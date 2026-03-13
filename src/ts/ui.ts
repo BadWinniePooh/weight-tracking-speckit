@@ -49,7 +49,7 @@ export function clearError(): void {
 // ─── Entry rendering ──────────────────────────────────────────────────────────
 
 export function renderEntry(entry: WeightEntry): HTMLElement {
-  const row = document.createElement("div");
+  const row = document.createElement("tr");
   row.setAttribute("data-id", entry.id);
   row.className = "entry-row";
 
@@ -63,21 +63,33 @@ export function renderEntry(entry: WeightEntry): HTMLElement {
     minute: "2-digit",
   });
   const date = new Date(entry.timestamp);
-  const dateStr = dateFormatter.format(date);
-  const timeStr = timeFormatter.format(date);
 
-  const info = document.createElement("span");
-  info.className = "entry-info";
-  info.textContent = `${entry.weightValue.toFixed(1)} ${entry.unit} — ${dateStr} ${timeStr}`;
+  const weightCell = document.createElement("td");
+  weightCell.className = "entry-weight";
+  weightCell.textContent = `${entry.weightValue.toFixed(1)} ${entry.unit}`;
+
+  const dateCell = document.createElement("td");
+  dateCell.className = "entry-date";
+  dateCell.textContent = dateFormatter.format(date);
+
+  const timeCell = document.createElement("td");
+  timeCell.className = "entry-time";
+  timeCell.textContent = timeFormatter.format(date);
+
+  const actionsCell = document.createElement("td");
+  actionsCell.className = "entry-actions";
 
   const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "Delete entry";
+  deleteBtn.textContent = "Delete";
   deleteBtn.setAttribute("aria-label", "Delete entry");
   deleteBtn.setAttribute("data-action", "delete");
   deleteBtn.setAttribute("data-id", entry.id);
+  actionsCell.appendChild(deleteBtn);
 
-  row.appendChild(info);
-  row.appendChild(deleteBtn);
+  row.appendChild(weightCell);
+  row.appendChild(dateCell);
+  row.appendChild(timeCell);
+  row.appendChild(actionsCell);
   return row;
 }
 
@@ -100,9 +112,33 @@ export function renderEntryList(entries: WeightEntry[]): void {
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
-  for (const entry of sorted) {
-    list.appendChild(renderEntry(entry));
+  const table = document.createElement("table");
+  table.className = "entry-table";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  for (const text of ["Weight", "Date", "Time"]) {
+    const th = document.createElement("th");
+    th.textContent = text;
+    headerRow.appendChild(th);
   }
+  const actionsTh = document.createElement("th");
+  const deleteAllBtn = document.createElement("button");
+  deleteAllBtn.textContent = "Delete all";
+  deleteAllBtn.setAttribute("data-action", "delete-all");
+  deleteAllBtn.setAttribute("aria-label", "Delete all entries");
+  actionsTh.appendChild(deleteAllBtn);
+  headerRow.appendChild(actionsTh);
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  for (const entry of sorted) {
+    tbody.appendChild(renderEntry(entry));
+  }
+  table.appendChild(tbody);
+
+  list.appendChild(table);
 }
 
 // ─── Form submission (US1) ────────────────────────────────────────────────────
@@ -141,6 +177,13 @@ export function handleSubmit(_event: Event): void {
 export function handleDelete(id: string): void {
   if (!window.confirm("Delete this entry?")) return;
   _entries = _entries.filter((e) => e.id !== id);
+  saveEntries(_entries);
+  renderEntryList(_entries);
+}
+
+export function handleDeleteAll(): void {
+  if (!window.confirm("Delete all entries? This cannot be undone.")) return;
+  _entries = [];
   saveEntries(_entries);
   renderEntryList(_entries);
 }

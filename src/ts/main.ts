@@ -5,6 +5,7 @@ import {
   renderEntryList,
   handleSubmit,
   handleDelete,
+  handleDeleteAll,
   initEntries,
   showChartSection,
   hideChartSection,
@@ -189,6 +190,9 @@ document.addEventListener("DOMContentLoaded", () => {
         handleDelete(id);
         refreshChart();
       }
+    } else if (target.getAttribute("data-action") === "delete-all") {
+      handleDeleteAll();
+      refreshChart();
     }
   });
 
