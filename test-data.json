@@ -1,0 +1,54 @@
+{
+  "_instructions": "Paste the following into the browser console to load test data. Reload the page after running it.",
+  "_script": "fetch('test-data.json').then(r=>r.json()).then(d=>{localStorage.setItem('weight_tracker_entries',JSON.stringify(d.weight_tracker_entries));localStorage.setItem('weight_tracker_preferences',JSON.stringify(d.weight_tracker_preferences));localStorage.setItem('weight_tracker_chart_settings',JSON.stringify(d.weight_tracker_chart_settings));console.log('Loaded',d.weight_tracker_entries.length,'entries');location.reload();})",
+  "_console_snippet": "const d=await(await fetch('/test-data.json')).json();localStorage.setItem('weight_tracker_entries',JSON.stringify(d.weight_tracker_entries));localStorage.setItem('weight_tracker_preferences',JSON.stringify(d.weight_tracker_preferences));localStorage.setItem('weight_tracker_chart_settings',JSON.stringify(d.weight_tracker_chart_settings));location.reload();",
+  "_summary": "35 calendar days (2026-02-06 to 2026-03-12). 3 gaps: Feb 13-15 (3 days), Feb 23-24 (2 days), Mar 4 (1 day). Double entries on Feb 9 and Mar 8. 31 total entries across 29 measured days. Unit: kg. Goal: 78 kg.",
+
+  "weight_tracker_preferences": {
+    "unit": "kg"
+  },
+
+  "weight_tracker_chart_settings": {
+    "weightGoal": 78,
+    "lossRate": 0.0055,
+    "carbFatRatio": 0.6,
+    "bufferValue": 0.0075
+  },
+
+  "weight_tracker_entries": [
+    { "id": "a1b2c3d4-0001-0001-0001-000000000001", "weightValue": 85.2, "unit": "kg", "timestamp": "2026-02-06T07:42:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000002", "weightValue": 85.0, "unit": "kg", "timestamp": "2026-02-07T08:15:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000003", "weightValue": 84.8, "unit": "kg", "timestamp": "2026-02-08T07:55:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000004", "weightValue": 85.1, "unit": "kg", "timestamp": "2026-02-09T07:30:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000005", "weightValue": 84.9, "unit": "kg", "timestamp": "2026-02-09T19:00:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000006", "weightValue": 84.7, "unit": "kg", "timestamp": "2026-02-10T07:48:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000007", "weightValue": 84.5, "unit": "kg", "timestamp": "2026-02-11T08:02:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000008", "weightValue": 84.8, "unit": "kg", "timestamp": "2026-02-12T07:35:00.000Z" },
+
+    { "id": "a1b2c3d4-0001-0001-0001-000000000009", "weightValue": 84.2, "unit": "kg", "timestamp": "2026-02-16T07:50:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000010", "weightValue": 84.0, "unit": "kg", "timestamp": "2026-02-17T08:10:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000011", "weightValue": 84.4, "unit": "kg", "timestamp": "2026-02-18T07:40:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000012", "weightValue": 83.9, "unit": "kg", "timestamp": "2026-02-19T07:55:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000013", "weightValue": 83.7, "unit": "kg", "timestamp": "2026-02-20T08:20:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000014", "weightValue": 84.0, "unit": "kg", "timestamp": "2026-02-21T07:30:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000015", "weightValue": 83.6, "unit": "kg", "timestamp": "2026-02-22T08:05:00.000Z" },
+
+    { "id": "a1b2c3d4-0001-0001-0001-000000000016", "weightValue": 83.3, "unit": "kg", "timestamp": "2026-02-25T07:45:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000017", "weightValue": 83.1, "unit": "kg", "timestamp": "2026-02-26T07:58:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000018", "weightValue": 83.4, "unit": "kg", "timestamp": "2026-02-27T08:12:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000019", "weightValue": 83.0, "unit": "kg", "timestamp": "2026-02-28T07:35:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000020", "weightValue": 82.8, "unit": "kg", "timestamp": "2026-03-01T08:00:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000021", "weightValue": 83.1, "unit": "kg", "timestamp": "2026-03-02T07:42:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000022", "weightValue": 82.7, "unit": "kg", "timestamp": "2026-03-03T07:55:00.000Z" },
+
+    { "id": "a1b2c3d4-0001-0001-0001-000000000023", "weightValue": 82.4, "unit": "kg", "timestamp": "2026-03-05T08:08:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000024", "weightValue": 82.6, "unit": "kg", "timestamp": "2026-03-06T07:50:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000025", "weightValue": 82.3, "unit": "kg", "timestamp": "2026-03-07T08:15:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000026", "weightValue": 82.5, "unit": "kg", "timestamp": "2026-03-08T07:30:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000027", "weightValue": 82.1, "unit": "kg", "timestamp": "2026-03-08T19:15:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000028", "weightValue": 82.0, "unit": "kg", "timestamp": "2026-03-09T07:48:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000029", "weightValue": 82.2, "unit": "kg", "timestamp": "2026-03-10T08:00:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000030", "weightValue": 81.9, "unit": "kg", "timestamp": "2026-03-11T07:38:00.000Z" },
+    { "id": "a1b2c3d4-0001-0001-0001-000000000031", "weightValue": 82.1, "unit": "kg", "timestamp": "2026-03-12T08:05:00.000Z" }
+  ]
+}
