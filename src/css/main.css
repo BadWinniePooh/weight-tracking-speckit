@@ -1,0 +1,240 @@
+/* ── Reset & base ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f5f5f5;
+  min-width: 320px;
+}
+
+/* ── Focus ring (FR-012 keyboard accessibility) ───────────────── */
+:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* ── Layout: mobile-first single column ──────────────────────── */
+#app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+header {
+  margin-bottom: 1.5rem;
+}
+
+header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* ── Form rows ─────────────────────────────────────────────────── */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #555;
+}
+
+input[type="number"],
+select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fff;
+  appearance: none;
+}
+
+input[type="number"]:focus,
+select:focus {
+  border-color: #0066cc;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+}
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#submit-btn {
+  background: #0066cc;
+  color: #fff;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+#submit-btn:hover {
+  background: #0052a3;
+}
+
+#export-btn {
+  background: #555;
+  color: #fff;
+}
+
+#export-btn:hover {
+  background: #333;
+}
+
+/* ── Error message ─────────────────────────────────────────────── */
+.error-msg {
+  color: #c0392b;
+  font-size: 0.875rem;
+  min-height: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Entry list ────────────────────────────────────────────────── */
+.entry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.entry-row:last-child {
+  border-bottom: none;
+}
+
+.entry-info {
+  font-size: 0.95rem;
+}
+
+.entry-row button {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  background: #fef2f2;
+  color: #c0392b;
+  border: 1px solid #fca5a5;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.entry-row button:hover {
+  background: #fee2e2;
+}
+
+.empty-state {
+  color: #888;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+/* ── Recovery screen (FR-013) ─────────────────────────────────── */
+#recovery-screen:not([hidden]) {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff3cd;
+  padding: 1rem;
+}
+
+.recovery-content {
+  max-width: 480px;
+  background: #fff;
+  border: 2px solid #e07b00;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.recovery-content h1 {
+  font-size: 1.5rem;
+  color: #c05700;
+  margin-bottom: 1rem;
+}
+
+.recovery-content p {
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+#download-raw-btn {
+  background: #e07b00;
+  color: #fff;
+  margin-right: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+#download-raw-btn:hover {
+  background: #c05700;
+}
+
+.reset-btn {
+  background: #c0392b;
+  color: #fff;
+}
+
+.reset-btn:hover {
+  background: #a93226;
+}
+
+/* ── Desktop layout (≥ 1024 px) ───────────────────────────────── */
+@media (min-width: 1024px) {
+  #app {
+    padding: 2rem;
+    max-width: 720px;
+  }
+
+  header h1 {
+    font-size: 2rem;
+  }
+
+  .form-row {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .form-row label {
+    width: 6rem;
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  #submit-btn {
+    width: auto;
+    padding: 0.5rem 2rem;
+  }
+}
