@@ -1,4 +1,4 @@
-import type { WeightEntry } from "./model";
+import type { WeightEntry, CorridorState } from "./model";
 import { validateWeight, createEntry } from "./model";
 import { saveEntries, isDataCorrupt, getRawStorageString } from "./storage";
 import { getUnit } from "./preferences";
@@ -13,6 +13,25 @@ export function initEntries(entries: WeightEntry[]): void {
 
 export function getEntries(): WeightEntry[] {
   return _entries;
+}
+
+// ─── Chart section visibility (FR-004, FR-019) ───────────────────────────────
+
+const INFO_MSG = "Corridor lines require 7 days of data and a configured weight goal.";
+
+export function showChartSection(corridorState: CorridorState): void {
+  const section = document.getElementById("chart-section");
+  if (section) section.hidden = false;
+  const msg = document.getElementById("chart-info-msg");
+  if (msg) {
+    msg.textContent =
+      corridorState === "no-goal" || corridorState === "calibrating" ? INFO_MSG : "";
+  }
+}
+
+export function hideChartSection(): void {
+  const section = document.getElementById("chart-section");
+  if (section) section.hidden = true;
 }
 
 // ─── Error display ────────────────────────────────────────────────────────────

@@ -161,6 +161,99 @@ button {
   padding: 0.5rem 0;
 }
 
+/* ── Chart section (FR-019) ────────────────────────────────────── */
+#chart-section:not([hidden]) {
+  display: block;
+}
+
+#chart-container {
+  position: relative;
+  height: 260px;
+  width: 100%;
+}
+
+#chart-info-msg {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #555;
+  min-height: 1.25rem;
+}
+
+#chart-section h2 {
+  margin-bottom: 0.75rem;
+}
+
+#chart-settings-btn {
+  margin-top: 0.75rem;
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  font-size: 0.875rem;
+  padding: 0.35rem 1rem;
+}
+
+#chart-settings-btn:hover {
+  background: #e0e0e0;
+}
+
+@media (min-width: 768px) {
+  #chart-container {
+    height: 320px;
+  }
+}
+
+/* ── Settings modal (FR-020) ────────────────────────────────────── */
+#chart-settings-modal {
+  border: none;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 90vw;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+#chart-settings-modal::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+#chart-settings-modal h2 {
+  margin-bottom: 1.25rem;
+}
+
+.field-error {
+  display: block;
+  color: #c0392b;
+  font-size: 0.8rem;
+  min-height: 1rem;
+  margin-top: 0.15rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  justify-content: flex-end;
+}
+
+#settings-save-btn {
+  background: #0066cc;
+  color: #fff;
+}
+
+#settings-save-btn:hover {
+  background: #0052a3;
+}
+
+#settings-cancel-btn {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+#settings-cancel-btn:hover {
+  background: #e0e0e0;
+}
+
 /* ── Recovery screen (FR-013) ─────────────────────────────────── */
 #recovery-screen:not([hidden]) {
   min-height: 100vh;

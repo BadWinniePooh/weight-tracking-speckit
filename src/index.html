@@ -27,6 +27,53 @@
       </header>
 
       <main>
+        <!-- Chart section (FR-019: first child of <main>, hidden when no data) -->
+        <section id="chart-section" hidden aria-labelledby="chart-heading">
+          <h2 id="chart-heading">Weight Trend</h2>
+          <div id="chart-container">
+            <canvas id="chart-canvas"></canvas>
+          </div>
+          <div id="chart-info-msg" role="status" aria-live="polite"></div>
+          <button id="chart-settings-btn" type="button" aria-label="Configure chart settings">
+            Settings
+          </button>
+        </section>
+
+        <!-- Settings modal (FR-020) -->
+        <dialog id="chart-settings-modal" aria-labelledby="settings-modal-title">
+          <h2 id="settings-modal-title">Chart Settings</h2>
+          <form id="chart-settings-form" method="dialog">
+            <div class="form-row">
+              <label for="weight-goal-input">Weight goal</label>
+              <input id="weight-goal-input" type="number" step="any" aria-describedby="weight-goal-error" />
+              <span id="weight-goal-error" role="alert" class="field-error"></span>
+            </div>
+
+            <div class="form-row">
+              <label for="loss-rate-input">Loss rate</label>
+              <input id="loss-rate-input" type="number" step="any" aria-describedby="loss-rate-error" />
+              <span id="loss-rate-error" role="alert" class="field-error"></span>
+            </div>
+
+            <div class="form-row">
+              <label for="carb-fat-ratio-input">Carb/fat ratio</label>
+              <input id="carb-fat-ratio-input" type="number" step="any" aria-describedby="carb-fat-error" />
+              <span id="carb-fat-error" role="alert" class="field-error"></span>
+            </div>
+
+            <div class="form-row">
+              <label for="buffer-value-input">Buffer value</label>
+              <input id="buffer-value-input" type="number" step="any" aria-describedby="buffer-error" />
+              <span id="buffer-error" role="alert" class="field-error"></span>
+            </div>
+
+            <div class="modal-actions">
+              <button id="settings-save-btn" type="button">Save</button>
+              <button id="settings-cancel-btn" type="button">Cancel</button>
+            </div>
+          </form>
+        </dialog>
+
         <!-- Entry form -->
         <section class="entry-form" aria-labelledby="form-heading">
           <h2 id="form-heading">Log your weight</h2>

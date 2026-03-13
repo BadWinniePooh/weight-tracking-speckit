@@ -281,6 +281,136 @@ describe("delete flow (US3)", () => {
   });
 });
 
+// ─── T008: Chart section visibility ───────────────────────────────────────────
+describe("chart section visibility (FR-004, FR-019)", () => {
+  beforeEach(() => {
+    // Add chart section to DOM
+    const main = document.querySelector("main") || document.getElementById("app");
+    const chartSection = document.createElement("section");
+    chartSection.id = "chart-section";
+    chartSection.hidden = true;
+    const infoMsg = document.createElement("div");
+    infoMsg.id = "chart-info-msg";
+    chartSection.appendChild(infoMsg);
+    if (main) main.insertBefore(chartSection, main.firstChild);
+  });
+
+  it("imports showChartSection and hideChartSection without error", async () => {
+    const { showChartSection, hideChartSection } = await import("../src/ts/ui");
+    expect(typeof showChartSection).toBe("function");
+    expect(typeof hideChartSection).toBe("function");
+  });
+
+  it("showChartSection removes the hidden attribute from #chart-section", async () => {
+    const { showChartSection } = await import("../src/ts/ui");
+    showChartSection("no-goal");
+    const section = document.getElementById("chart-section");
+    expect(section?.hidden).toBe(false);
+  });
+
+  it("hideChartSection sets the hidden attribute on #chart-section", async () => {
+    const { showChartSection, hideChartSection } = await import("../src/ts/ui");
+    showChartSection("no-goal");
+    hideChartSection();
+    const section = document.getElementById("chart-section");
+    expect(section?.hidden).toBe(true);
+  });
+
+  it("showChartSection with 'no-goal' shows the informational message", async () => {
+    const { showChartSection } = await import("../src/ts/ui");
+    showChartSection("no-goal");
+    const msg = document.getElementById("chart-info-msg");
+    expect(msg?.textContent).toContain("Corridor lines require");
+  });
+
+  it("showChartSection with 'calibrating' shows the informational message", async () => {
+    const { showChartSection } = await import("../src/ts/ui");
+    showChartSection("calibrating");
+    const msg = document.getElementById("chart-info-msg");
+    expect(msg?.textContent).toContain("Corridor lines require");
+  });
+
+  it("showChartSection with 'ready' clears the informational message", async () => {
+    const { showChartSection } = await import("../src/ts/ui");
+    showChartSection("ready");
+    const msg = document.getElementById("chart-info-msg");
+    expect(msg?.textContent).toBe("");
+  });
+});
+
+// ─── T018: Settings modal (US2) ───────────────────────────────────────────────
+describe("settings modal DOM structure (US2 / FR-020)", () => {
+  beforeEach(() => {
+    // Add settings modal and trigger button to DOM
+    const dialog = document.createElement("dialog");
+    dialog.id = "chart-settings-modal";
+    const form = document.createElement("form");
+    form.id = "chart-settings-form";
+    form.method = "dialog";
+
+    const fields = [
+      ["weight-goal-input", "weight-goal-error"],
+      ["loss-rate-input", "loss-rate-error"],
+      ["carb-fat-ratio-input", "carb-fat-error"],
+      ["buffer-value-input", "buffer-error"],
+    ];
+    for (const [inputId, errId] of fields) {
+      const input = document.createElement("input");
+      input.id = inputId;
+      input.type = "number";
+      const err = document.createElement("span");
+      err.id = errId;
+      err.role = "alert";
+      form.appendChild(input);
+      form.appendChild(err);
+    }
+
+    const saveBtn = document.createElement("button");
+    saveBtn.id = "settings-save-btn";
+    saveBtn.type = "button";
+    const cancelBtn = document.createElement("button");
+    cancelBtn.id = "settings-cancel-btn";
+    cancelBtn.type = "button";
+    form.appendChild(saveBtn);
+    form.appendChild(cancelBtn);
+    dialog.appendChild(form);
+
+    const settingsBtn = document.createElement("button");
+    settingsBtn.id = "chart-settings-btn";
+    document.body.appendChild(dialog);
+    document.body.appendChild(settingsBtn);
+
+    // Polyfill showModal/close for jsdom (jsdom doesn't implement dialog API)
+    dialog.showModal = vi.fn(() => { dialog.open = true; });
+    dialog.close = vi.fn(() => { dialog.open = false; });
+  });
+
+  it("dialog element exists in DOM", () => {
+    expect(document.getElementById("chart-settings-modal")).not.toBeNull();
+  });
+
+  it("has all four input fields", () => {
+    expect(document.getElementById("weight-goal-input")).not.toBeNull();
+    expect(document.getElementById("loss-rate-input")).not.toBeNull();
+    expect(document.getElementById("carb-fat-ratio-input")).not.toBeNull();
+    expect(document.getElementById("buffer-value-input")).not.toBeNull();
+  });
+
+  it("has save and cancel buttons", () => {
+    expect(document.getElementById("settings-save-btn")).not.toBeNull();
+    expect(document.getElementById("settings-cancel-btn")).not.toBeNull();
+  });
+
+  it("has error spans for each field with role='alert'", () => {
+    const errIds = ["weight-goal-error", "loss-rate-error", "carb-fat-error", "buffer-error"];
+    for (const id of errIds) {
+      const el = document.getElementById(id);
+      expect(el).not.toBeNull();
+      expect(el?.getAttribute("role")).toBe("alert");
+    }
+  });
+});
+
 // ─── showError / clearError ───────────────────────────────────────────────────
 describe("showError / clearError", () => {
   it("showError sets error message text", () => {

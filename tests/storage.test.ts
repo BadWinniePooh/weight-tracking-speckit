@@ -6,8 +6,10 @@ import {
   savePreferences,
   isDataCorrupt,
   getRawStorageString,
+  loadChartSettings,
+  saveChartSettings,
 } from "../src/ts/storage";
-import type { WeightEntry } from "../src/ts/model";
+import type { WeightEntry, ChartSettings } from "../src/ts/model";
 
 const ENTRIES_KEY = "weight_tracker_entries";
 const PREFS_KEY = "weight_tracker_preferences";
@@ -130,6 +132,55 @@ describe("isDataCorrupt", () => {
     localStorage.setItem(ENTRIES_KEY, "{bad json");
     loadEntries();
     expect(isDataCorrupt()).toBe(true);
+  });
+});
+
+describe("loadChartSettings", () => {
+  it("returns defaults when key is absent", () => {
+    const settings = loadChartSettings();
+    expect(settings.lossRate).toBe(0.0055);
+    expect(settings.carbFatRatio).toBe(0.6);
+    expect(settings.bufferValue).toBe(0.0075);
+    expect(settings.weightGoal).toBeNull();
+  });
+
+  it("returns defaults when key is empty string", () => {
+    localStorage.setItem("weight_tracker_chart_settings", "");
+    const settings = loadChartSettings();
+    expect(settings.weightGoal).toBeNull();
+    expect(settings.lossRate).toBe(0.0055);
+  });
+
+  it("returns defaults when stored JSON is malformed", () => {
+    localStorage.setItem("weight_tracker_chart_settings", "{bad json");
+    expect(loadChartSettings().lossRate).toBe(0.0055);
+  });
+});
+
+describe("saveChartSettings + loadChartSettings round-trip", () => {
+  it("persists and retrieves full settings", () => {
+    const settings: ChartSettings = {
+      weightGoal: 75.0,
+      lossRate: 0.004,
+      carbFatRatio: 0.5,
+      bufferValue: 0.01,
+    };
+    saveChartSettings(settings);
+    const loaded = loadChartSettings();
+    expect(loaded.weightGoal).toBe(75.0);
+    expect(loaded.lossRate).toBe(0.004);
+    expect(loaded.carbFatRatio).toBe(0.5);
+    expect(loaded.bufferValue).toBe(0.01);
+  });
+
+  it("persists weightGoal: null", () => {
+    saveChartSettings({ weightGoal: null, lossRate: 0.0055, carbFatRatio: 0.6, bufferValue: 0.0075 });
+    expect(loadChartSettings().weightGoal).toBeNull();
+  });
+
+  it("persists a numeric weightGoal", () => {
+    saveChartSettings({ weightGoal: 80, lossRate: 0.0055, carbFatRatio: 0.6, bufferValue: 0.0075 });
+    expect(loadChartSettings().weightGoal).toBe(80);
   });
 });
 

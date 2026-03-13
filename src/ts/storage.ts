@@ -1,7 +1,15 @@
-import type { WeightEntry, UserPreferences } from "./model";
+import type { WeightEntry, UserPreferences, ChartSettings } from "./model";
 
 const ENTRIES_KEY = "weight_tracker_entries";
 const PREFS_KEY = "weight_tracker_preferences";
+const CHART_SETTINGS_KEY = "weight_tracker_chart_settings";
+
+const DEFAULT_CHART_SETTINGS: ChartSettings = {
+  weightGoal: null,
+  lossRate: 0.0055,
+  carbFatRatio: 0.6,
+  bufferValue: 0.0075,
+};
 
 let _dataCorrupt = false;
 
@@ -63,6 +71,22 @@ export function savePreferences(prefs: UserPreferences): void {
     }
     throw err;
   }
+}
+
+export function loadChartSettings(): ChartSettings {
+  const raw = localStorage.getItem(CHART_SETTINGS_KEY);
+  if (!raw) return { ...DEFAULT_CHART_SETTINGS };
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed === null || typeof parsed !== "object") return { ...DEFAULT_CHART_SETTINGS };
+    return { ...DEFAULT_CHART_SETTINGS, ...parsed } as ChartSettings;
+  } catch {
+    return { ...DEFAULT_CHART_SETTINGS };
+  }
+}
+
+export function saveChartSettings(settings: ChartSettings): void {
+  localStorage.setItem(CHART_SETTINGS_KEY, JSON.stringify(settings));
 }
 
 export function isDataCorrupt(): boolean {

@@ -1,5 +1,37 @@
 export type WeightUnit = "kg" | "lbs";
 
+// ─── Chart types ───────────────────────────────────────────────────────────────
+
+export type CorridorState = "ready" | "no-goal" | "calibrating" | "no-data";
+
+export interface ChartPoint {
+  date: Date;
+  value: number;
+}
+
+export interface ChartSettings {
+  weightGoal: number | null;
+  lossRate: number;      // default 0.0055
+  carbFatRatio: number;  // default 0.6
+  bufferValue: number;   // default 0.0075
+}
+
+export interface DailyAverage {
+  date: Date;
+  dayIndex: number;   // 0-based; dayIndex 0 = first entry's calendar day
+  avgWeight: number;
+  origin: "measured" | "interpolated";
+}
+
+export interface ChartDataSet {
+  dataPoints: ChartPoint[];
+  trendline: ChartPoint[] | null;
+  floor: ChartPoint[] | null;
+  ceiling: ChartPoint[] | null;
+  ideal: ChartPoint[] | null;
+  corridorState: CorridorState;
+}
+
 export interface WeightEntry {
   id: string;
   weightValue: number;
