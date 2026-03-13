@@ -7,6 +7,7 @@ import {
   handleDelete,
   handleDeleteAll,
   initEntries,
+  getEntries,
   showChartSection,
   hideChartSection,
 } from "./ui";
@@ -158,9 +159,10 @@ document.addEventListener("DOMContentLoaded", () => {
   renderEntryList(entries);
   refreshChart();
 
-  // Unit preference change — re-render chart with new unit (FR-015, C1)
+  // Unit preference change — re-render history list and chart with new unit (FR-015, C1)
   unitSelect?.addEventListener("change", () => {
     setUnit(unitSelect.value as WeightUnit);
+    renderEntryList(getEntries());
     refreshChart();
   });
 

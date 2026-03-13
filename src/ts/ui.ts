@@ -1,8 +1,16 @@
-import type { WeightEntry, CorridorState } from "./model";
+import type { WeightEntry, WeightUnit, CorridorState } from "./model";
 import { validateWeight, createEntry } from "./model";
 import { saveEntries, isDataCorrupt, getRawStorageString } from "./storage";
 import { getUnit } from "./preferences";
 import { triggerDownload } from "./export";
+
+// ─── Unit conversion ──────────────────────────────────────────────────────────
+
+function convertWeight(value: number, fromUnit: WeightUnit, toUnit: WeightUnit): number {
+  if (fromUnit === toUnit) return value;
+  if (fromUnit === "kg" && toUnit === "lbs") return value * 2.20462;
+  return value * 0.453592; // lbs → kg
+}
 
 // In-memory entries array — managed by this module
 let _entries: WeightEntry[] = [];
@@ -48,7 +56,7 @@ export function clearError(): void {
 
 // ─── Entry rendering ──────────────────────────────────────────────────────────
 
-export function renderEntry(entry: WeightEntry): HTMLElement {
+export function renderEntry(entry: WeightEntry, displayUnit: WeightUnit = entry.unit): HTMLElement {
   const row = document.createElement("tr");
   row.setAttribute("data-id", entry.id);
   row.className = "entry-row";
@@ -64,9 +72,10 @@ export function renderEntry(entry: WeightEntry): HTMLElement {
   });
   const date = new Date(entry.timestamp);
 
+  const displayValue = convertWeight(entry.weightValue, entry.unit, displayUnit);
   const weightCell = document.createElement("td");
   weightCell.className = "entry-weight";
-  weightCell.textContent = `${entry.weightValue.toFixed(1)} ${entry.unit}`;
+  weightCell.textContent = `${displayValue.toFixed(1)} ${displayUnit}`;
 
   const dateCell = document.createElement("td");
   dateCell.className = "entry-date";
@@ -107,6 +116,8 @@ export function renderEntryList(entries: WeightEntry[]): void {
     return;
   }
 
+  const displayUnit = getUnit();
+
   // Sort newest-first before rendering
   const sorted = [...entries].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -134,7 +145,7 @@ export function renderEntryList(entries: WeightEntry[]): void {
 
   const tbody = document.createElement("tbody");
   for (const entry of sorted) {
-    tbody.appendChild(renderEntry(entry));
+    tbody.appendChild(renderEntry(entry, displayUnit));
   }
   table.appendChild(tbody);
 

@@ -31,7 +31,7 @@ import {
   showError,
   clearError,
 } from "../src/ts/ui";
-import { isDataCorrupt, getRawStorageString, saveEntries } from "../src/ts/storage";
+import { isDataCorrupt, getRawStorageString, saveEntries, loadPreferences } from "../src/ts/storage";
 import { createEntry } from "../src/ts/model";
 import type { WeightEntry } from "../src/ts/model";
 
@@ -76,6 +76,7 @@ beforeEach(() => {
   vi.mocked(isDataCorrupt).mockReturnValue(false);
   vi.mocked(getRawStorageString).mockReturnValue("");
   vi.mocked(saveEntries).mockReset();
+  vi.mocked(loadPreferences).mockReturnValue({ unit: "kg" });
 });
 
 afterEach(() => {
@@ -253,7 +254,8 @@ describe("renderEntryList — history rendering (US2)", () => {
     expect(rows[1].getAttribute("data-id")).toBe("old");
   });
 
-  it("entries with different stored units each display their own label", () => {
+  it("all entries display in the current preferred unit regardless of stored unit", () => {
+    // loadPreferences mock returns { unit: "kg" } by default
     const entries: WeightEntry[] = [
       makeEntry({ id: "kg-entry", unit: "kg", weightValue: 75, timestamp: "2026-03-13T09:00:00.000Z" }),
       makeEntry({ id: "lbs-entry", unit: "lbs", weightValue: 165, timestamp: "2026-03-12T09:00:00.000Z" }),
@@ -261,8 +263,32 @@ describe("renderEntryList — history rendering (US2)", () => {
     renderEntryList(entries);
     const kgRow = document.querySelector("[data-id='kg-entry']")!;
     const lbsRow = document.querySelector("[data-id='lbs-entry']")!;
+    // Both should now show in kg (the current preference)
     expect(kgRow.textContent).toContain("kg");
-    expect(lbsRow.textContent).toContain("lbs");
+    expect(lbsRow.textContent).toContain("kg");
+  });
+
+  it("converts lbs entry to kg when preference is kg", () => {
+    // loadPreferences returns { unit: "kg" } by default
+    const entry = makeEntry({ id: "lbs-entry", unit: "lbs", weightValue: 220, timestamp: "2026-03-13T09:00:00.000Z" });
+    renderEntryList([entry]);
+    const row = document.querySelector("[data-id='lbs-entry']")!;
+    // 220 lbs * 0.453592 ≈ 99.8 kg
+    expect(row.textContent).toContain("99.8");
+    expect(row.textContent).toContain("kg");
+  });
+
+  it("converts kg entry to lbs when preference is lbs", () => {
+    vi.mocked(loadPreferences).mockReturnValue({ unit: "lbs" });
+
+    const entry = makeEntry({ id: "kg-entry", unit: "kg", weightValue: 100, timestamp: "2026-03-13T09:00:00.000Z" });
+    renderEntryList([entry]);
+    const row = document.querySelector("[data-id='kg-entry']")!;
+    // 100 kg * 2.20462 ≈ 220.5 lbs
+    expect(row.textContent).toContain("220.5");
+    expect(row.textContent).toContain("lbs");
+
+    vi.mocked(loadPreferences).mockReturnValue({ unit: "kg" });
   });
 });
 
