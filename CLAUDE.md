@@ -31,7 +31,7 @@ docker-compose.yml             # Full stack: db + backend + frontend
 ## Commands
 
 # Frontend
-npm test && npm run lint
+cd frontend && npm test && npm run lint
 
 # Backend (from backend/ directory)
 cd backend && dotnet test

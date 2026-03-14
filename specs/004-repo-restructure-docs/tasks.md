@@ -160,13 +160,13 @@ Web app layout: `frontend/` and `backend/` at repository root. All backend chang
 
 **Purpose**: Final verification and housekeeping across all user stories.
 
-- [ ] T034 Update `CLAUDE.md` commands section to reflect the new frontend path: change the frontend test command from `npm test && npm run lint` (run from repo root) to `cd frontend && npm test && npm run lint`
+- [X] T034 Update `CLAUDE.md` commands section to reflect the new frontend path: change the frontend test command from `npm test && npm run lint` (run from repo root) to `cd frontend && npm test && npm run lint`
 
-- [ ] T035 [P] Verify `docker-compose.yml` contains no hardcoded credential or configuration literals — scan for any remaining string values that should be `${VAR}` references; confirm SC-006 compliance
+- [X] T035 [P] Verify `docker-compose.yml` contains no hardcoded credential or configuration literals — scan for any remaining string values that should be `${VAR}` references; confirm SC-006 compliance
 
-- [ ] T036 [P] Cross-reference every `${VAR_NAME}` reference in `docker-compose.yml` against `.env.example` entries — confirm SC-004: every interpolated variable has a corresponding entry with a placeholder and a comment in `.env.example`
+- [X] T036 [P] Cross-reference every `${VAR_NAME}` reference in `docker-compose.yml` against `.env.example` entries — confirm SC-004: every interpolated variable has a corresponding entry with a placeholder and a comment in `.env.example`
 
-- [ ] T037 Run final end-to-end validation from a clean state: `docker compose down && docker compose up --build` — confirm cold-start succeeds with all three services healthy and the app accessible at http://localhost:3000
+- [X] T037 Run final end-to-end validation from a clean state: `docker compose down && docker compose up --build` — confirm cold-start succeeds with all three services healthy and the app accessible at http://localhost:3000
 
 ---
 
