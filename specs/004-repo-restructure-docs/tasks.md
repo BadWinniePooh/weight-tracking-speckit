@@ -132,22 +132,22 @@ Web app layout: `frontend/` and `backend/` at repository root. All backend chang
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Create the `docs/` directory and create `docs/runbook.md` — write the file header, table of contents, and the "Configuration" section as the **first** operational section. The Configuration section must:
+- [X] T027 [US3] Create the `docs/` directory and create `docs/runbook.md` — write the file header, table of contents, and the "Configuration" section as the **first** operational section. The Configuration section must:
   - Instruct the operator to copy `.env.example` to `.env` (`cp .env.example .env`)
   - Instruct them to open `.env` and set all required values, especially `DB_PASSWORD`
   - Include a warning: running `docker compose up` without a `.env` file (or with empty values) will cause startup failures because Docker Compose substitutes undefined variables as empty strings
 
-- [ ] T028 [US3] Add "Deploying with Docker Compose" section to `docs/runbook.md` — include exact commands to start the stack (`docker compose up -d`), check service status (`docker compose ps`), and view logs (`docker compose logs -f <service>`); describe what healthy output looks like for each command
+- [X] T028 [US3] Add "Deploying with Docker Compose" section to `docs/runbook.md` — include exact commands to start the stack (`docker compose up -d`), check service status (`docker compose ps`), and view logs (`docker compose logs -f <service>`); describe what healthy output looks like for each command
 
-- [ ] T029 [US3] Add "Updating to a New Version" section to `docs/runbook.md` — steps: pull latest source (`git pull`), rebuild and restart without downtime (`docker compose up --build -d`); explain that the named volume `weighttracker-data` is unaffected by image rebuilds; include a prominent warning: **never run `docker compose down -v`** as it destroys the data volume
+- [X] T029 [US3] Add "Updating to a New Version" section to `docs/runbook.md` — steps: pull latest source (`git pull`), rebuild and restart without downtime (`docker compose up --build -d`); explain that the named volume `weighttracker-data` is unaffected by image rebuilds; include a prominent warning: **never run `docker compose down -v`** as it destroys the data volume
 
-- [ ] T030 [US3] Add "Backing Up the Database" section to `docs/runbook.md` — include exact command: `docker compose exec db pg_dump -U ${DB_USER} ${DB_NAME} > backup-$(date +%Y-%m-%d).sql`; note the database service must be running; describe expected output (an SQL dump file created in the current directory)
+- [X] T030 [US3] Add "Backing Up the Database" section to `docs/runbook.md` — include exact command: `docker compose exec db pg_dump -U ${DB_USER} ${DB_NAME} > backup-$(date +%Y-%m-%d).sql`; note the database service must be running; describe expected output (an SQL dump file created in the current directory)
 
-- [ ] T031 [US3] Add "Restoring from Backup" section to `docs/runbook.md` — include exact command: `docker compose exec -T db psql -U ${DB_USER} ${DB_NAME} < backup-YYYY-MM-DD.sql`; warn that the target database should be empty before restoring to avoid duplicate-key errors; describe expected output
+- [X] T031 [US3] Add "Restoring from Backup" section to `docs/runbook.md` — include exact command: `docker compose exec -T db psql -U ${DB_USER} ${DB_NAME} < backup-YYYY-MM-DD.sql`; warn that the target database should be empty before restoring to avoid duplicate-key errors; describe expected output
 
-- [ ] T032 [US3] Add "Rolling Back a Failed Update" section to `docs/runbook.md` — steps: check out the previous working commit (`git checkout <previous-commit-or-tag>`), rebuild (`docker compose up --build -d`); explain that the named volume is decoupled from the image so data is preserved across rollbacks
+- [X] T032 [US3] Add "Rolling Back a Failed Update" section to `docs/runbook.md` — steps: check out the previous working commit (`git checkout <previous-commit-or-tag>`), rebuild (`docker compose up --build -d`); explain that the named volume is decoupled from the image so data is preserved across rollbacks
 
-- [ ] T033 [US3] Add "Troubleshooting" section to `docs/runbook.md` covering exactly three scenarios:
+- [X] T033 [US3] Add "Troubleshooting" section to `docs/runbook.md` covering exactly three scenarios:
   - (a) **Container won't start**: use `docker compose logs <service>` to read startup error output; check that `.env` exists and all variables are set
   - (b) **Database connection errors**: verify `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` in `.env` match what the `db` service is configured with; confirm the `db` service is healthy (`docker compose ps`)
   - (c) **Frontend can't reach backend**: verify `API_URL` in `.env` matches the host and port the backend is actually reachable at; verify `ALLOWED_ORIGIN` matches the URL users use to access the frontend; check backend logs for CORS errors
