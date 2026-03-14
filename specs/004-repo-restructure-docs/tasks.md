@@ -89,11 +89,11 @@ Web app layout: `frontend/` and `backend/` at repository root. All backend chang
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Copy `.env.example` to `.env` at the repository root (for local verification) — confirm the file exists and all 7 variables are populated before proceeding
-- [ ] T019 [US1] Run `cd frontend && npm install` to install frontend dependencies in their new location; verify `node_modules/` is created under `frontend/`
-- [ ] T020 [US1] Run `cd frontend && npm test` and verify all existing Vitest tests pass without modification
-- [ ] T021 [US1] Run `cd backend && dotnet test` and verify all existing xUnit tests pass — including T016's connection string assembly test
-- [ ] T022 [US1] Run `docker compose up --build` from the repository root and verify all three services (db, backend, frontend) start healthy; confirm the app is accessible at http://localhost:3000 and that data can be entered and saved
+- [X] T018 [US1] Copy `.env.example` to `.env` at the repository root (for local verification) — confirm the file exists and all 7 variables are populated before proceeding
+- [X] T019 [US1] Run `cd frontend && npm install` to install frontend dependencies in their new location; verify `node_modules/` is created under `frontend/`
+- [X] T020 [US1] Run `cd frontend && npm test` and verify all existing Vitest tests pass without modification
+- [X] T021 [US1] Run `cd backend && dotnet test` and verify all existing xUnit tests pass — including T016's connection string assembly test
+- [X] T022 [US1] Run `docker compose up --build` from the repository root and verify all three services (db, backend, frontend) start healthy; confirm the app is accessible at http://localhost:3000 and that data can be entered and saved
 
 **Checkpoint**: Full stack works end-to-end with `.env`-based configuration. User Story 1 is complete. Commit phase before proceeding.
 
