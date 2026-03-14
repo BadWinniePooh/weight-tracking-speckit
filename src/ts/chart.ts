@@ -26,7 +26,7 @@ export function renderChart(
   // Data points series
   datasets.push({
     label: "Weight",
-    data: dataPoints.map((p) => ({ x: p.date.getTime(), y: p.value })),
+    data: dataPoints.map((p) => ({ x: p.date, y: p.value })),
     borderColor: "#0066cc",
     backgroundColor: "#0066cc",
     pointRadius: 4,
@@ -39,7 +39,7 @@ export function renderChart(
   if (trendline) {
     datasets.push({
       label: "Trend",
-      data: trendline.map((p) => ({ x: p.date.getTime(), y: p.value })),
+      data: trendline.map((p) => ({ x: p.date, y: p.value })),
       borderColor: "#888888",
       borderDash: [6, 3],
       borderWidth: 1.5,
@@ -53,7 +53,7 @@ export function renderChart(
   if (floor) {
     datasets.push({
       label: "Floor",
-      data: floor.map((p) => ({ x: p.date.getTime(), y: p.value })),
+      data: floor.map((p) => ({ x: p.date, y: p.value })),
       borderColor: "#27ae60",
       borderDash: [4, 4],
       borderWidth: 1.5,
@@ -67,7 +67,7 @@ export function renderChart(
   if (ceiling) {
     datasets.push({
       label: "Ceiling",
-      data: ceiling.map((p) => ({ x: p.date.getTime(), y: p.value })),
+      data: ceiling.map((p) => ({ x: p.date, y: p.value })),
       borderColor: "#c0392b",
       borderDash: [4, 4],
       borderWidth: 1.5,
@@ -81,7 +81,7 @@ export function renderChart(
   if (ideal) {
     datasets.push({
       label: "Ideal",
-      data: ideal.map((p) => ({ x: p.date.getTime(), y: p.value })),
+      data: ideal.map((p) => ({ x: p.date, y: p.value })),
       borderColor: "#8e44ad",
       borderDash: [4, 4],
       borderWidth: 1.5,

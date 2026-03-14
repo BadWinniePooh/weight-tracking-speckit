@@ -4,3 +4,13 @@ dist/
 .env*
 .DS_Store
 Thumbs.db
+
+# C#/.NET
+backend/**/bin/
+backend/**/obj/
+*.user
+*.suo
+.vs/
+
+# Test results
+backend/TestResults/

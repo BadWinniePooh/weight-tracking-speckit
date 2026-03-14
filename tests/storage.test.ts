@@ -160,6 +160,7 @@ describe("loadChartSettings", () => {
 describe("saveChartSettings + loadChartSettings round-trip", () => {
   it("persists and retrieves full settings", () => {
     const settings: ChartSettings = {
+      preferredUnit: "kg",
       weightGoal: 75.0,
       lossRate: 0.004,
       carbFatRatio: 0.5,
@@ -174,12 +175,12 @@ describe("saveChartSettings + loadChartSettings round-trip", () => {
   });
 
   it("persists weightGoal: null", () => {
-    saveChartSettings({ weightGoal: null, lossRate: 0.0055, carbFatRatio: 0.6, bufferValue: 0.0075 });
+    saveChartSettings({ preferredUnit: "kg", weightGoal: null, lossRate: 0.0055, carbFatRatio: 0.6, bufferValue: 0.0075 });
     expect(loadChartSettings().weightGoal).toBeNull();
   });
 
   it("persists a numeric weightGoal", () => {
-    saveChartSettings({ weightGoal: 80, lossRate: 0.0055, carbFatRatio: 0.6, bufferValue: 0.0075 });
+    saveChartSettings({ preferredUnit: "kg", weightGoal: 80, lossRate: 0.0055, carbFatRatio: 0.6, bufferValue: 0.0075 });
     expect(loadChartSettings().weightGoal).toBe(80);
   });
 });

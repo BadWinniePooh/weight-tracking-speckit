@@ -5,31 +5,26 @@ export type WeightUnit = "kg" | "lbs";
 export type CorridorState = "ready" | "no-goal" | "calibrating" | "no-data";
 
 export interface ChartPoint {
-  date: Date;
+  date: string;  // "YYYY-MM-DD" — matches API response
   value: number;
 }
 
 export interface ChartSettings {
+  preferredUnit: string;
   weightGoal: number | null;
-  lossRate: number;      // default 0.0055
-  carbFatRatio: number;  // default 0.6
-  bufferValue: number;   // default 0.0075
-}
-
-export interface DailyAverage {
-  date: Date;
-  dayIndex: number;   // 0-based; dayIndex 0 = first entry's calendar day
-  avgWeight: number;
-  origin: "measured" | "interpolated";
+  lossRate: number;
+  carbFatRatio: number;
+  bufferValue: number;
 }
 
 export interface ChartDataSet {
+  corridorState: CorridorState;
+  unit: string;
   dataPoints: ChartPoint[];
   trendline: ChartPoint[] | null;
   floor: ChartPoint[] | null;
   ceiling: ChartPoint[] | null;
   ideal: ChartPoint[] | null;
-  corridorState: CorridorState;
 }
 
 export interface WeightEntry {
@@ -37,10 +32,6 @@ export interface WeightEntry {
   weightValue: number;
   unit: WeightUnit;
   timestamp: string;
-}
-
-export interface UserPreferences {
-  unit: WeightUnit;
 }
 
 export interface ValidationResult {
@@ -59,7 +50,6 @@ export function validateWeight(raw: string, unit: WeightUnit): ValidationResult 
     return { valid: false, error: "Weight must be a number." };
   }
 
-  // Check for non-numeric characters
   if (!/^-?\d+(\.\d+)?$/.test(trimmed)) {
     return { valid: false, error: "Weight must be a number." };
   }
@@ -80,13 +70,4 @@ export function validateWeight(raw: string, unit: WeightUnit): ValidationResult 
   }
 
   return { valid: true };
-}
-
-export function createEntry(weightValue: number, unit: WeightUnit): WeightEntry {
-  return {
-    id: crypto.randomUUID(),
-    weightValue,
-    unit,
-    timestamp: new Date().toISOString(),
-  };
 }

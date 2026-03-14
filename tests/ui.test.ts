@@ -10,29 +10,29 @@ vi.mock("../src/ts/storage", () => ({
   getRawStorageString: vi.fn(() => ""),
 }));
 
-vi.mock("../src/ts/model", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../src/ts/model")>();
-  return {
-    ...actual,
-    createEntry: vi.fn((weightValue: number, unit: string) => ({
-      id: "test-id-" + Math.random().toString(36).slice(2),
-      weightValue,
-      unit,
-      timestamp: new Date().toISOString(),
-    })),
-  };
-});
+vi.mock("../src/ts/api-client", () => ({
+  getEntries: vi.fn(),
+  createEntry: vi.fn(),
+  deleteEntry: vi.fn(),
+  deleteAllEntries: vi.fn(),
+  getChartData: vi.fn(),
+  getSettings: vi.fn(),
+  updateSettings: vi.fn(),
+  migrateFromLocalStorage: vi.fn(),
+}));
 
 import {
   renderApp,
   renderRecoveryScreen,
   renderEntryList,
-  handleSubmit,
   showError,
   clearError,
+  showApiLoading,
+  hideApiLoading,
+  showApiError,
+  clearApiError,
 } from "../src/ts/ui";
-import { isDataCorrupt, getRawStorageString, saveEntries, loadPreferences } from "../src/ts/storage";
-import { createEntry } from "../src/ts/model";
+import { isDataCorrupt, getRawStorageString } from "../src/ts/storage";
 import type { WeightEntry } from "../src/ts/model";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -51,6 +51,8 @@ function buildDOM() {
       <input id="weight-input" type="number" step="0.1" min="0" />
       <button id="submit-btn">Log Weight</button>
       <div id="error-msg" role="alert"></div>
+      <div id="loading-indicator" hidden></div>
+      <div id="api-error-banner" hidden></div>
       <div id="entry-list"></div>
       <select id="export-format">
         <option value="csv">CSV</option>
@@ -75,8 +77,6 @@ beforeEach(() => {
   buildDOM();
   vi.mocked(isDataCorrupt).mockReturnValue(false);
   vi.mocked(getRawStorageString).mockReturnValue("");
-  vi.mocked(saveEntries).mockReset();
-  vi.mocked(loadPreferences).mockReturnValue({ unit: "kg" });
 });
 
 afterEach(() => {
@@ -154,66 +154,6 @@ describe("renderRecoveryScreen", () => {
   });
 });
 
-// ─── US1: Entry submission (T017) ─────────────────────────────────────────────
-describe("handleSubmit — entry submission (US1)", () => {
-  it("creates entry and prepends it to the list on valid input", () => {
-    const input = document.getElementById("weight-input") as HTMLInputElement;
-    const unitSelect = document.getElementById("unit-select") as HTMLSelectElement;
-    input.value = "75";
-    unitSelect.value = "kg";
-
-    handleSubmit(new Event("click"));
-
-    const rows = document.querySelectorAll("#entry-list .entry-row");
-    expect(rows.length).toBe(1);
-  });
-
-  it("clears the weight input field after successful submission", () => {
-    const input = document.getElementById("weight-input") as HTMLInputElement;
-    input.value = "75";
-    handleSubmit(new Event("click"));
-    expect(input.value).toBe("");
-  });
-
-  it("shows no error message after successful submission", () => {
-    const input = document.getElementById("weight-input") as HTMLInputElement;
-    input.value = "75";
-    handleSubmit(new Event("click"));
-    const errorDiv = document.getElementById("error-msg")!;
-    expect(errorDiv.textContent).toBe("");
-  });
-
-  it("shows error and creates no entry on empty input", () => {
-    const input = document.getElementById("weight-input") as HTMLInputElement;
-    input.value = "";
-    handleSubmit(new Event("click"));
-    const errorDiv = document.getElementById("error-msg")!;
-    expect(errorDiv.textContent).not.toBe("");
-    const rows = document.querySelectorAll("#entry-list [data-id]");
-    expect(rows.length).toBe(0);
-  });
-
-  it("shows error and retains value on out-of-range kg input", () => {
-    const input = document.getElementById("weight-input") as HTMLInputElement;
-    input.value = "1000";
-    handleSubmit(new Event("click"));
-    const errorDiv = document.getElementById("error-msg")!;
-    expect(errorDiv.textContent).not.toBe("");
-    expect(input.value).toBe("1000");
-  });
-
-  it("Enter key in #weight-input triggers submit behavior", () => {
-    const input = document.getElementById("weight-input") as HTMLInputElement;
-    input.value = "80";
-    const event = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
-    input.dispatchEvent(event);
-    // handleSubmit is wired in main.ts; here we test the submit function directly
-    handleSubmit(new Event("submit"));
-    const rows = document.querySelectorAll("#entry-list [data-id]");
-    expect(rows.length).toBeGreaterThan(0);
-  });
-});
-
 // ─── US2: History rendering (T020) ────────────────────────────────────────────
 describe("renderEntryList — history rendering (US2)", () => {
   it("renders entries in newest-first order", () => {
@@ -222,7 +162,7 @@ describe("renderEntryList — history rendering (US2)", () => {
       makeEntry({ id: "newest", timestamp: "2026-03-13T00:00:00.000Z", weightValue: 82 }),
       makeEntry({ id: "middle", timestamp: "2026-02-15T00:00:00.000Z", weightValue: 75 }),
     ];
-    renderEntryList(entries);
+    renderEntryList(entries, "kg");
     const rows = document.querySelectorAll("#entry-list .entry-row");
     expect(rows[0].getAttribute("data-id")).toBe("newest");
     expect(rows[1].getAttribute("data-id")).toBe("middle");
@@ -231,14 +171,14 @@ describe("renderEntryList — history rendering (US2)", () => {
 
   it("each row displays weight value, stored unit label, date and time", () => {
     const entry = makeEntry({ weightValue: 82.5, unit: "kg", timestamp: "2026-03-13T09:15:00.000Z" });
-    renderEntryList([entry]);
+    renderEntryList([entry], "kg");
     const row = document.querySelector("#entry-list [data-id='e1']")!;
     expect(row.textContent).toContain("82.5");
     expect(row.textContent).toContain("kg");
   });
 
   it("renders empty-state message when array is empty", () => {
-    renderEntryList([]);
+    renderEntryList([], "kg");
     const list = document.getElementById("entry-list")!;
     expect(list.textContent).toContain("No entries yet");
     expect(document.querySelectorAll("#entry-list [data-id]").length).toBe(0);
@@ -246,62 +186,56 @@ describe("renderEntryList — history rendering (US2)", () => {
 
   it("new entry prepended to existing list maintains newest-first", () => {
     const existing = makeEntry({ id: "old", timestamp: "2026-01-01T00:00:00.000Z" });
-    renderEntryList([existing]);
+    renderEntryList([existing], "kg");
     const newEntry = makeEntry({ id: "new", timestamp: "2026-03-13T00:00:00.000Z", weightValue: 80 });
-    renderEntryList([newEntry, existing]);
+    renderEntryList([newEntry, existing], "kg");
     const rows = document.querySelectorAll("#entry-list .entry-row");
     expect(rows[0].getAttribute("data-id")).toBe("new");
     expect(rows[1].getAttribute("data-id")).toBe("old");
   });
 
-  it("all entries display in the current preferred unit regardless of stored unit", () => {
-    // loadPreferences mock returns { unit: "kg" } by default
+  it("all entries display in the passed displayUnit", () => {
     const entries: WeightEntry[] = [
       makeEntry({ id: "kg-entry", unit: "kg", weightValue: 75, timestamp: "2026-03-13T09:00:00.000Z" }),
       makeEntry({ id: "lbs-entry", unit: "lbs", weightValue: 165, timestamp: "2026-03-12T09:00:00.000Z" }),
     ];
-    renderEntryList(entries);
+    renderEntryList(entries, "kg");
     const kgRow = document.querySelector("[data-id='kg-entry']")!;
     const lbsRow = document.querySelector("[data-id='lbs-entry']")!;
-    // Both should now show in kg (the current preference)
+    // Both should now show in kg (the passed displayUnit)
     expect(kgRow.textContent).toContain("kg");
     expect(lbsRow.textContent).toContain("kg");
   });
 
-  it("converts lbs entry to kg when preference is kg", () => {
-    // loadPreferences returns { unit: "kg" } by default
+  it("converts lbs entry to kg when displayUnit is kg", () => {
     const entry = makeEntry({ id: "lbs-entry", unit: "lbs", weightValue: 220, timestamp: "2026-03-13T09:00:00.000Z" });
-    renderEntryList([entry]);
+    renderEntryList([entry], "kg");
     const row = document.querySelector("[data-id='lbs-entry']")!;
     // 220 lbs * 0.453592 ≈ 99.8 kg
     expect(row.textContent).toContain("99.8");
     expect(row.textContent).toContain("kg");
   });
 
-  it("converts kg entry to lbs when preference is lbs", () => {
-    vi.mocked(loadPreferences).mockReturnValue({ unit: "lbs" });
-
+  it("converts kg entry to lbs when displayUnit is lbs", () => {
     const entry = makeEntry({ id: "kg-entry", unit: "kg", weightValue: 100, timestamp: "2026-03-13T09:00:00.000Z" });
-    renderEntryList([entry]);
+    renderEntryList([entry], "lbs");
     const row = document.querySelector("[data-id='kg-entry']")!;
     // 100 kg * 2.20462 ≈ 220.5 lbs
     expect(row.textContent).toContain("220.5");
     expect(row.textContent).toContain("lbs");
-
-    vi.mocked(loadPreferences).mockReturnValue({ unit: "kg" });
   });
 });
 
 // ─── US3: Delete flow (T027) ──────────────────────────────────────────────────
 describe("delete flow (US3)", () => {
   it("delete buttons carry data-action='delete' attribute", () => {
-    renderEntryList([makeEntry({ id: "abc" })]);
+    renderEntryList([makeEntry({ id: "abc" })], "kg");
     const btn = document.querySelector("[data-action='delete']");
     expect(btn).not.toBeNull();
   });
 
   it("delete button data-id matches the entry id", () => {
-    renderEntryList([makeEntry({ id: "target-id" })]);
+    renderEntryList([makeEntry({ id: "target-id" })], "kg");
     const btn = document.querySelector("[data-action='delete']") as HTMLElement;
     expect(btn.getAttribute("data-id")).toBe("target-id");
   });
@@ -448,5 +382,37 @@ describe("showError / clearError", () => {
     showError("Some error");
     clearError();
     expect(document.getElementById("error-msg")!.textContent).toBe("");
+  });
+});
+
+// ─── showApiLoading / hideApiLoading ──────────────────────────────────────────
+describe("showApiLoading / hideApiLoading", () => {
+  it("showApiLoading makes #loading-indicator visible", () => {
+    showApiLoading();
+    expect(document.getElementById("loading-indicator")!.hidden).toBe(false);
+  });
+
+  it("hideApiLoading hides #loading-indicator", () => {
+    showApiLoading();
+    hideApiLoading();
+    expect(document.getElementById("loading-indicator")!.hidden).toBe(true);
+  });
+});
+
+// ─── showApiError / clearApiError ─────────────────────────────────────────────
+describe("showApiError / clearApiError", () => {
+  it("showApiError sets the banner text and makes it visible", () => {
+    showApiError("Server unavailable");
+    const banner = document.getElementById("api-error-banner")!;
+    expect(banner.textContent).toBe("Server unavailable");
+    expect(banner.hidden).toBe(false);
+  });
+
+  it("clearApiError empties the banner text and hides it", () => {
+    showApiError("Some error");
+    clearApiError();
+    const banner = document.getElementById("api-error-banner")!;
+    expect(banner.textContent).toBe("");
+    expect(banner.hidden).toBe(true);
   });
 });

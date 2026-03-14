@@ -1,55 +1,89 @@
-import { loadEntries, saveEntries, isDataCorrupt, loadChartSettings, saveChartSettings } from "./storage";
-import { getUnit, setUnit } from "./preferences";
+import { loadConfig } from "./config";
+import {
+  getEntries as fetchEntries,
+  createEntry as apiCreateEntry,
+  deleteEntry as apiDeleteEntry,
+  deleteAllEntries as apiDeleteAllEntries,
+  getChartData,
+  getSettings,
+  updateSettings,
+  ApiError,
+} from "./api-client";
 import {
   renderApp,
   renderEntryList,
-  handleSubmit,
-  handleDelete,
-  handleDeleteAll,
-  initEntries,
-  getEntries,
   showChartSection,
   hideChartSection,
+  showApiLoading,
+  hideApiLoading,
+  showApiError,
+  clearApiError,
+  showMigrationButton,
+  hideMigrationButton,
+  showMigrationResult,
 } from "./ui";
+import { runMigration, hasMigratableData } from "./migration-tool";
 import { generateCSV, generateJSON, formatExportFilename, triggerDownload } from "./export";
-import { computeChartData } from "./chart-calculations";
 import { renderChart } from "./chart";
+import { validateWeight } from "./model";
 import type { WeightUnit, ChartSettings } from "./model";
 import type { Chart } from "chart.js";
 
-// ─── Chart instance (kept to destroy before re-render) ────────────────────────
 let _chartInstance: Chart | null = null;
+let _entries: { id: string; weightValue: number; unit: string; timestamp: string }[] = [];
+let _preferredUnit: string = "kg";
 
-function refreshChart(): void {
-  const entries = loadEntries();
-  const settings = loadChartSettings();
-  const unit = getUnit();
-  const dataset = computeChartData(entries, settings, unit);
+async function refreshChart(): Promise<void> {
+  try {
+    const dataset = await getChartData();
 
-  if (dataset.corridorState === "no-data") {
+    if (dataset.corridorState === "no-data") {
+      hideChartSection();
+      return;
+    }
+
+    const canvas = document.getElementById("chart-canvas") as HTMLCanvasElement | null;
+    if (!canvas) return;
+
+    if (_chartInstance) {
+      _chartInstance.destroy();
+      _chartInstance = null;
+    }
+
+    _chartInstance = renderChart(canvas, dataset, dataset.unit as WeightUnit);
+    showChartSection(dataset.corridorState);
+  } catch {
+    // Chart errors are non-fatal — entries are still shown
     hideChartSection();
-    return;
   }
+}
 
-  const canvas = document.getElementById("chart-canvas") as HTMLCanvasElement | null;
-  if (!canvas) return;
-
-  if (_chartInstance) {
-    _chartInstance.destroy();
-    _chartInstance = null;
+async function refreshEntries(): Promise<void> {
+  showApiLoading();
+  clearApiError();
+  try {
+    const response = await fetchEntries();
+    _entries = response.entries;
+    renderEntryList(_entries, _preferredUnit);
+    await refreshChart();
+  } catch (err) {
+    if (err instanceof ApiError) {
+      showApiError(err.message);
+    } else {
+      showApiError("Failed to load entries. Is the server running?");
+    }
+  } finally {
+    hideApiLoading();
   }
-
-  _chartInstance = renderChart(canvas, dataset, unit);
-  showChartSection(dataset.corridorState);
 }
 
 // ─── Settings modal ───────────────────────────────────────────────────────────
 
-function openSettingsModal(): void {
+async function openSettingsModal(): Promise<void> {
   const dialog = document.getElementById("chart-settings-modal") as HTMLDialogElement | null;
   if (!dialog) return;
 
-  const settings = loadChartSettings();
+  const settings = await getSettings();
   const goalInput = document.getElementById("weight-goal-input") as HTMLInputElement | null;
   const lossInput = document.getElementById("loss-rate-input") as HTMLInputElement | null;
   const carbInput = document.getElementById("carb-fat-ratio-input") as HTMLInputElement | null;
@@ -60,7 +94,6 @@ function openSettingsModal(): void {
   if (carbInput) carbInput.value = String(settings.carbFatRatio);
   if (bufferInput) bufferInput.value = String(settings.bufferValue);
 
-  // Clear any previous field errors
   ["weight-goal-error", "loss-rate-error", "carb-fat-error", "buffer-error"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.textContent = "";
@@ -98,7 +131,6 @@ function validateSettingsForm(): ChartSettings | null {
   clearErr("carb-fat-error");
   clearErr("buffer-error");
 
-  // weightGoal — optional but must be positive if provided
   let weightGoal: number | null = null;
   if (goalInput.value.trim() !== "") {
     const gVal = Number(goalInput.value);
@@ -111,7 +143,6 @@ function validateSettingsForm(): ChartSettings | null {
     }
   }
 
-  // lossRate — required, > 0
   const lossVal = Number(lossInput.value);
   if (isNaN(lossVal) || lossInput.value.trim() === "") {
     setErr("loss-rate-error", "Please enter a valid number.");
@@ -119,7 +150,6 @@ function validateSettingsForm(): ChartSettings | null {
     setErr("loss-rate-error", "Loss rate must be greater than zero.");
   }
 
-  // carbFatRatio — required, > 0
   const carbVal = Number(carbInput.value);
   if (isNaN(carbVal) || carbInput.value.trim() === "") {
     setErr("carb-fat-error", "Please enter a valid number.");
@@ -127,7 +157,6 @@ function validateSettingsForm(): ChartSettings | null {
     setErr("carb-fat-error", "Carb/fat ratio must be greater than zero.");
   }
 
-  // bufferValue — required, > 0
   const bufferVal = Number(bufferInput.value);
   if (isNaN(bufferVal) || bufferInput.value.trim() === "") {
     setErr("buffer-error", "Please enter a valid number.");
@@ -136,100 +165,172 @@ function validateSettingsForm(): ChartSettings | null {
   }
 
   if (!valid) return null;
-  return { weightGoal, lossRate: lossVal, carbFatRatio: carbVal, bufferValue: bufferVal };
+  return {
+    preferredUnit: _preferredUnit as WeightUnit,
+    weightGoal,
+    lossRate: lossVal,
+    carbFatRatio: carbVal,
+    bufferValue: bufferVal,
+  };
 }
 
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
-  const entries = loadEntries();
-  const corrupt = isDataCorrupt();
+  renderApp(false);
 
-  renderApp(corrupt);
-
-  if (corrupt) return;
-
-  initEntries(entries);
-
-  // Set unit selector to persisted preference
-  const unit = getUnit();
   const unitSelect = document.getElementById("unit-select") as HTMLSelectElement | null;
-  if (unitSelect) unitSelect.value = unit;
 
-  renderEntryList(entries);
-  refreshChart();
+  loadConfig()
+    .then(() => getSettings())
+    .then((settings) => {
+      _preferredUnit = settings.preferredUnit;
+      if (unitSelect) unitSelect.value = _preferredUnit;
+      return refreshEntries();
+    })
+    .then(() => {
+      if (hasMigratableData()) {
+        showMigrationButton(async () => {
+          try {
+            const result = await runMigration();
+            hideMigrationButton();
+            showMigrationResult(result);
+            await refreshEntries();
+          } catch {
+            showApiError("Migration failed.");
+          }
+        });
+      }
+    })
+    .catch(() => {
+      showApiError("Failed to load application configuration.");
+    });
 
-  // Unit preference change — re-render history list and chart with new unit (FR-015, C1)
-  unitSelect?.addEventListener("change", () => {
-    setUnit(unitSelect.value as WeightUnit);
-    renderEntryList(getEntries());
-    refreshChart();
+  unitSelect?.addEventListener("change", async () => {
+    const newUnit = unitSelect.value as string;
+    _preferredUnit = newUnit;
+    try {
+      const currentSettings = await getSettings();
+      await updateSettings({ ...currentSettings, preferredUnit: newUnit as WeightUnit });
+    } catch {
+      // non-fatal
+    }
+    renderEntryList(_entries, _preferredUnit);
+    void refreshChart();
   });
 
-  // Submit button click
   const submitBtn = document.getElementById("submit-btn");
-  submitBtn?.addEventListener("click", (e) => {
-    handleSubmit(e);
-    refreshChart();
-  });
+  submitBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const input = document.getElementById("weight-input") as HTMLInputElement | null;
+    const unitSel = document.getElementById("unit-select") as HTMLSelectElement | null;
+    if (!input) return;
 
-  // Enter key in weight input
-  const weightInput = document.getElementById("weight-input");
-  weightInput?.addEventListener("keydown", (e) => {
-    if ((e as KeyboardEvent).key === "Enter") {
-      handleSubmit(e);
-      refreshChart();
+    const entryUnit = (unitSel?.value ?? _preferredUnit) as "kg" | "lbs";
+    const validation = validateWeight(input.value, entryUnit);
+    if (!validation.valid) {
+      const errEl = document.getElementById("error-msg");
+      if (errEl) errEl.textContent = validation.error ?? "Invalid entry.";
+      return;
+    }
+    const errEl = document.getElementById("error-msg");
+    if (errEl) errEl.textContent = "";
+
+    showApiLoading();
+    try {
+      await apiCreateEntry({
+        weightValue: Number(input.value.trim()),
+        unit: entryUnit,
+        timestamp: new Date().toISOString(),
+      });
+      input.value = "";
+      await refreshEntries();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        showApiError(err.message);
+      } else {
+        showApiError("Failed to save entry.");
+      }
+    } finally {
+      hideApiLoading();
     }
   });
 
-  // Click delegation for delete buttons
+  const weightInput = document.getElementById("weight-input");
+  weightInput?.addEventListener("keydown", async (e) => {
+    if ((e as KeyboardEvent).key === "Enter") {
+      submitBtn?.click();
+    }
+  });
+
   const entryList = document.getElementById("entry-list");
-  entryList?.addEventListener("click", (e) => {
+  entryList?.addEventListener("click", async (e) => {
     const target = e.target as HTMLElement;
     if (target.getAttribute("data-action") === "delete") {
       const id = target.getAttribute("data-id");
-      if (id) {
-        handleDelete(id);
-        refreshChart();
+      if (id && window.confirm("Delete this entry?")) {
+        showApiLoading();
+        try {
+          await apiDeleteEntry(id);
+          await refreshEntries();
+        } catch (err) {
+          showApiError("Failed to delete entry.");
+        } finally {
+          hideApiLoading();
+        }
       }
     } else if (target.getAttribute("data-action") === "delete-all") {
-      handleDeleteAll();
-      refreshChart();
+      if (window.confirm("Delete all entries? This cannot be undone.")) {
+        showApiLoading();
+        try {
+          await apiDeleteAllEntries();
+          await refreshEntries();
+        } catch (err) {
+          showApiError("Failed to delete all entries.");
+        } finally {
+          hideApiLoading();
+        }
+      }
     }
   });
 
-  // Export button
   const exportBtn = document.getElementById("export-btn");
-  exportBtn?.addEventListener("click", () => {
+  exportBtn?.addEventListener("click", async () => {
     const formatSelect = document.getElementById("export-format") as HTMLSelectElement | null;
     const format = (formatSelect?.value ?? "csv") as "csv" | "json";
-    const currentEntries = loadEntries();
 
-    if (format === "csv") {
-      const content = generateCSV(currentEntries);
-      triggerDownload(content, formatExportFilename("csv"), "text/csv");
-    } else {
-      const content = generateJSON(currentEntries);
-      triggerDownload(content, formatExportFilename("json"), "application/json");
+    showApiLoading();
+    try {
+      const { getEntries: fetchForExport } = await import("./api-client");
+      const response = await fetchForExport();
+      const entries = response.entries;
+
+      if (format === "csv") {
+        const content = generateCSV(entries);
+        triggerDownload(content, formatExportFilename("csv"), "text/csv");
+      } else {
+        const content = generateJSON(entries);
+        triggerDownload(content, formatExportFilename("json"), "application/json");
+      }
+    } catch (err) {
+      showApiError("Failed to export entries.");
+    } finally {
+      hideApiLoading();
     }
   });
 
-  // Chart settings button
   const settingsBtn = document.getElementById("chart-settings-btn");
-  settingsBtn?.addEventListener("click", openSettingsModal);
+  settingsBtn?.addEventListener("click", () => void openSettingsModal());
 
-  // Settings modal: cancel and Escape
   const settingsModal = document.getElementById("chart-settings-modal") as HTMLDialogElement | null;
   const cancelBtn = document.getElementById("settings-cancel-btn");
   cancelBtn?.addEventListener("click", closeSettingsModal);
   settingsModal?.addEventListener("cancel", closeSettingsModal);
 
-  // Settings modal: backdrop click closes (C2)
   settingsModal?.addEventListener("click", (e) => {
     if (e.target === settingsModal) closeSettingsModal();
   });
 
-  // Settings modal: Enter key in input does NOT submit (C3)
   const settingsForm = document.getElementById("chart-settings-form");
   settingsForm?.addEventListener("keydown", (e) => {
     if ((e as KeyboardEvent).key === "Enter") {
@@ -237,13 +338,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Settings modal: save
   const saveBtn = document.getElementById("settings-save-btn");
-  saveBtn?.addEventListener("click", () => {
+  saveBtn?.addEventListener("click", async () => {
     const validated = validateSettingsForm();
-    if (!validated) return; // errors shown inline, modal stays open
-    saveChartSettings(validated);
-    closeSettingsModal();
-    refreshChart();
+    if (!validated) return;
+    try {
+      await updateSettings(validated);
+      closeSettingsModal();
+      await refreshEntries();
+    } catch {
+      showApiError("Failed to save settings.");
+    }
   });
 });

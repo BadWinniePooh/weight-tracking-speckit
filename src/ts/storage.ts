@@ -1,10 +1,11 @@
-import type { WeightEntry, UserPreferences, ChartSettings } from "./model";
+import type { WeightEntry, ChartSettings } from "./model";
 
 const ENTRIES_KEY = "weight_tracker_entries";
 const PREFS_KEY = "weight_tracker_preferences";
 const CHART_SETTINGS_KEY = "weight_tracker_chart_settings";
 
 const DEFAULT_CHART_SETTINGS: ChartSettings = {
+  preferredUnit: "kg",
   weightGoal: null,
   lossRate: 0.0055,
   carbFatRatio: 0.6,
@@ -46,7 +47,7 @@ export function saveEntries(entries: WeightEntry[]): void {
   }
 }
 
-export function loadPreferences(): UserPreferences {
+export function loadPreferences(): { unit: "kg" | "lbs" } {
   const raw = localStorage.getItem(PREFS_KEY);
   if (raw === null) {
     return { unit: "kg" };
@@ -56,13 +57,13 @@ export function loadPreferences(): UserPreferences {
     if (parsed === null || typeof parsed !== "object") {
       return { unit: "kg" };
     }
-    return parsed as UserPreferences;
+    return parsed as { unit: "kg" | "lbs" };
   } catch {
     return { unit: "kg" };
   }
 }
 
-export function savePreferences(prefs: UserPreferences): void {
+export function savePreferences(prefs: { unit: "kg" | "lbs" }): void {
   try {
     localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
   } catch (err) {

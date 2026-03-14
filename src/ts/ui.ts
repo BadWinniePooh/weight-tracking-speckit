@@ -1,7 +1,5 @@
 import type { WeightEntry, WeightUnit, CorridorState } from "./model";
-import { validateWeight, createEntry } from "./model";
-import { saveEntries, isDataCorrupt, getRawStorageString } from "./storage";
-import { getUnit } from "./preferences";
+import { getRawStorageString } from "./storage";
 import { triggerDownload } from "./export";
 
 // ─── Unit conversion ──────────────────────────────────────────────────────────
@@ -102,7 +100,7 @@ export function renderEntry(entry: WeightEntry, displayUnit: WeightUnit = entry.
   return row;
 }
 
-export function renderEntryList(entries: WeightEntry[]): void {
+export function renderEntryList(entries: Array<{ id: string; weightValue: number; unit: string; timestamp: string }>, displayUnit?: string): void {
   const list = document.getElementById("entry-list");
   if (!list) return;
 
@@ -116,7 +114,7 @@ export function renderEntryList(entries: WeightEntry[]): void {
     return;
   }
 
-  const displayUnit = getUnit();
+  const resolvedDisplayUnit = (displayUnit ?? "kg") as WeightUnit;
 
   // Sort newest-first before rendering
   const sorted = [...entries].sort(
@@ -145,58 +143,39 @@ export function renderEntryList(entries: WeightEntry[]): void {
 
   const tbody = document.createElement("tbody");
   for (const entry of sorted) {
-    tbody.appendChild(renderEntry(entry, displayUnit));
+    tbody.appendChild(renderEntry(entry as WeightEntry, resolvedDisplayUnit));
   }
   table.appendChild(tbody);
 
   list.appendChild(table);
 }
 
-// ─── Form submission (US1) ────────────────────────────────────────────────────
+// ─── API loading / error state ────────────────────────────────────────────────
 
-export function handleSubmit(_event: Event): void {
-  const input = document.getElementById("weight-input") as HTMLInputElement | null;
-  const unitSelect = document.getElementById("unit-select") as HTMLSelectElement | null;
-  if (!input) return;
-
-  const unit = (unitSelect?.value ?? getUnit()) as "kg" | "lbs";
-  const validation = validateWeight(input.value, unit);
-
-  if (!validation.valid) {
-    showError(validation.error ?? "Invalid entry.");
-    return;
-  }
-
-  clearError();
-  const entry = createEntry(Number(input.value.trim()), unit);
-
-  try {
-    _entries = [entry, ..._entries];
-    saveEntries(_entries);
-  } catch (err) {
-    showError((err as Error).message);
-    _entries = _entries.slice(1); // rollback
-    return;
-  }
-
-  renderEntryList(_entries);
-  input.value = "";
+export function showApiLoading(): void {
+  const el = document.getElementById("loading-indicator");
+  if (el) el.hidden = false;
 }
 
-// ─── Delete handler (US3) ─────────────────────────────────────────────────────
-
-export function handleDelete(id: string): void {
-  if (!window.confirm("Delete this entry?")) return;
-  _entries = _entries.filter((e) => e.id !== id);
-  saveEntries(_entries);
-  renderEntryList(_entries);
+export function hideApiLoading(): void {
+  const el = document.getElementById("loading-indicator");
+  if (el) el.hidden = true;
 }
 
-export function handleDeleteAll(): void {
-  if (!window.confirm("Delete all entries? This cannot be undone.")) return;
-  _entries = [];
-  saveEntries(_entries);
-  renderEntryList(_entries);
+export function showApiError(msg: string): void {
+  const el = document.getElementById("api-error-banner");
+  if (el) {
+    el.textContent = msg;
+    el.hidden = false;
+  }
+}
+
+export function clearApiError(): void {
+  const el = document.getElementById("api-error-banner");
+  if (el) {
+    el.textContent = "";
+    el.hidden = true;
+  }
 }
 
 // ─── Recovery screen (FR-013) ─────────────────────────────────────────────────
@@ -224,6 +203,57 @@ export function renderRecoveryScreen(): void {
       location.reload();
     });
   }
+}
+
+// ─── Migration banner ─────────────────────────────────────────────────────────
+
+export function showMigrationButton(onClick: () => Promise<void>): void {
+  const existing = document.getElementById("migration-banner");
+  if (existing) return; // already shown
+
+  const banner = document.createElement("div");
+  banner.id = "migration-banner";
+  banner.className = "migration-banner";
+
+  const msg = document.createElement("p");
+  msg.textContent = "You have weight data from a previous version.";
+
+  const btn = document.createElement("button");
+  btn.id = "migration-btn";
+  btn.textContent = "Import from previous version";
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "Importing\u2026";
+    try {
+      await onClick();
+    } finally {
+      // onClick is responsible for hiding/removing the banner
+    }
+  });
+
+  banner.appendChild(msg);
+  banner.appendChild(btn);
+
+  // Insert before #app
+  const app = document.getElementById("app");
+  if (app) app.parentNode?.insertBefore(banner, app);
+}
+
+export function hideMigrationButton(): void {
+  const el = document.getElementById("migration-banner");
+  el?.remove();
+}
+
+export function showMigrationResult(result: { migratedEntries: number; skippedEntries: number; skippedReasons: string[] }): void {
+  const el = document.getElementById("migration-result");
+  if (!el) return;
+
+  let msg = `Migrated ${result.migratedEntries} entries.`;
+  if (result.skippedEntries > 0) {
+    msg += ` Skipped ${result.skippedEntries}.`;
+  }
+  el.textContent = msg;
+  el.hidden = false;
 }
 
 export function renderApp(corrupt: boolean): void {
