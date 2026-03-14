@@ -8,11 +8,11 @@ COPY WeightTracker.Infrastructure/WeightTracker.Infrastructure.csproj WeightTrac
 COPY WeightTracker.Api/WeightTracker.Api.csproj WeightTracker.Api/
 COPY WeightTracker.Tests/WeightTracker.Tests.csproj WeightTracker.Tests/
 
-RUN dotnet restore WeightTracker.Api/WeightTracker.Api.csproj
+RUN dotnet restore WeightTracker.sln
 
 COPY . .
 
-RUN dotnet publish WeightTracker.Api/WeightTracker.Api.csproj -c Release -o /app --no-restore
+RUN dotnet publish WeightTracker.Api/WeightTracker.Api.csproj -c Release -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app

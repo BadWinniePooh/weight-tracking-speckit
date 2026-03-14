@@ -21,7 +21,7 @@ services:
       dockerfile: WeightTracker.Api/Dockerfile
     environment:
       ConnectionStrings__DefaultConnection: "Host=db;Database=weighttracker;Username=weighttracker;Password=weighttracker"
-      AllowedOrigin: "http://localhost:3000"
+      AllowedOrigin: "http://localhost:3030"
     ports:
       - "8080:8080"
     depends_on:
@@ -41,7 +41,7 @@ services:
     environment:
       API_URL: "http://localhost:8080"
     ports:
-      - "3000:80"
+      - "3030:80"
     depends_on:
       backend:
         condition: service_healthy
