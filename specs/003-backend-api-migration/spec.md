@@ -18,6 +18,12 @@
 
 - Q: What architectural pattern must the backend follow for layer separation and dependency direction? → A: Ports and Adapters (Hexagonal Architecture). The Domain project is the application core: domain entities, all port interfaces (IWeightEntryRepository, IChartSettingsRepository, ICurrentUserResolver, IChartCalculationService), and all domain/business logic — it has zero dependencies on Infrastructure or Api. The Infrastructure project contains the adapters: concrete implementations of all port interfaces (EF Core repositories, PostgreSQL, stub user resolver) — it depends on Domain only, never on Api. The Api project is the driving adapter: HTTP endpoint definitions, DI wiring, middleware — it depends on both Domain and Infrastructure but contains no business logic. No cross-layer dependency violations are permitted in any direction.
 
+### Session 2026-03-14 (Implementation Constraints)
+
+- Q: Is TDD mandatory, and what is the required test-first order? → A: TDD is non-negotiable. For every implementation task, a failing test MUST be written first in WeightTracker.Tests. The test must fail before any implementation code is written. Implementation is written only to make the failing test pass. This order must not be skipped or reversed.
+- Q: Where must all test files reside? → A: All test files MUST live in WeightTracker.Tests. No file ending in Tests.cs or containing [Fact] or [Theory] is permitted inside WeightTracker.Domain, WeightTracker.Infrastructure, or WeightTracker.Api. Any test file found outside WeightTracker.Tests is a constitution violation.
+- Q: What naming convention must test files follow? → A: Test files mirror the project structure of what they test. Example: WeightTracker.Infrastructure/Repositories/UserRepository.cs is tested by WeightTracker.Tests/Integration/Repositories/UserRepositoryTests.cs.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Log and View Weight Entries (Priority: P1)
@@ -157,6 +163,12 @@ As an operator, I run `docker-compose up` and the full system starts: a database
 - **FR-027**: The backend API MUST restrict cross-origin requests to the configured frontend origin; the allowed origin MUST be supplied via an environment variable and MUST NOT be hardcoded or set to a wildcard.
 - **FR-028**: The backend MUST expose a health-check endpoint that reports whether the service is ready to handle requests (including database connectivity).
 - **FR-029**: The docker-compose configuration MUST use health-check-based startup ordering: the backend container waits for the database to report healthy before starting; the frontend container waits for the backend to report healthy before starting.
+
+**Testing Discipline**
+
+- **FR-033**: TDD is mandatory for all non-trivial backend logic. A failing test MUST be written in `WeightTracker.Tests` before any implementation code is written. Implementation proceeds only to make the failing test pass. This order MUST NOT be skipped or reversed.
+- **FR-034**: All test files MUST reside in `WeightTracker.Tests`. No `.cs` file ending in `Tests.cs` or containing `[Fact]` or `[Theory]` is permitted inside `WeightTracker.Domain`, `WeightTracker.Infrastructure`, or `WeightTracker.Api`. A test file found outside `WeightTracker.Tests` is a constitution violation and MUST be removed.
+- **FR-035**: Test file naming MUST mirror the project structure of the file under test. `WeightTracker.Infrastructure/Repositories/Foo.cs` is tested by `WeightTracker.Tests/Integration/Repositories/FooTests.cs`; `WeightTracker.Infrastructure/Services/Bar.cs` is tested by `WeightTracker.Tests/Unit/Services/BarTests.cs`.
 
 **Multi-Tenancy Foundation**
 
