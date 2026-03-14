@@ -107,18 +107,18 @@ Web app layout: `frontend/` and `backend/` at repository root. All backend chang
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Create `README.md` at the repository root — write the app description section (what the weight tracker is, who it is for) and the prerequisites section listing Docker Engine 20.10+ and Docker Compose v2.0+ as minimum requirements
+- [X] T023 [US2] Create `README.md` at the repository root — write the app description section (what the weight tracker is, who it is for) and the prerequisites section listing Docker Engine 20.10+ and Docker Compose v2.0+ as minimum requirements
 
-- [ ] T024 [US2] Add the three-step quick-start section to `README.md`:
+- [X] T024 [US2] Add the three-step quick-start section to `README.md`:
   - Step 1: Clone the repository (`git clone …`)
   - Step 2: Copy `.env.example` to `.env` (`cp .env.example .env`) and open `.env` to set credentials — especially `DB_PASSWORD`
   - Step 3: Start the stack (`docker compose up -d`) and open http://localhost:3000
 
   Each step must describe its expected outcome. Do NOT include "or accept defaults" — credentials must be explicitly set.
 
-- [ ] T025 [US2] Add a "Configuration" section to `README.md` that directs users to `.env.example` as the authoritative reference for all configurable variables; explain that `.env.example` is self-documenting with one-line comments on every variable. Do NOT duplicate the variable list inline in the README — link to or reference `.env.example` only.
+- [X] T025 [US2] Add a "Configuration" section to `README.md` that directs users to `.env.example` as the authoritative reference for all configurable variables; explain that `.env.example` is self-documenting with one-line comments on every variable. Do NOT duplicate the variable list inline in the README — link to or reference `.env.example` only.
 
-- [ ] T026 [US2] Add a "Further Reading" section to `README.md` with a link to `docs/runbook.md` for operators who need guidance on updates, backups, restores, rollbacks, and troubleshooting
+- [X] T026 [US2] Add a "Further Reading" section to `README.md` with a link to `docs/runbook.md` for operators who need guidance on updates, backups, restores, rollbacks, and troubleshooting
 
 **Checkpoint**: README complete. Verify the README's quick-start references `.env.example` copy as step 1, and that the Configuration section points to `.env.example` rather than inlining a variable table. Commit phase before proceeding.
 
