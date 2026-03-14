@@ -23,7 +23,7 @@ Web app layout: `frontend/` and `backend/` at repository root. All backend chang
 
 **Purpose**: Create the `frontend/` directory so subsequent `git mv` commands have a destination.
 
-- [ ] T001 Create `frontend/` directory at repository root (`mkdir frontend`)
+- [X] T001 Create `frontend/` directory at repository root (`mkdir frontend`)
 
 ---
 
@@ -35,23 +35,23 @@ Web app layout: `frontend/` and `backend/` at repository root. All backend chang
 
 ### Part A — File Moves
 
-- [ ] T002 Move `src/` into frontend using `git mv src frontend/src`
-- [ ] T003 [P] Move `tests/` into frontend using `git mv tests frontend/tests`
-- [ ] T004 [P] Move `public/` into frontend using `git mv public frontend/public`
-- [ ] T005 [P] Move `package.json` into frontend using `git mv package.json frontend/package.json`
-- [ ] T006 [P] Move `package-lock.json` into frontend using `git mv package-lock.json frontend/package-lock.json`
-- [ ] T007 [P] Move `tsconfig.json` into frontend using `git mv tsconfig.json frontend/tsconfig.json`
-- [ ] T008 [P] Move `vite.config.ts` into frontend using `git mv vite.config.ts frontend/vite.config.ts`
-- [ ] T009 [P] Move `vitest.config.ts` into frontend using `git mv vitest.config.ts frontend/vitest.config.ts`
-- [ ] T010 [P] Move `nginx.conf` into frontend using `git mv nginx.conf frontend/nginx.conf`
-- [ ] T011 [P] Move `Dockerfile` into frontend using `git mv Dockerfile frontend/Dockerfile`
-- [ ] T012 [P] Move `entrypoint.sh` into frontend using `git mv entrypoint.sh frontend/entrypoint.sh`
+- [X] T002 Move `src/` into frontend using `git mv src frontend/src`
+- [X] T003 [P] Move `tests/` into frontend using `git mv tests frontend/tests`
+- [X] T004 [P] Move `public/` into frontend using `git mv public frontend/public`
+- [X] T005 [P] Move `package.json` into frontend using `git mv package.json frontend/package.json`
+- [X] T006 [P] Move `package-lock.json` into frontend using `git mv package-lock.json frontend/package-lock.json`
+- [X] T007 [P] Move `tsconfig.json` into frontend using `git mv tsconfig.json frontend/tsconfig.json`
+- [X] T008 [P] Move `vite.config.ts` into frontend using `git mv vite.config.ts frontend/vite.config.ts`
+- [X] T009 [P] Move `vitest.config.ts` into frontend using `git mv vitest.config.ts frontend/vitest.config.ts`
+- [X] T010 [P] Move `nginx.conf` into frontend using `git mv nginx.conf frontend/nginx.conf`
+- [X] T011 [P] Move `Dockerfile` into frontend using `git mv Dockerfile frontend/Dockerfile`
+- [X] T012 [P] Move `entrypoint.sh` into frontend using `git mv entrypoint.sh frontend/entrypoint.sh`
 
 ### Part B — Secrets and Configuration Management
 
-- [ ] T013 Verify `.env` is listed in `.gitignore` at the repository root; add the line `.env` if it is not already present in `.gitignore`
+- [X] T013 Verify `.env` is listed in `.gitignore` at the repository root; add the line `.env` if it is not already present in `.gitignore`
 
-- [ ] T014 Create `.env.example` at the repository root containing all 7 configurable variables, each with a placeholder value and a one-line comment. Exact content:
+- [X] T014 Create `.env.example` at the repository root containing all 7 configurable variables, each with a placeholder value and a one-line comment. Exact content:
   ```
   # Hostname of the PostgreSQL service (use 'db' for Docker Compose internal networking)
   DB_HOST=db
@@ -69,13 +69,13 @@ Web app layout: `frontend/` and `backend/` at repository root. All backend chang
   ALLOWED_ORIGIN=http://localhost:3000
   ```
 
-- [ ] T015 Rewrite `docker-compose.yml` to: (a) change the frontend build context from `context: .` to `context: ./frontend`, and (b) replace every hardcoded credential and configuration value across all three services (`db`, `backend`, `frontend`) with `${VAR_NAME}` variable interpolation referencing the variables defined in `.env.example`. **Critically**: remove `ConnectionStrings__DefaultConnection` from the backend service env block entirely — it must not remain in any form. Replace it with the five individual `DB_*` variables. No hardcoded connection string or credential may remain anywhere in the file. Result: `POSTGRES_DB: ${DB_NAME}`, `POSTGRES_USER: ${DB_USER}`, `POSTGRES_PASSWORD: ${DB_PASSWORD}`, `DB_HOST: ${DB_HOST}`, `DB_PORT: ${DB_PORT}`, `DB_NAME: ${DB_NAME}`, `DB_USER: ${DB_USER}`, `DB_PASSWORD: ${DB_PASSWORD}`, `AllowedOrigin: ${ALLOWED_ORIGIN}`, `API_URL: ${API_URL}`
+- [X] T015 Rewrite `docker-compose.yml` to: (a) change the frontend build context from `context: .` to `context: ./frontend`, and (b) replace every hardcoded credential and configuration value across all three services (`db`, `backend`, `frontend`) with `${VAR_NAME}` variable interpolation referencing the variables defined in `.env.example`. **Critically**: remove `ConnectionStrings__DefaultConnection` from the backend service env block entirely — it must not remain in any form. Replace it with the five individual `DB_*` variables. No hardcoded connection string or credential may remain anywhere in the file. Result: `POSTGRES_DB: ${DB_NAME}`, `POSTGRES_USER: ${DB_USER}`, `POSTGRES_PASSWORD: ${DB_PASSWORD}`, `DB_HOST: ${DB_HOST}`, `DB_PORT: ${DB_PORT}`, `DB_NAME: ${DB_NAME}`, `DB_USER: ${DB_USER}`, `DB_PASSWORD: ${DB_PASSWORD}`, `AllowedOrigin: ${ALLOWED_ORIGIN}`, `API_URL: ${API_URL}`
 
 ### Part C — Backend Connection String (TDD — Constitution Principle III)
 
-- [ ] T016 Write a **failing** xUnit test in `backend/WeightTracker.Tests/Unit/` that verifies the backend assembles a valid PostgreSQL connection string from the individual environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`. The test must fail before T017 is implemented. Test file: `backend/WeightTracker.Tests/Unit/ConnectionStringBuilderTests.cs` (or equivalent unit test for the configuration startup code)
+- [X] T016 Write a **failing** xUnit test in `backend/WeightTracker.Tests/Unit/` that verifies the backend assembles a valid PostgreSQL connection string from the individual environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`. The test must fail before T017 is implemented. Test file: `backend/WeightTracker.Tests/Unit/ConnectionStringBuilderTests.cs` (or equivalent unit test for the configuration startup code)
 
-- [ ] T017 Update `backend/WeightTracker.Api/Program.cs` (or the Infrastructure service registration where `DbContext` is configured) to read `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` from environment variables and construct the Npgsql connection string in the format `Host={DB_HOST};Port={DB_PORT};Database={DB_NAME};Username={DB_USER};Password={DB_PASSWORD}`. Remove the `ConnectionStrings__DefaultConnection` configuration key dependency. Additionally, update any existing integration tests in `backend/WeightTracker.Tests/` that previously injected `ConnectionStrings__DefaultConnection` via `WebApplicationFactory` config override — replace those injections with the five individual `DB_*` env vars so the existing integration tests remain green. Verify all tests pass (`cd backend && dotnet test`)
+- [X] T017 Update `backend/WeightTracker.Api/Program.cs` (or the Infrastructure service registration where `DbContext` is configured) to read `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` from environment variables and construct the Npgsql connection string in the format `Host={DB_HOST};Port={DB_PORT};Database={DB_NAME};Username={DB_USER};Password={DB_PASSWORD}`. Remove the `ConnectionStrings__DefaultConnection` configuration key dependency. Additionally, update any existing integration tests in `backend/WeightTracker.Tests/` that previously injected `ConnectionStrings__DefaultConnection` via `WebApplicationFactory` config override — replace those injections with the five individual `DB_*` env vars so the existing integration tests remain green. Verify all tests pass (`cd backend && dotnet test`)
 
 **Checkpoint**: All tracked frontend files are under `frontend/`. `.env.example` committed. `.env` gitignored. `docker-compose.yml` uses `${VAR}` interpolation throughout. Backend reads individual env vars. Run `git status` to confirm all moves show as renames. Commit this phase before proceeding.
 

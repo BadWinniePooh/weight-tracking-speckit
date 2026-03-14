@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WeightTracker.Api;
 using WeightTracker.Api.Endpoints;
 using WeightTracker.Domain.Interfaces.Repositories;
 using WeightTracker.Domain.Interfaces.Services;
@@ -11,8 +12,17 @@ using WeightTracker.Infrastructure.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuration
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var dbHost = builder.Configuration["DB_HOST"]
+    ?? throw new InvalidOperationException("Environment variable 'DB_HOST' not found.");
+var dbPort = builder.Configuration["DB_PORT"]
+    ?? throw new InvalidOperationException("Environment variable 'DB_PORT' not found.");
+var dbName = builder.Configuration["DB_NAME"]
+    ?? throw new InvalidOperationException("Environment variable 'DB_NAME' not found.");
+var dbUser = builder.Configuration["DB_USER"]
+    ?? throw new InvalidOperationException("Environment variable 'DB_USER' not found.");
+var dbPassword = builder.Configuration["DB_PASSWORD"]
+    ?? throw new InvalidOperationException("Environment variable 'DB_PASSWORD' not found.");
+var connectionString = ConnectionStringBuilder.Build(dbHost, dbPort, dbName, dbUser, dbPassword);
 var allowedOrigin = builder.Configuration["AllowedOrigin"]
     ?? throw new InvalidOperationException("AllowedOrigin configuration not found.");
 

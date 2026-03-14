@@ -4,13 +4,13 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: weighttracker
-      POSTGRES_USER: weighttracker
-      POSTGRES_PASSWORD: weighttracker
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - weighttracker-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U weighttracker -d weighttracker"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -20,8 +20,12 @@ services:
       context: ./backend
       dockerfile: WeightTracker.Api/Dockerfile
     environment:
-      ConnectionStrings__DefaultConnection: "Host=db;Database=weighttracker;Username=weighttracker;Password=weighttracker"
-      AllowedOrigin: "http://localhost:3030"
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      AllowedOrigin: ${ALLOWED_ORIGIN}
     ports:
       - "8080:8080"
     depends_on:
@@ -36,12 +40,12 @@ services:
 
   frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     environment:
-      API_URL: "http://localhost:8080"
+      API_URL: ${API_URL}
     ports:
-      - "3030:80"
+      - "3000:80"
     depends_on:
       backend:
         condition: service_healthy

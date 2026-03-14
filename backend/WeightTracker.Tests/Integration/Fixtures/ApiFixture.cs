@@ -28,7 +28,19 @@ public class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseSetting("ConnectionStrings:DefaultConnection", _postgres.GetConnectionString());
+        // Parse the Testcontainers connection string to extract individual components
+        var connStr = _postgres.GetConnectionString();
+        // Testcontainers returns: Host=localhost;Port=XXXXX;Database=weighttracker_test;Username=test;Password=test
+        var parts = connStr.Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Split('=', 2))
+            .Where(p => p.Length == 2)
+            .ToDictionary(p => p[0].Trim(), p => p[1].Trim(), StringComparer.OrdinalIgnoreCase);
+
+        builder.UseSetting("DB_HOST", parts.GetValueOrDefault("Host", "localhost"));
+        builder.UseSetting("DB_PORT", parts.GetValueOrDefault("Port", "5432"));
+        builder.UseSetting("DB_NAME", parts.GetValueOrDefault("Database", "weighttracker_test"));
+        builder.UseSetting("DB_USER", parts.GetValueOrDefault("Username", "test"));
+        builder.UseSetting("DB_PASSWORD", parts.GetValueOrDefault("Password", "test"));
         builder.UseSetting("AllowedOrigin", "http://localhost:3000");
     }
 }
