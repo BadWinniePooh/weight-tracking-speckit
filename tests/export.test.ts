@@ -15,19 +15,27 @@ function makeEntry(overrides: Partial<WeightEntry> = {}): WeightEntry {
 describe("generateCSV", () => {
   it("returns header row only for empty array", () => {
     const result = generateCSV([]);
-    expect(result).toBe("date,time,weight,unit\n");
+    expect(result).toBe("id,date,time,weight,unit\n");
   });
 
   it("returns header + one data row for single entry", () => {
-    const entry = makeEntry({ weightValue: 82.5, unit: "kg", timestamp: "2026-03-13T09:15:00.000Z" });
+    const entry = makeEntry({ id: "e1", weightValue: 82.5, unit: "kg", timestamp: "2026-03-13T09:15:00.000Z" });
     const result = generateCSV([entry]);
     const lines = result.split("\n").filter(Boolean);
     expect(lines).toHaveLength(2);
-    expect(lines[0]).toBe("date,time,weight,unit");
+    expect(lines[0]).toBe("id,date,time,weight,unit");
+    expect(lines[1]).toContain("e1");
     expect(lines[1]).toContain("2026-03-13");
     expect(lines[1]).toContain("09:15");
     expect(lines[1]).toContain("82.5");
     expect(lines[1]).toContain("kg");
+  });
+
+  it("places id as the first column in the data row", () => {
+    const entry = makeEntry({ id: "abc-123", weightValue: 70, unit: "kg", timestamp: "2026-03-13T10:00:00.000Z" });
+    const result = generateCSV([entry]);
+    const dataLine = result.split("\n").filter(Boolean)[1];
+    expect(dataLine.startsWith("abc-123,")).toBe(true);
   });
 
   it("preserves stored unit (lbs) in CSV row", () => {

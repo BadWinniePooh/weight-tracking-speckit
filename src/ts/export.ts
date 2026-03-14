@@ -1,14 +1,14 @@
 import type { WeightEntry } from "./model";
 
 export function generateCSV(entries: WeightEntry[]): string {
-  const header = "date,time,weight,unit\n";
+  const header = "id,date,time,weight,unit\n";
   if (entries.length === 0) {
     return header;
   }
   const rows = entries.map((entry) => {
     const date = entry.timestamp.slice(0, 10); // YYYY-MM-DD
     const time = entry.timestamp.slice(11, 16); // HH:MM
-    return `${date},${time},${entry.weightValue},${entry.unit}`;
+    return `${entry.id},${date},${time},${entry.weightValue},${entry.unit}`;
   });
   return header + rows.join("\n") + "\n";
 }
