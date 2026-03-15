@@ -82,6 +82,8 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<ICurrentUserResolver, JwtCurrentUserResolver>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
+builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 builder.Services.AddScoped<IWeightEntryRepository, WeightEntryRepository>();
 builder.Services.AddScoped<IChartSettingsRepository, ChartSettingsRepository>();
 builder.Services.AddScoped<IChartCalculationService, ChartCalculationService>();

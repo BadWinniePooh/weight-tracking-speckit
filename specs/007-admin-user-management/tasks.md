@@ -59,19 +59,19 @@
 
 > ⚠️ **Write these tests FIRST — confirm they FAIL before proceeding to implementation**
 
-- [ ] T014 [P] [US1] Write failing tests: `POST /api/auth/forgot-password` returns 200 with identical body for known and unknown email in `backend/WeightTracker.Tests/Integration/Endpoints/PasswordResetEndpointsTests.cs`
-- [ ] T015 [P] [US1] Write failing tests: `POST /api/auth/forgot-password` for an existing user delivers email to MailHog — assert recipient address, subject contains "reset", body contains token URL in `backend/WeightTracker.Tests/Integration/Endpoints/PasswordResetEndpointsTests.cs`
-- [ ] T016 [P] [US1] Write failing tests: `POST /api/auth/reset-password` with valid token updates password and login succeeds; token cannot be reused (400 on second use) in `backend/WeightTracker.Tests/Integration/Endpoints/PasswordResetEndpointsTests.cs`
-- [ ] T017 [P] [US1] Write failing test: `POST /api/auth/reset-password` with expired token returns 400 in `backend/WeightTracker.Tests/Integration/Endpoints/PasswordResetEndpointsTests.cs`
+- [x] T014 [P] [US1] Write failing tests: `POST /api/auth/forgot-password` returns 200 with identical body for known and unknown email in `backend/WeightTracker.Tests/Integration/Endpoints/PasswordResetEndpointsTests.cs`
+- [x] T015 [P] [US1] Write failing tests: `POST /api/auth/forgot-password` for an existing user delivers email to MailHog — assert recipient address, subject contains "reset", body contains token URL in `backend/WeightTracker.Tests/Integration/Endpoints/PasswordResetEndpointsTests.cs`
+- [x] T016 [P] [US1] Write failing tests: `POST /api/auth/reset-password` with valid token updates password and login succeeds; token cannot be reused (400 on second use) in `backend/WeightTracker.Tests/Integration/Endpoints/PasswordResetEndpointsTests.cs`
+- [x] T017 [P] [US1] Write failing test: `POST /api/auth/reset-password` with expired token returns 400 in `backend/WeightTracker.Tests/Integration/Endpoints/PasswordResetEndpointsTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Create `IPasswordResetTokenRepository` port (GetActiveByHashAsync, CreateAsync, MarkUsedAsync) in `backend/WeightTracker.Domain/Interfaces/Repositories/IPasswordResetTokenRepository.cs`
-- [ ] T019 [P] [US1] Create `IPasswordResetService` port (RequestResetAsync, ResetPasswordAsync) in `backend/WeightTracker.Domain/Interfaces/Services/IPasswordResetService.cs`
-- [ ] T020 [US1] Implement `PasswordResetTokenRepository` in `backend/WeightTracker.Infrastructure/Repositories/PasswordResetTokenRepository.cs` (depends on T018)
-- [ ] T021 [US1] Implement `PasswordResetService` — generate `RandomNumberGenerator` token, SHA-256 hash for storage, `APP_BASE_URL` link construction, delegate to `IEmailService` — in `backend/WeightTracker.Infrastructure/Services/PasswordResetService.cs` (depends on T019, T020)
-- [ ] T022 [US1] Add `POST /api/auth/forgot-password` and `POST /api/auth/reset-password` anonymous endpoints to `backend/WeightTracker.Api/Endpoints/AuthEndpoints.cs` (depends on T021)
-- [ ] T023 [US1] Register `IPasswordResetService` → `PasswordResetService` and `IPasswordResetTokenRepository` → `PasswordResetTokenRepository` in `backend/WeightTracker.Api/Program.cs` (note: `IEmailService` → `SmtpEmailService` registered in T013a)
+- [x] T018 [P] [US1] Create `IPasswordResetTokenRepository` port (GetActiveByHashAsync, CreateAsync, MarkUsedAsync) in `backend/WeightTracker.Domain/Interfaces/Repositories/IPasswordResetTokenRepository.cs`
+- [x] T019 [P] [US1] Create `IPasswordResetService` port (RequestResetAsync, ResetPasswordAsync) in `backend/WeightTracker.Domain/Interfaces/Services/IPasswordResetService.cs`
+- [x] T020 [US1] Implement `PasswordResetTokenRepository` in `backend/WeightTracker.Infrastructure/Repositories/PasswordResetTokenRepository.cs` (depends on T018)
+- [x] T021 [US1] Implement `PasswordResetService` — generate `RandomNumberGenerator` token, SHA-256 hash for storage, `APP_BASE_URL` link construction, delegate to `IEmailService` — in `backend/WeightTracker.Infrastructure/Services/PasswordResetService.cs` (depends on T019, T020)
+- [x] T022 [US1] Add `POST /api/auth/forgot-password` and `POST /api/auth/reset-password` anonymous endpoints to `backend/WeightTracker.Api/Endpoints/AuthEndpoints.cs` (depends on T021)
+- [x] T023 [US1] Register `IPasswordResetService` → `PasswordResetService` and `IPasswordResetTokenRepository` → `PasswordResetTokenRepository` in `backend/WeightTracker.Api/Program.cs` (note: `IEmailService` → `SmtpEmailService` registered in T013a)
 
 **Checkpoint**: `dotnet test --filter PasswordReset` passes. Password reset flow fully functional end-to-end with MailHog.
 

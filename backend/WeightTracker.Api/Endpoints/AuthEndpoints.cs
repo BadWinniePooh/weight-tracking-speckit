@@ -7,6 +7,7 @@ using WeightTracker.Domain.Interfaces.Services;
 
 namespace WeightTracker.Api.Endpoints;
 
+
 public static class AuthEndpoints
 {
     private const string RefreshTokenCookieName = "refreshToken";
@@ -79,6 +80,26 @@ public static class AuthEndpoints
             });
         }).AllowAnonymous();
 
+        // POST /api/auth/forgot-password
+        app.MapPost("/api/auth/forgot-password", async (
+            ForgotPasswordRequest request,
+            IPasswordResetService passwordResetService) =>
+        {
+            await passwordResetService.RequestResetAsync(request.Email);
+            return Results.Ok(new { message = "If an account with that email exists, a reset link has been sent." });
+        }).AllowAnonymous();
+
+        // POST /api/auth/reset-password
+        app.MapPost("/api/auth/reset-password", async (
+            ResetPasswordRequest request,
+            IPasswordResetService passwordResetService) =>
+        {
+            var success = await passwordResetService.ResetPasswordAsync(request.Token, request.NewPassword);
+            if (!success)
+                return Results.Json(new { error = "This reset link is invalid or has expired. Please request a new one." }, statusCode: 400);
+            return Results.Ok(new { message = "Password has been reset. You may now log in." });
+        }).AllowAnonymous();
+
         // POST /api/auth/logout
         app.MapPost("/api/auth/logout", async (
             ITokenService tokenService,
@@ -125,4 +146,6 @@ public static class AuthEndpoints
     }
 
     private record LoginRequest(string Username, string Password);
+    private record ForgotPasswordRequest(string Email);
+    private record ResetPasswordRequest(string Token, string NewPassword);
 }
