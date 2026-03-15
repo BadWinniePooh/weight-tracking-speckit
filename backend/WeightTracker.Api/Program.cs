@@ -61,7 +61,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", p => p.RequireClaim("role", "admin"));
+    // "role" claim is the JWT claim name; after inbound mapping, ASP.NET uses ClaimTypes.Role
+    options.AddPolicy("AdminOnly", p => p.RequireClaim(System.Security.Claims.ClaimTypes.Role, "admin"));
 });
 
 // CORS — must use explicit origin when AllowCredentials is required
@@ -86,6 +87,8 @@ builder.Services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepo
 builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
 builder.Services.AddScoped<IEmailConfirmationService, EmailConfirmationService>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 builder.Services.AddScoped<IWeightEntryRepository, WeightEntryRepository>();
 builder.Services.AddScoped<IChartSettingsRepository, ChartSettingsRepository>();
 builder.Services.AddScoped<IChartCalculationService, ChartCalculationService>();
@@ -129,6 +132,7 @@ app.MapEntryEndpoints();
 app.MapSettingsEndpoints();
 app.MapChartEndpoints();
 app.MapMigrationEndpoints();
+app.MapAdminEndpoints();
 
 app.Run();
 

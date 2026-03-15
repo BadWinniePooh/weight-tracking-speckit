@@ -115,22 +115,22 @@
 
 > ⚠️ **Write these tests FIRST — confirm they FAIL before proceeding to implementation**
 
-- [ ] T034 [P] [US4] Write failing tests: `GET /api/admin/users` returns user list with all required fields; non-admin returns 403 in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
-- [ ] T035 [P] [US4] Write failing tests: `POST /api/admin/users` creates user with `EmailConfirmed = false` and delivers confirmation email to MailHog in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
-- [ ] T036 [P] [US4] Write failing tests: `POST /api/admin/users/{id}/deactivate` sets `IsActive = false` and `ScheduledDeletionAt`; deactivated user cannot log in in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
-- [ ] T037 [P] [US4] Write failing tests: `POST /api/admin/users/{id}/reactivate` restores `IsActive = true` and clears `ScheduledDeletionAt` in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
-- [ ] T038 [P] [US4] Write failing tests: `DELETE /api/admin/users/{id}` permanently removes user, weight entries, chart settings, and refresh tokens in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
-- [ ] T039 [P] [US4] Write failing tests: `PUT /api/admin/users/{id}/role` assigns role; `POST /api/admin/users/{id}/resend-confirmation` delivers to MailHog in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
-- [ ] T040 [P] [US4] Write failing tests: all admin management actions on own account return 400; each successful action creates an audit log entry in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
+- [x] T034 [P] [US4] Write failing tests: `GET /api/admin/users` returns user list with all required fields; non-admin returns 403 in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
+- [x] T035 [P] [US4] Write failing tests: `POST /api/admin/users` creates user with `EmailConfirmed = false` and delivers confirmation email to MailHog in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
+- [x] T036 [P] [US4] Write failing tests: `POST /api/admin/users/{id}/deactivate` sets `IsActive = false` and `ScheduledDeletionAt`; deactivated user cannot log in in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
+- [x] T037 [P] [US4] Write failing tests: `POST /api/admin/users/{id}/reactivate` restores `IsActive = true` and clears `ScheduledDeletionAt` in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
+- [x] T038 [P] [US4] Write failing tests: `DELETE /api/admin/users/{id}` permanently removes user, weight entries, chart settings, and refresh tokens in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
+- [x] T039 [P] [US4] Write failing tests: `PUT /api/admin/users/{id}/role` assigns role; `POST /api/admin/users/{id}/resend-confirmation` delivers to MailHog in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
+- [x] T040 [P] [US4] Write failing tests: all admin management actions on own account return 400; each successful action creates an audit log entry in `backend/WeightTracker.Tests/Integration/Endpoints/AdminEndpointsTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T041 [P] Create `IAuditLogRepository` port (AppendAsync, QueryAsync — no Update/Delete methods) in `backend/WeightTracker.Domain/Interfaces/Repositories/IAuditLogRepository.cs`
-- [ ] T042 [P] Create `IUserManagementService` port (CreateUserAsync, DeactivateUserAsync, ReactivateUserAsync, DeleteUserAsync, AssignRoleAsync, ListUsersAsync) in `backend/WeightTracker.Domain/Interfaces/Services/IUserManagementService.cs`
-- [ ] T043 Implement `AuditLogRepository` in `backend/WeightTracker.Infrastructure/Repositories/AuditLogRepository.cs` (depends on T041)
-- [ ] T044 Implement `UserManagementService` — orchestrates user CRUD, grace-period scheduling, self-action guard, audit log writes — in `backend/WeightTracker.Infrastructure/Services/UserManagementService.cs` (depends on T042, T043, IEmailConfirmationService from Phase 4)
-- [ ] T045 Create `backend/WeightTracker.Api/Endpoints/AdminEndpoints.cs` with routes: `GET /api/admin/users`, `POST /api/admin/users`, `POST /api/admin/users/{id}/deactivate`, `POST /api/admin/users/{id}/reactivate`, `DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/role`, `POST /api/admin/users/{id}/resend-confirmation` — all with `AdminOnly` policy (depends on T044)
-- [ ] T046 Register `IAuditLogRepository` → `AuditLogRepository` and `IUserManagementService` → `UserManagementService` in `backend/WeightTracker.Api/Program.cs`
+- [x] T041 [P] Create `IAuditLogRepository` port (AppendAsync, QueryAsync — no Update/Delete methods) in `backend/WeightTracker.Domain/Interfaces/Repositories/IAuditLogRepository.cs`
+- [x] T042 [P] Create `IUserManagementService` port (CreateUserAsync, DeactivateUserAsync, ReactivateUserAsync, DeleteUserAsync, AssignRoleAsync, ListUsersAsync) in `backend/WeightTracker.Domain/Interfaces/Services/IUserManagementService.cs`
+- [x] T043 Implement `AuditLogRepository` in `backend/WeightTracker.Infrastructure/Repositories/AuditLogRepository.cs` (depends on T041)
+- [x] T044 Implement `UserManagementService` — orchestrates user CRUD, grace-period scheduling, self-action guard, audit log writes — in `backend/WeightTracker.Infrastructure/Services/UserManagementService.cs` (depends on T042, T043, IEmailConfirmationService from Phase 4)
+- [x] T045 Create `backend/WeightTracker.Api/Endpoints/AdminEndpoints.cs` with routes: `GET /api/admin/users`, `POST /api/admin/users`, `POST /api/admin/users/{id}/deactivate`, `POST /api/admin/users/{id}/reactivate`, `DELETE /api/admin/users/{id}`, `PUT /api/admin/users/{id}/role`, `POST /api/admin/users/{id}/resend-confirmation` — all with `AdminOnly` policy (depends on T044)
+- [x] T046 Register `IAuditLogRepository` → `AuditLogRepository` and `IUserManagementService` → `UserManagementService` in `backend/WeightTracker.Api/Program.cs`
 
 **Checkpoint**: `dotnet test --filter Admin` passes. All user management operations work end-to-end with audit logging.
 
