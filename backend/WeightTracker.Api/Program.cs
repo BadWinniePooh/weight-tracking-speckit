@@ -135,6 +135,7 @@ app.MapSettingsEndpoints();
 app.MapChartEndpoints();
 app.MapMigrationEndpoints();
 app.MapAdminEndpoints();
+app.MapAccountEndpoints();
 
 app.Run();
 

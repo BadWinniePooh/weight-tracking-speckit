@@ -171,14 +171,14 @@
 
 > ⚠️ **Write these tests FIRST — confirm they FAIL before proceeding to implementation**
 
-- [ ] T054 [P] [US3] Write failing tests: `PUT /api/account/username` updates username; duplicate username returns 400 in `backend/WeightTracker.Tests/Integration/Endpoints/AccountEndpointsTests.cs`
-- [ ] T055 [P] [US3] Write failing tests: `PUT /api/account/password` with correct current password succeeds; incorrect current password returns 400 in `backend/WeightTracker.Tests/Integration/Endpoints/AccountEndpointsTests.cs`
-- [ ] T056 [P] [US3] Write failing tests: `PUT /api/account/email` sends confirmation to new address via MailHog; old email still works for login until confirmed; confirming new email switches active address in `backend/WeightTracker.Tests/Integration/Endpoints/AccountEndpointsTests.cs`
+- [x] T054 [P] [US3] Write failing tests: `PUT /api/account/username` updates username; duplicate username returns 400 in `backend/WeightTracker.Tests/Integration/Endpoints/AccountEndpointsTests.cs`
+- [x] T055 [P] [US3] Write failing tests: `PUT /api/account/password` with correct current password succeeds; incorrect current password returns 400 in `backend/WeightTracker.Tests/Integration/Endpoints/AccountEndpointsTests.cs`
+- [x] T056 [P] [US3] Write failing tests: `PUT /api/account/email` sends confirmation to new address via MailHog; old email still works for login until confirmed; confirming new email switches active address in `backend/WeightTracker.Tests/Integration/Endpoints/AccountEndpointsTests.cs`
 
 ### Implementation for User Story 3
 
-- [ ] T057 [US3] Create `backend/WeightTracker.Api/Endpoints/AccountEndpoints.cs` with `PUT /api/account/username`, `PUT /api/account/password`, `PUT /api/account/email` — all requiring `RequireAuthorization()` (depends on T054–T056 tests written)
-- [ ] T058 [US3] Register account endpoint routes in `backend/WeightTracker.Api/Program.cs`
+- [x] T057 [US3] Create `backend/WeightTracker.Api/Endpoints/AccountEndpoints.cs` with `PUT /api/account/username`, `PUT /api/account/password`, `PUT /api/account/email` — all requiring `RequireAuthorization()` (depends on T054–T056 tests written)
+- [x] T058 [US3] Register account endpoint routes in `backend/WeightTracker.Api/Program.cs`
 
 **Checkpoint**: `dotnet test --filter Account` passes. Self-service changes work for all three account fields.
 
