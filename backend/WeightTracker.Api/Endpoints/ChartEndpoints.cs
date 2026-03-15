@@ -16,6 +16,6 @@ public static class ChartEndpoints
             var unit = settings?.PreferredUnit ?? "kg";
             var chartData = await chartService.ComputeChartDataAsync(userId, unit);
             return Results.Ok(chartData);
-        });
+        }).RequireAuthorization();
     }
 }

@@ -5,12 +5,13 @@ This runbook covers all operational procedures for a self-hosted Weight Tracker 
 ## Table of Contents
 
 1. [Configuration](#configuration)
-2. [Deploying with Docker Compose](#deploying-with-docker-compose)
-3. [Updating to a New Version](#updating-to-a-new-version)
-4. [Backing Up the Database](#backing-up-the-database)
-5. [Restoring from Backup](#restoring-from-backup)
-6. [Rolling Back a Failed Update](#rolling-back-a-failed-update)
-7. [Troubleshooting](#troubleshooting)
+2. [Authentication Setup](#authentication-setup)
+3. [Deploying with Docker Compose](#deploying-with-docker-compose)
+4. [Updating to a New Version](#updating-to-a-new-version)
+5. [Backing Up the Database](#backing-up-the-database)
+6. [Restoring from Backup](#restoring-from-backup)
+7. [Rolling Back a Failed Update](#rolling-back-a-failed-update)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -25,6 +26,51 @@ cp .env.example .env
 Open `.env` in a text editor and set values for all variables. At minimum, you must set `DB_PASSWORD` to a strong secret — do not leave it as the placeholder value before exposing the app to any network. The `ALLOWED_ORIGIN` value must exactly match the URL users will type into their browser (same scheme, host, and port).
 
 > **Warning**: Running `docker compose up` without a `.env` file, or with empty variable values, will cause startup failures. Docker Compose substitutes undefined variables as empty strings, which results in the database initialising with blank credentials and the backend failing to connect.
+
+---
+
+## Authentication Setup
+
+Weight Tracker uses JWT-based authentication. There are two ways to create the initial admin account.
+
+### Option A — Environment variable seeding (automated deployments)
+
+Set all four variables in `.env` before the first `docker compose up`:
+
+```sh
+# Generate a strong random secret (32+ characters required)
+openssl rand -base64 32
+
+JWT_SECRET=<output from above>
+ADMIN_USERNAME=admin
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=<strong password>
+```
+
+On startup, the backend detects that no users exist and automatically creates the admin account using these values. All four variables must be set; if any are missing the seeder logs a warning and skips creation.
+
+> **Note**: After the admin account is created, changing `ADMIN_USERNAME`/`ADMIN_EMAIL`/`ADMIN_PASSWORD` has no effect — the seeder only runs when the `Users` table is empty.
+
+### Option B — First-run setup wizard (interactive)
+
+Leave `ADMIN_USERNAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` unset (or empty). You must still set `JWT_SECRET`. After starting the stack, open the frontend in a browser — you will be redirected to `/setup.html` to create the first admin account interactively.
+
+Once any user exists, the setup endpoint returns `409 Conflict` and the setup page is no longer accessible.
+
+### JWT secret requirements
+
+- Must be **at least 32 characters** long.
+- Use a cryptographically random value — never a dictionary word or simple phrase.
+- Generate one with: `openssl rand -base64 32`
+- Changing `JWT_SECRET` after deployment immediately invalidates all existing sessions; all users will need to log in again.
+
+### HTTPS and cookie requirements
+
+The refresh token is stored in an `HttpOnly`, `SameSite=Strict` cookie. In production:
+
+- Serve the frontend over HTTPS — browsers block `SameSite=Strict` cookies on plain HTTP in cross-origin contexts.
+- Ensure `ALLOWED_ORIGIN` uses `https://` to match the browser origin exactly.
+- Set `COOKIE_SECURE=true` in `.env` if you add that variable to `Program.cs` for explicit Secure cookie enforcement (it is off by default for local dev).
 
 ---
 

@@ -1,4 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using WeightTracker.Api;
 using WeightTracker.Api.Endpoints;
 using WeightTracker.Domain.Interfaces.Repositories;
@@ -23,8 +26,13 @@ var dbUser = builder.Configuration["DB_USER"]
 var dbPassword = builder.Configuration["DB_PASSWORD"]
     ?? throw new InvalidOperationException("Environment variable 'DB_PASSWORD' not found.");
 var connectionString = ConnectionStringBuilder.Build(dbHost, dbPort, dbName, dbUser, dbPassword);
+
 var allowedOrigin = builder.Configuration["AllowedOrigin"]
-    ?? throw new InvalidOperationException("AllowedOrigin configuration not found.");
+    ?? builder.Configuration["ALLOWED_ORIGIN"]
+    ?? throw new InvalidOperationException("AllowedOrigin / ALLOWED_ORIGIN configuration not found.");
+
+var jwtSecret = builder.Configuration["JWT_SECRET"]
+    ?? throw new InvalidOperationException("Environment variable 'JWT_SECRET' not found.");
 
 // EF Core
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -34,17 +42,41 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<AppDbContext>(name: "npgsql");
 
-// CORS
+// JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = "weight-tracker",
+            ValidateAudience = true,
+            ValidAudience = "weight-tracker-api",
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// CORS — must use explicit origin when AllowCredentials is required
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
         policy.WithOrigins(allowedOrigin)
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+              .AllowCredentials());
 });
 
 // Application services
-builder.Services.AddScoped<ICurrentUserResolver, StubCurrentUserResolver>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<ICurrentUserResolver, JwtCurrentUserResolver>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IWeightEntryRepository, WeightEntryRepository>();
 builder.Services.AddScoped<IChartSettingsRepository, ChartSettingsRepository>();
@@ -78,9 +110,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseMiddleware<CurrentUserMiddleware>();
 
 app.MapHealthEndpoints();
+app.MapSetupEndpoints();
+app.MapAuthEndpoints();
 app.MapEntryEndpoints();
 app.MapSettingsEndpoints();
 app.MapChartEndpoints();

@@ -95,7 +95,7 @@ public static class MigrationEndpoints
                 settingsMigrated,
                 skippedReasons
             });
-        });
+        }).RequireAuthorization();
     }
 
     private record MigrateRequest(

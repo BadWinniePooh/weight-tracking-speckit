@@ -1,4 +1,6 @@
-import { loadConfig } from "./config";
+import { loadConfig, getApiUrl } from "./config";
+import { checkAuthStatus, enforceRedirect } from "./auth-guard";
+import { clearAccessToken } from "./auth-token";
 import {
   getEntries as fetchEntries,
   createEntry as apiCreateEntry,
@@ -174,9 +176,32 @@ function validateSettingsForm(): ChartSettings | null {
   };
 }
 
+// ─── Logout handler ───────────────────────────────────────────────────────────
+
+export function initLogout(): void {
+  const logoutBtn = document.getElementById("logout-button");
+  logoutBtn?.addEventListener("click", async () => {
+    try {
+      await fetch(`${getApiUrl()}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // always clear session regardless of server response
+    } finally {
+      clearAccessToken();
+      window.location.href = "/login.html";
+    }
+  });
+}
+
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const state = await checkAuthStatus();
+  enforceRedirect("app", state);
+
+  initLogout();
   renderApp(false);
 
   const unitSelect = document.getElementById("unit-select") as HTMLSelectElement | null;

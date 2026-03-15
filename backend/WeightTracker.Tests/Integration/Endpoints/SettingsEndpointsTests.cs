@@ -7,7 +7,7 @@ namespace WeightTracker.Tests.Integration.Endpoints;
 
 public class SettingsEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
 {
-    private readonly HttpClient _client = fixture.CreateClient();
+    private readonly HttpClient _client = fixture.CreateAuthenticatedClient();
 
     // ── GET /api/settings ───────────────────────────────────────────────────────
 

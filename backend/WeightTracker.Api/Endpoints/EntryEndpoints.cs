@@ -7,7 +7,9 @@ public static class EntryEndpoints
 {
     public static void MapEntryEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/entries", async (HttpContext httpContext, IWeightEntryRepository repository) =>
+        var group = app.MapGroup("/api/entries").RequireAuthorization();
+
+        group.MapGet("", async (HttpContext httpContext, IWeightEntryRepository repository) =>
         {
             var userId = (Guid)httpContext.Items["CurrentUserId"]!;
             var entries = await repository.GetAllAsync(userId);
@@ -23,7 +25,7 @@ public static class EntryEndpoints
             });
         });
 
-        app.MapPost("/api/entries", async (HttpContext httpContext, EntryRequest request, IWeightEntryRepository repository) =>
+        group.MapPost("", async (HttpContext httpContext, EntryRequest request, IWeightEntryRepository repository) =>
         {
             if (request.Unit != "kg" && request.Unit != "lbs")
                 return Results.BadRequest(new { error = "Unit must be 'kg' or 'lbs'", field = "unit" });
@@ -56,7 +58,7 @@ public static class EntryEndpoints
             });
         });
 
-        app.MapDelete("/api/entries/{id:guid}", async (Guid id, HttpContext httpContext, IWeightEntryRepository repository) =>
+        group.MapDelete("{id:guid}", async (Guid id, HttpContext httpContext, IWeightEntryRepository repository) =>
         {
             var userId = (Guid)httpContext.Items["CurrentUserId"]!;
             var deleted = await repository.DeleteAsync(id, userId);
@@ -65,7 +67,7 @@ public static class EntryEndpoints
                 : Results.NotFound(new { error = "Entry not found" });
         });
 
-        app.MapDelete("/api/entries", async (HttpContext httpContext, IWeightEntryRepository repository) =>
+        group.MapDelete("", async (HttpContext httpContext, IWeightEntryRepository repository) =>
         {
             var userId = (Guid)httpContext.Items["CurrentUserId"]!;
             await repository.DeleteAllAsync(userId);

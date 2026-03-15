@@ -1,42 +1,57 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using WeightTracker.Domain.Entities;
 using WeightTracker.Domain.Interfaces.Repositories;
+using WeightTracker.Domain.Interfaces.Services;
 using WeightTracker.Infrastructure.Data;
 
 namespace WeightTracker.Infrastructure.Seeding;
 
-public class DatabaseSeeder(AppDbContext db)
+public class DatabaseSeeder(
+    IUserRepository userRepository,
+    IPasswordHasher passwordHasher,
+    IConfiguration configuration,
+    ILogger<DatabaseSeeder> logger)
 {
-    public static readonly Guid DefaultUserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-
     public async Task SeedAsync()
     {
-        var user = await db.Users.FindAsync(DefaultUserId);
-        if (user is null)
+        var adminUsername = configuration["ADMIN_USERNAME"];
+        var adminEmail = configuration["ADMIN_EMAIL"];
+        var adminPassword = configuration["ADMIN_PASSWORD"];
+
+        var allSet = !string.IsNullOrEmpty(adminUsername)
+                  && !string.IsNullOrEmpty(adminEmail)
+                  && !string.IsNullOrEmpty(adminPassword);
+
+        var someSet = !string.IsNullOrEmpty(adminUsername)
+                   || !string.IsNullOrEmpty(adminEmail)
+                   || !string.IsNullOrEmpty(adminPassword);
+
+        if (someSet && !allSet)
         {
-            db.Users.Add(new User
-            {
-                Id = DefaultUserId,
-                DisplayName = "Default User",
-                CreatedAt = DateTime.UtcNow
-            });
-            await db.SaveChangesAsync();
+            logger.LogWarning(
+                "Partial admin env vars detected (ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD). " +
+                "All three must be set for auto-seeding. Skipping — first-run interactive setup required.");
+            return;
         }
 
-        var hasSettings = db.ChartSettings.Any(c => c.UserId == DefaultUserId);
-        if (!hasSettings)
+        if (allSet)
         {
-            db.ChartSettings.Add(new ChartSettings
+            if (!await userRepository.ExistsAnyAsync())
             {
-                Id = Guid.NewGuid(),
-                UserId = DefaultUserId,
-                PreferredUnit = "kg",
-                WeightGoal = null,
-                LossRate = 0.005500m,
-                CarbFatRatio = 0.600000m,
-                BufferValue = 0.007500m,
-                UpdatedAt = DateTime.UtcNow
-            });
-            await db.SaveChangesAsync();
+                var admin = new User
+                {
+                    Id = Guid.NewGuid(),
+                    Username = adminUsername!,
+                    Email = adminEmail!,
+                    PasswordHash = passwordHasher.Hash(adminPassword!),
+                    Role = "admin",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await userRepository.AddAsync(admin);
+                logger.LogInformation("Admin user '{Username}' created via env-var seeding.", adminUsername);
+            }
         }
     }
 }

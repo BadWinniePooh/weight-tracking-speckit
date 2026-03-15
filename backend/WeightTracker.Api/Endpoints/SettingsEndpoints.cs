@@ -7,7 +7,9 @@ public static class SettingsEndpoints
 {
     public static void MapSettingsEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/settings", async (HttpContext httpContext, IChartSettingsRepository settingsRepo) =>
+        var group = app.MapGroup("/api/settings").RequireAuthorization();
+
+        group.MapGet("", async (HttpContext httpContext, IChartSettingsRepository settingsRepo) =>
         {
             var userId = (Guid)httpContext.Items["CurrentUserId"]!;
             var settings = await settingsRepo.GetByUserAsync(userId);
@@ -25,7 +27,7 @@ public static class SettingsEndpoints
             });
         });
 
-        app.MapPut("/api/settings", async (HttpContext httpContext, SettingsRequest request, IChartSettingsRepository settingsRepo) =>
+        group.MapPut("", async (HttpContext httpContext, SettingsRequest request, IChartSettingsRepository settingsRepo) =>
         {
             if (request.PreferredUnit != "kg" && request.PreferredUnit != "lbs")
                 return Results.BadRequest(new { error = "PreferredUnit must be 'kg' or 'lbs'", field = "preferredUnit" });

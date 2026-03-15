@@ -1,4 +1,5 @@
 import { getApiUrl } from "./config";
+import { getAccessToken, setAccessToken, clearAccessToken } from "./auth-token";
 import type { WeightEntry, ChartDataSet, ChartSettings } from "./model";
 
 // ─── Typed API error ──────────────────────────────────────────────────────────
@@ -29,14 +30,78 @@ export interface MigrationResult {
   skippedReasons: string[];
 }
 
+// ─── Silent refresh deduplication lock ────────────────────────────────────────
+
+let _refreshPromise: Promise<boolean> | null = null;
+
+async function attemptRefresh(): Promise<boolean> {
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${getApiUrl()}/api/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        const { accessToken } = (await res.json()) as { accessToken: string };
+        setAccessToken(accessToken);
+        return true;
+      }
+    } catch {
+      // network error
+    }
+    return false;
+  })().finally(() => {
+    _refreshPromise = null;
+  });
+
+  return _refreshPromise;
+}
+
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${getApiUrl()}${path}`;
-  const response = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
+  const token = getAccessToken();
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const response = await fetch(url, { ...init, headers });
+
+  if (response.status === 401) {
+    // Attempt silent refresh
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+      const newToken = getAccessToken();
+      const retryHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(init?.headers as Record<string, string> | undefined),
+      };
+      if (newToken) retryHeaders["Authorization"] = `Bearer ${newToken}`;
+
+      const retryResponse = await fetch(url, { ...init, headers: retryHeaders });
+      if (retryResponse.status === 401) {
+        clearAccessToken();
+        window.location.href = "/login.html";
+        throw new ApiError("Authentication required.", 401);
+      }
+      if (!retryResponse.ok) {
+        const errBody = await retryResponse.json().catch(() => ({})) as { error?: string; field?: string };
+        throw new ApiError(errBody.error ?? `HTTP ${retryResponse.status}`, retryResponse.status, errBody.field);
+      }
+      if (retryResponse.status === 204) return undefined as T;
+      return retryResponse.json() as Promise<T>;
+    } else {
+      clearAccessToken();
+      window.location.href = "/login.html";
+      throw new ApiError("Authentication required.", 401);
+    }
+  }
 
   if (!response.ok) {
     let errorMessage = `HTTP ${response.status}`;
