@@ -14,6 +14,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-14
 - PostgreSQL 16 via Docker named volume `weighttracker-data` (unchanged) (004-repo-restructure-docs)
 - C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend) (006-jwt-auth-setup)
 - PostgreSQL 16 — adds `RefreshTokens` table; alters `Users` table (006-jwt-auth-setup)
+- C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend — api-client.ts only) + ASP.NET Core Minimal API, EF Core 8, Npgsql, BCrypt.Net-Next, MailKit 4.x (new), Testcontainers 3.10.0 + MailHog generic container (new) (007-admin-user-management)
+- PostgreSQL 16 — adds `PasswordResetTokens`, `EmailConfirmationTokens`, `AuditLog` tables; alters `Users` table (007-admin-user-management)
 
 - TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing) (001-weight-tracker-app)
 
@@ -50,9 +52,9 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 007-admin-user-management: Added C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend — api-client.ts only) + ASP.NET Core Minimal API, EF Core 8, Npgsql, BCrypt.Net-Next, MailKit 4.x (new), Testcontainers 3.10.0 + MailHog generic container (new)
 - 006-jwt-auth-setup: Added C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend)
 - 004-repo-restructure-docs: Added TypeScript 5.x (frontend), C# 12 / .NET 8 (backend — unchanged) + Vite 5.x, Vitest 2.x, nginx:alpine, Docker Compose v2 (file moves only — no new dependencies)
-- 003-backend-api-migration: Full backend API with PostgreSQL; Docker Compose deployment; chart calculation service; data migration endpoint; TDD throughout
 
 
 <!-- MANUAL ADDITIONS START -->

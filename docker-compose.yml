@@ -27,9 +27,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       AllowedOrigin: ${ALLOWED_ORIGIN}
       JWT_SECRET: ${JWT_SECRET}
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      #ADMIN_USERNAME: ${ADMIN_USERNAME}
+      #ADMIN_EMAIL: ${ADMIN_EMAIL}
+      #ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:

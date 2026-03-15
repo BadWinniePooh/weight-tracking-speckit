@@ -20,10 +20,6 @@ namespace WeightTracker.Infrastructure.Data.Migrations
                 "DELETE FROM \"Users\" WHERE \"Id\" = '00000000-0000-0000-0000-000000000001';");
 
             // Alter Users table
-            migrationBuilder.DropColumn(
-                name: "DisplayName",
-                table: "Users");
-
             migrationBuilder.AddColumn<string>(
                 name: "Username",
                 table: "Users",
@@ -150,18 +146,10 @@ namespace WeightTracker.Infrastructure.Data.Migrations
                 name: "Username",
                 table: "Users");
 
-            migrationBuilder.AddColumn<string>(
-                name: "DisplayName",
-                table: "Users",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true,
-                defaultValue: null);
-
             // Re-insert stub user row
             migrationBuilder.Sql(
-                "INSERT INTO \"Users\" (\"Id\", \"DisplayName\", \"CreatedAt\") " +
-                "VALUES ('00000000-0000-0000-0000-000000000001', 'Default User', NOW());");
+                "INSERT INTO \"Users\" (\"Id\", \"CreatedAt\") " +
+                "VALUES ('00000000-0000-0000-0000-000000000001', NOW());");
         }
     }
 }

@@ -9,9 +9,14 @@ vi.mock("../src/ts/auth-guard", () => ({
   enforceRedirect: vi.fn(),
 }));
 
-vi.mock("../src/ts/config", () => ({
-  getApiUrl: vi.fn().mockReturnValue(""),
-}));
+vi.mock("../src/ts/config", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    loadConfig: vi.fn().mockResolvedValue(undefined),
+    getApiUrl: vi.fn().mockReturnValue(""),
+  };
+});
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;

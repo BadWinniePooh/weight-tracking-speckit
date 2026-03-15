@@ -198,6 +198,7 @@ export function initLogout(): void {
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("app", state);
 
@@ -206,8 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const unitSelect = document.getElementById("unit-select") as HTMLSelectElement | null;
 
-  loadConfig()
-    .then(() => getSettings())
+  getSettings()
     .then((settings) => {
       _preferredUnit = settings.preferredUnit;
       if (unitSelect) unitSelect.value = _preferredUnit;

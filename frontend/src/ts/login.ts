@@ -1,8 +1,9 @@
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { setAccessToken } from "./auth-token";
-import { getApiUrl } from "./config";
+import { loadConfig, getApiUrl } from "./config";
 
 export async function initLoginPage(): Promise<void> {
+  await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("login", state);
 
