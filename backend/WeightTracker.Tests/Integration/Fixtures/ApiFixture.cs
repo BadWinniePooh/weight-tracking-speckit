@@ -42,5 +42,8 @@ public class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("DB_USER", parts.GetValueOrDefault("Username", "test"));
         builder.UseSetting("DB_PASSWORD", parts.GetValueOrDefault("Password", "test"));
         builder.UseSetting("AllowedOrigin", "http://localhost:3000");
+        builder.UseSetting("JWT_SECRET", "weight-tracker-test-jwt-secret-key-256bits!!");
+        builder.UseSetting("JWT_ISSUER", "weight-tracker-test");
+        builder.UseSetting("JWT_AUDIENCE", "weight-tracker-test");
     }
 }

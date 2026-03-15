@@ -26,6 +26,17 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       AllowedOrigin: ${ALLOWED_ORIGIN}
+      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_ISSUER: ${JWT_ISSUER:-}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL:-}
     ports:
       - "8080:8080"
     depends_on:
@@ -45,7 +56,7 @@ services:
     environment:
       API_URL: ${API_URL}
     ports:
-      - "3000:80"
+      - "3030:80"
     depends_on:
       backend:
         condition: service_healthy
