@@ -422,7 +422,7 @@ FodyWeavers.xsd
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
 
 # Thumbnails
 ._*
@@ -688,3 +688,12 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/dotnet,csharp,node,visua       lstudiocode,rider,macos,windows,linux
+
+# Project-specific
+.env*
+!.env.example
+backend/TestResults/
+
+# Stryker mutation testing
+.stryker-tmp/
+reports/mutation/

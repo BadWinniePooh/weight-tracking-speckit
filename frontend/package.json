@@ -8,9 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:mutation": "stryker run"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "^9.6.0",
+    "@stryker-mutator/typescript-checker": "^9.6.0",
+    "@stryker-mutator/vitest-runner": "^9.6.0",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^2.0.0",
     "jsdom": "^25.0.0",
