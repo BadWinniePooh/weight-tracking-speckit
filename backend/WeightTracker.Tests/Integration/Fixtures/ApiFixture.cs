@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Testcontainers.PostgreSql;
 using WeightTracker.Domain.Entities;
+using WeightTracker.Domain.Interfaces.Services;
 using WeightTracker.Infrastructure.Data;
 using WeightTracker.Infrastructure.Repositories;
 
@@ -18,6 +19,10 @@ public class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private const string TestJwtSecret = "test-secret-key-must-be-at-least-32-characters-long!";
     public static readonly Guid TestUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    public static readonly Guid AdminUserId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
+    /// <summary>In-memory email capture for test assertions.</summary>
+    public readonly FakeEmailService FakeEmail = new();
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
         .WithImage("postgres:16-alpine")
@@ -53,11 +58,23 @@ public class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("DB_PASSWORD", parts.GetValueOrDefault("Password", "test"));
         builder.UseSetting("AllowedOrigin", "http://localhost:3000");
         builder.UseSetting("JWT_SECRET", TestJwtSecret);
+        builder.UseSetting("APP_BASE_URL", "http://localhost:3000");
+
+        // Override IEmailService with the in-memory fake for all tests
+        builder.ConfigureServices(services =>
+        {
+            // Remove the real SmtpEmailService registration
+            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IEmailService));
+            if (descriptor != null)
+                services.Remove(descriptor);
+
+            // Register the shared FakeEmailService instance
+            services.AddSingleton<IEmailService>(FakeEmail);
+        });
     }
 
     /// <summary>
     /// Creates an HttpClient with a valid Bearer token for the test user.
-    /// The test user is seeded into the DB during app startup via the test DB context.
     /// </summary>
     public HttpClient CreateAuthenticatedClient()
     {
@@ -68,15 +85,28 @@ public class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         return client;
     }
 
+    /// <summary>
+    /// Creates an HttpClient with a valid Bearer token for the admin test user.
+    /// </summary>
+    public HttpClient CreateAuthenticatedAdminClient()
+    {
+        EnsureTestUserExists();
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", GenerateTestJwt(AdminUserId, "admin"));
+        return client;
+    }
+
     /// <summary>Generates a signed JWT for the given userId using the test secret.</summary>
-    public static string GenerateTestJwt(Guid userId)
+    public static string GenerateTestJwt(Guid userId, string role = "user")
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestJwtSecret));
         var now = DateTime.UtcNow;
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("role", role),
         };
         var token = new JwtSecurityToken(
             issuer: "weight-tracker",
@@ -88,7 +118,7 @@ public class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private void EnsureTestUserExists()
+    public void EnsureTestUserExists()
     {
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -102,6 +132,23 @@ public class ApiFixture : WebApplicationFactory<Program>, IAsyncLifetime
                 PasswordHash = "testhash",
                 Role = "user",
                 IsActive = true,
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow
+            });
+            db.SaveChanges();
+        }
+
+        if (!db.Users.Any(u => u.Id == AdminUserId))
+        {
+            db.Users.Add(new User
+            {
+                Id = AdminUserId,
+                Username = "adminuser",
+                Email = "admin@example.com",
+                PasswordHash = "testhash",
+                Role = "admin",
+                IsActive = true,
+                EmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow
             });
             db.SaveChanges();

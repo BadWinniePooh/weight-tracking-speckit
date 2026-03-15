@@ -59,7 +59,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", p => p.RequireClaim("role", "admin"));
+});
 
 // CORS — must use explicit origin when AllowCredentials is required
 builder.Services.AddCors(options =>
@@ -73,6 +76,7 @@ builder.Services.AddCors(options =>
 
 // Application services
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();

@@ -19,7 +19,7 @@ public class JwtTokenService(IRefreshTokenRepository refreshTokenRepository, ICo
 
     public async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user)
     {
-        var accessToken = BuildAccessToken(user.Id);
+        var accessToken = BuildAccessToken(user.Id, user.Role);
         var rawRefreshToken = GenerateRawRefreshToken();
         var tokenHash = HashToken(rawRefreshToken);
 
@@ -47,7 +47,7 @@ public class JwtTokenService(IRefreshTokenRepository refreshTokenRepository, ICo
         if (stored is null || stored.UserId != userId)
             return null;
 
-        return BuildAccessToken(userId);
+        return BuildAccessToken(userId, null);
     }
 
     public async Task InvalidateAllTokensAsync(Guid userId)
@@ -55,11 +55,11 @@ public class JwtTokenService(IRefreshTokenRepository refreshTokenRepository, ICo
         await refreshTokenRepository.RevokeAllForUserAsync(userId);
     }
 
-    private string BuildAccessToken(Guid userId)
+    private string BuildAccessToken(Guid userId, string? role)
     {
         var key = GetSigningKey();
         var now = DateTime.UtcNow;
-        var claims = new[]
+        var claimsList = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
@@ -67,6 +67,9 @@ public class JwtTokenService(IRefreshTokenRepository refreshTokenRepository, ICo
                 new DateTimeOffset(now).ToUnixTimeSeconds().ToString(),
                 ClaimValueTypes.Integer64)
         };
+        if (!string.IsNullOrEmpty(role))
+            claimsList.Add(new Claim("role", role));
+        var claims = claimsList.ToArray();
 
         var token = new JwtSecurityToken(
             issuer: Issuer,

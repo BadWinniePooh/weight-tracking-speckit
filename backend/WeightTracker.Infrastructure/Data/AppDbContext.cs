@@ -9,6 +9,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WeightEntry> WeightEntries => Set<WeightEntry>();
     public DbSet<ChartSettings> ChartSettings => Set<ChartSettings>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<EmailConfirmationToken> EmailConfirmationTokens => Set<EmailConfirmationToken>();
+    public DbSet<AuditLogEntry> AuditLog => Set<AuditLogEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,8 +27,60 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(u => u.Role).HasMaxLength(20).IsRequired();
             e.Property(u => u.IsActive).IsRequired();
             e.Property(u => u.CreatedAt).IsRequired();
+            e.Property(u => u.ScheduledDeletionAt);
+            e.Property(u => u.EmailConfirmed).IsRequired().HasDefaultValue(false);
+            e.Property(u => u.PendingEmail).HasMaxLength(255);
+            e.Property(u => u.LastLoginAt);
             e.HasIndex(u => u.Username).IsUnique();
             e.HasIndex(u => u.Email).IsUnique();
+        });
+
+        modelBuilder.Entity<PasswordResetToken>(e =>
+        {
+            e.ToTable("PasswordResetTokens");
+            e.HasKey(p => p.Id);
+            e.Property(p => p.TokenHash).HasMaxLength(64).IsRequired();
+            e.Property(p => p.ExpiresAt).IsRequired();
+            e.Property(p => p.UsedAt);
+            e.Property(p => p.CreatedAt).IsRequired();
+            e.HasIndex(p => p.TokenHash).IsUnique().HasDatabaseName("IX_PasswordResetTokens_TokenHash");
+            e.HasIndex(p => p.UserId).HasDatabaseName("IX_PasswordResetTokens_UserId");
+            e.HasOne(p => p.User)
+             .WithMany()
+             .HasForeignKey(p => p.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EmailConfirmationToken>(e =>
+        {
+            e.ToTable("EmailConfirmationTokens");
+            e.HasKey(ec => ec.Id);
+            e.Property(ec => ec.TargetEmail).HasMaxLength(255).IsRequired();
+            e.Property(ec => ec.TokenHash).HasMaxLength(64).IsRequired();
+            e.Property(ec => ec.ExpiresAt).IsRequired();
+            e.Property(ec => ec.UsedAt);
+            e.Property(ec => ec.CreatedAt).IsRequired();
+            e.HasIndex(ec => ec.TokenHash).IsUnique().HasDatabaseName("IX_EmailConfirmationTokens_TokenHash");
+            e.HasIndex(ec => ec.UserId).HasDatabaseName("IX_EmailConfirmationTokens_UserId");
+            e.HasOne(ec => ec.User)
+             .WithMany()
+             .HasForeignKey(ec => ec.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AuditLogEntry>(e =>
+        {
+            e.ToTable("AuditLog");
+            e.HasKey(a => a.Id);
+            e.Property(a => a.ActionType).HasMaxLength(50).IsRequired();
+            e.Property(a => a.ActorUserId).IsRequired();
+            e.Property(a => a.TargetUserId);
+            e.Property(a => a.IpAddress).HasMaxLength(45).IsRequired();
+            e.Property(a => a.Timestamp).IsRequired();
+            e.HasIndex(a => a.Timestamp).HasDatabaseName("IX_AuditLog_Timestamp");
+            e.HasIndex(a => a.ActionType).HasDatabaseName("IX_AuditLog_ActionType");
+            e.HasIndex(a => a.ActorUserId).HasDatabaseName("IX_AuditLog_ActorUserId");
+            // No FK on ActorUserId/TargetUserId — preserves log after user deletion
         });
 
         modelBuilder.Entity<RefreshToken>(e =>

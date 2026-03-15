@@ -9,5 +9,9 @@ public class User
     public string Role { get; set; } = "user";
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
+    public DateTime? ScheduledDeletionAt { get; set; }
+    public bool EmailConfirmed { get; set; } = false;
+    public string? PendingEmail { get; set; }
+    public DateTime? LastLoginAt { get; set; }
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

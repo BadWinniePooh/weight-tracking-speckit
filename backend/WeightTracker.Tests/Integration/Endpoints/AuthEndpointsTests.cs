@@ -25,6 +25,7 @@ public class AuthEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
             PasswordHash = hasher.Hash(password),
             Role = "user",
             IsActive = true,
+            EmailConfirmed = true,
             CreatedAt = DateTime.UtcNow
         };
         db.Users.Add(user);
