@@ -210,9 +210,9 @@
 
 **Purpose**: Frontend API client typings, docker-compose wiring, and full test suite validation.
 
-- [ ] T063 [P] Add all new typed functions and response types to `frontend/src/ts/api-client.ts` per `contracts/api.md` (`requestPasswordReset`, `resetPassword`, `confirmEmail`, `changeUsername`, `changePassword`, `changeEmail`, `adminListUsers`, `adminCreateUser`, `adminDeactivateUser`, `adminReactivateUser`, `adminDeleteUser`, `adminAssignRole`, `adminResendConfirmation`, `adminGetAuditLog`, and all corresponding response interfaces)
-- [ ] T064 [P] Add `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SENDER_EMAIL`, `APP_BASE_URL`, and `USER_DELETION_GRACE_DAYS` to the `backend` service environment section in `docker-compose.yml`
-- [ ] T065 Run full backend test suite and confirm all tests pass: `cd backend && dotnet test`
+- [x] T063 [P] Add all new typed functions and response types to `frontend/src/ts/api-client.ts` per `contracts/api.md` (`requestPasswordReset`, `resetPassword`, `confirmEmail`, `changeUsername`, `changePassword`, `changeEmail`, `adminListUsers`, `adminCreateUser`, `adminDeactivateUser`, `adminReactivateUser`, `adminDeleteUser`, `adminAssignRole`, `adminResendConfirmation`, `adminGetAuditLog`, and all corresponding response interfaces)
+- [x] T064 [P] Add `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_SENDER_EMAIL`, `APP_BASE_URL`, and `USER_DELETION_GRACE_DAYS` to the `backend` service environment section in `docker-compose.yml`
+- [x] T065 Run full backend test suite and confirm all tests pass: `cd backend && dotnet test`
 
 ---
 

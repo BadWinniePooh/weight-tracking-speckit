@@ -169,6 +169,152 @@ export async function updateSettings(settings: Partial<ChartSettings>): Promise<
   });
 }
 
+// ─── Password reset & email confirmation ──────────────────────────────────────
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  return request<void>("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  return request<void>("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, newPassword }),
+  });
+}
+
+export async function confirmEmail(token: string): Promise<void> {
+  return request<void>(`/api/auth/confirm-email?token=${encodeURIComponent(token)}`);
+}
+
+// ─── Account self-service ─────────────────────────────────────────────────────
+
+export async function changeUsername(newUsername: string): Promise<{ username: string }> {
+  return request<{ username: string }>("/api/account/username", {
+    method: "PUT",
+    body: JSON.stringify({ newUsername }),
+  });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  return request<void>("/api/account/password", {
+    method: "PUT",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+export async function changeEmail(newEmail: string): Promise<{ message: string }> {
+  return request<{ message: string }>("/api/account/email", {
+    method: "PUT",
+    body: JSON.stringify({ newEmail }),
+  });
+}
+
+// ─── Admin user management response types ─────────────────────────────────────
+
+export interface AdminUserDto {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  emailConfirmed: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+  scheduledDeletionAt: string | null;
+}
+
+export interface AdminUserListResponse {
+  users: AdminUserDto[];
+}
+
+export interface AuditLogParams {
+  page?: number;
+  pageSize?: number;
+  fromDate?: string;
+  toDate?: string;
+  actionType?: string;
+}
+
+export interface AuditLogEntryDto {
+  id: string;
+  actionType: string;
+  actorUserId: string;
+  targetUserId: string | null;
+  ipAddress: string;
+  timestamp: string;
+}
+
+export interface AuditLogResponse {
+  entries: AuditLogEntryDto[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+// ─── Admin user management functions ─────────────────────────────────────────
+
+export async function adminListUsers(): Promise<AdminUserListResponse> {
+  return request<AdminUserListResponse>("/api/admin/users");
+}
+
+export async function adminCreateUser(
+  username: string,
+  email: string,
+  role: string,
+): Promise<AdminUserDto> {
+  return request<AdminUserDto>("/api/admin/users", {
+    method: "POST",
+    body: JSON.stringify({ username, email, role }),
+  });
+}
+
+export async function adminDeactivateUser(
+  id: string,
+): Promise<{ id: string; isActive: boolean; scheduledDeletionAt: string | null }> {
+  return request<{ id: string; isActive: boolean; scheduledDeletionAt: string | null }>(
+    `/api/admin/users/${id}/deactivate`,
+    { method: "POST" },
+  );
+}
+
+export async function adminReactivateUser(
+  id: string,
+): Promise<{ id: string; isActive: boolean; scheduledDeletionAt: null }> {
+  return request<{ id: string; isActive: boolean; scheduledDeletionAt: null }>(
+    `/api/admin/users/${id}/reactivate`,
+    { method: "POST" },
+  );
+}
+
+export async function adminDeleteUser(id: string): Promise<void> {
+  return request<void>(`/api/admin/users/${id}`, { method: "DELETE" });
+}
+
+export async function adminAssignRole(id: string, role: string): Promise<{ id: string; role: string }> {
+  return request<{ id: string; role: string }>(`/api/admin/users/${id}/role`, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+}
+
+export async function adminResendConfirmation(id: string): Promise<void> {
+  return request<void>(`/api/admin/users/${id}/resend-confirmation`, { method: "POST" });
+}
+
+export async function adminGetAuditLog(params: AuditLogParams = {}): Promise<AuditLogResponse> {
+  const query = new URLSearchParams();
+  if (params.page !== undefined) query.set("page", String(params.page));
+  if (params.pageSize !== undefined) query.set("pageSize", String(params.pageSize));
+  if (params.fromDate) query.set("fromDate", params.fromDate);
+  if (params.toDate) query.set("toDate", params.toDate);
+  if (params.actionType) query.set("actionType", params.actionType);
+  const qs = query.toString();
+  return request<AuditLogResponse>(`/api/admin/audit-log${qs ? `?${qs}` : ""}`);
+}
+
 // ─── Migration ────────────────────────────────────────────────────────────────
 
 export async function migrateFromLocalStorage(payload: {
