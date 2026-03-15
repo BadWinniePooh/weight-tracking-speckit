@@ -146,16 +146,16 @@
 
 > ⚠️ **Write these tests FIRST — confirm they FAIL before proceeding to implementation**
 
-- [ ] T047 [P] [US6] Write failing tests: `UserDeletionService.DeleteExpiredUsersAsync` deletes users with `ScheduledDeletionAt <= NOW()` and all associated data (weight entries, chart settings, refresh tokens) in `backend/WeightTracker.Tests/Integration/Services/UserDeletionServiceTests.cs`
-- [ ] T048 [P] [US6] Write failing tests: users with future `ScheduledDeletionAt` and active users (null) are not deleted; reactivated user (null `ScheduledDeletionAt`) is not deleted in `backend/WeightTracker.Tests/Integration/Services/UserDeletionServiceTests.cs`
-- [ ] T049 [P] [US6] Write failing test: if one user deletion fails, subsequent users are still processed (atomic per user) in `backend/WeightTracker.Tests/Integration/Services/UserDeletionServiceTests.cs`
+- [x] T047 [P] [US6] Write failing tests: `UserDeletionService.DeleteExpiredUsersAsync` deletes users with `ScheduledDeletionAt <= NOW()` and all associated data (weight entries, chart settings, refresh tokens) in `backend/WeightTracker.Tests/Integration/Services/UserDeletionServiceTests.cs`
+- [x] T048 [P] [US6] Write failing tests: users with future `ScheduledDeletionAt` and active users (null) are not deleted; reactivated user (null `ScheduledDeletionAt`) is not deleted in `backend/WeightTracker.Tests/Integration/Services/UserDeletionServiceTests.cs`
+- [x] T049 [P] [US6] Write failing test: if one user deletion fails, subsequent users are still processed (atomic per user) in `backend/WeightTracker.Tests/Integration/Services/UserDeletionServiceTests.cs`
 
 ### Implementation for User Story 6
 
-- [ ] T050 [P] Create `IUserDeletionService` port with `DeleteExpiredUsersAsync(CancellationToken)` in `backend/WeightTracker.Domain/Interfaces/Services/IUserDeletionService.cs`
-- [ ] T051 Implement `UserDeletionService` — query users with `ScheduledDeletionAt <= NOW()`, delete each in a separate transaction — in `backend/WeightTracker.Infrastructure/Services/UserDeletionService.cs` (depends on T050)
-- [ ] T052 Implement `UserDeletionHostedService` (extends `BackgroundService`) — runs `DeleteExpiredUsersAsync` on startup and every 24 hours; reads `USER_DELETION_GRACE_DAYS` default from config — in `backend/WeightTracker.Infrastructure/Services/UserDeletionHostedService.cs` (depends on T051)
-- [ ] T053 Register `IUserDeletionService` → `UserDeletionService` and `builder.Services.AddHostedService<UserDeletionHostedService>()` in `backend/WeightTracker.Api/Program.cs`
+- [x] T050 [P] Create `IUserDeletionService` port with `DeleteExpiredUsersAsync(CancellationToken)` in `backend/WeightTracker.Domain/Interfaces/Services/IUserDeletionService.cs`
+- [x] T051 Implement `UserDeletionService` — query users with `ScheduledDeletionAt <= NOW()`, delete each in a separate transaction — in `backend/WeightTracker.Infrastructure/Services/UserDeletionService.cs` (depends on T050)
+- [x] T052 Implement `UserDeletionHostedService` (extends `BackgroundService`) — runs `DeleteExpiredUsersAsync` on startup and every 24 hours; reads `USER_DELETION_GRACE_DAYS` default from config — in `backend/WeightTracker.Infrastructure/Services/UserDeletionHostedService.cs` (depends on T051)
+- [x] T053 Register `IUserDeletionService` → `UserDeletionService` and `builder.Services.AddHostedService<UserDeletionHostedService>()` in `backend/WeightTracker.Api/Program.cs`
 
 **Checkpoint**: `dotnet test --filter UserDeletion` passes. Background cleanup service removes expired users with all associated data atomically.
 

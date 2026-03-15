@@ -89,6 +89,8 @@ builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationT
 builder.Services.AddScoped<IEmailConfirmationService, EmailConfirmationService>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IUserDeletionService, UserDeletionService>();
+builder.Services.AddHostedService<UserDeletionHostedService>();
 builder.Services.AddScoped<IWeightEntryRepository, WeightEntryRepository>();
 builder.Services.AddScoped<IChartSettingsRepository, ChartSettingsRepository>();
 builder.Services.AddScoped<IChartCalculationService, ChartCalculationService>();
