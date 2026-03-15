@@ -171,8 +171,8 @@ public static class AdminEndpoints
             var filter = new AuditLogFilter(
                 page,
                 effectivePageSize,
-                string.IsNullOrEmpty(fromDate) ? null : DateTime.Parse(fromDate),
-                string.IsNullOrEmpty(toDate) ? null : DateTime.Parse(toDate),
+                string.IsNullOrEmpty(fromDate) ? null : DateTime.SpecifyKind(DateTime.Parse(fromDate), DateTimeKind.Utc),
+                string.IsNullOrEmpty(toDate) ? null : DateTime.SpecifyKind(DateTime.Parse(toDate), DateTimeKind.Utc),
                 actionType);
 
             var result = await auditLogRepository.QueryAsync(filter);

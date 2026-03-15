@@ -194,13 +194,13 @@
 
 > ⚠️ **Write these tests FIRST — confirm they FAIL before proceeding to implementation**
 
-- [ ] T059 [P] [US5] Write failing tests: `GET /api/admin/audit-log` returns paginated entries with all required fields; `page` and `pageSize` query params work correctly in `backend/WeightTracker.Tests/Integration/Endpoints/AuditLogEndpointsTests.cs`
-- [ ] T060 [P] [US5] Write failing tests: `fromDate`/`toDate` filter returns only matching entries; `actionType` filter returns only matching action type in `backend/WeightTracker.Tests/Integration/Endpoints/AuditLogEndpointsTests.cs`
-- [ ] T061 [P] [US5] Write failing test: non-admin user receives 403 from `GET /api/admin/audit-log` in `backend/WeightTracker.Tests/Integration/Endpoints/AuditLogEndpointsTests.cs`
+- [x] T059 [P] [US5] Write failing tests: `GET /api/admin/audit-log` returns paginated entries with all required fields; `page` and `pageSize` query params work correctly in `backend/WeightTracker.Tests/Integration/Endpoints/AuditLogEndpointsTests.cs`
+- [x] T060 [P] [US5] Write failing tests: `fromDate`/`toDate` filter returns only matching entries; `actionType` filter returns only matching action type in `backend/WeightTracker.Tests/Integration/Endpoints/AuditLogEndpointsTests.cs`
+- [x] T061 [P] [US5] Write failing test: non-admin user receives 403 from `GET /api/admin/audit-log` in `backend/WeightTracker.Tests/Integration/Endpoints/AuditLogEndpointsTests.cs`
 
 ### Implementation for User Story 5
 
-- [ ] T062 [US5] Add `GET /api/admin/audit-log` endpoint (with `AdminOnly` policy) to `backend/WeightTracker.Api/Endpoints/AdminEndpoints.cs` — delegates to `IAuditLogRepository.QueryAsync` with filter/pagination (depends on T059–T061 tests written)
+- [x] T062 [US5] Add `GET /api/admin/audit-log` endpoint (with `AdminOnly` policy) to `backend/WeightTracker.Api/Endpoints/AdminEndpoints.cs` — delegates to `IAuditLogRepository.QueryAsync` with filter/pagination (depends on T059–T061 tests written)
 
 **Checkpoint**: `dotnet test --filter AuditLog` passes. Audit log is queryable with pagination and filters.
 
