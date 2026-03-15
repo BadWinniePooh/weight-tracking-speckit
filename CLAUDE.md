@@ -12,6 +12,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-14
 - PostgreSQL 16 in a Docker container with a named persistent volume (003-backend-api-migration)
 - TypeScript 5.x (frontend), C# 12 / .NET 8 (backend — unchanged) + Vite 5.x, Vitest 2.x, nginx:alpine, Docker Compose v2 (file moves only — no new dependencies) (004-repo-restructure-docs)
 - PostgreSQL 16 via Docker named volume `weighttracker-data` (unchanged) (004-repo-restructure-docs)
+- C# 12 / .NET 8 (backend); TypeScript 5.x (frontend) (005-jwt-multi-user-auth)
+- PostgreSQL 16 via Docker named volume `weighttracker-data` (existing). New tables: `RefreshTokens`, `PasswordResetTokens`. `Users` table extended. (005-jwt-multi-user-auth)
 
 - TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing) (001-weight-tracker-app)
 
@@ -48,9 +50,9 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 005-jwt-multi-user-auth: Added C# 12 / .NET 8 (backend); TypeScript 5.x (frontend)
 - 004-repo-restructure-docs: Added TypeScript 5.x (frontend), C# 12 / .NET 8 (backend — unchanged) + Vite 5.x, Vitest 2.x, nginx:alpine, Docker Compose v2 (file moves only — no new dependencies)
 - 003-backend-api-migration: Full backend API with PostgreSQL; Docker Compose deployment; chart calculation service; data migration endpoint; TDD throughout
-- 002-chart-visualization: Added TypeScript 5.x (browser target: ES2020) + Chart.js ^4.0.0, chartjs-adapter-date-fns ^3.0.0, date-fns ^3.0.0 (new); Vite 5.x (existing)
 
 
 <!-- MANUAL ADDITIONS START -->
