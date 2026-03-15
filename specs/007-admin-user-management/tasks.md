@@ -87,19 +87,19 @@
 
 > ⚠️ **Write these tests FIRST — confirm they FAIL before proceeding to implementation**
 
-- [ ] T024 [P] [US2] Write failing test: unconfirmed user (`EmailConfirmed = false`) attempting `POST /api/auth/login` receives 401 with "confirm your email" message in `backend/WeightTracker.Tests/Integration/Endpoints/EmailConfirmationEndpointsTests.cs`
-- [ ] T025 [P] [US2] Write failing tests: `GET /api/auth/confirm-email?token=...` with valid token sets `EmailConfirmed = true` and returns 200; subsequent login succeeds in `backend/WeightTracker.Tests/Integration/Endpoints/EmailConfirmationEndpointsTests.cs`
-- [ ] T026 [P] [US2] Write failing tests: expired token returns 400; used token returns 400 in `backend/WeightTracker.Tests/Integration/Endpoints/EmailConfirmationEndpointsTests.cs`
-- [ ] T027 [P] [US2] Write failing test: calling `ResendConfirmationAsync` generates a new token and delivers to MailHog (sets up for US4 admin resend action) in `backend/WeightTracker.Tests/Integration/Endpoints/EmailConfirmationEndpointsTests.cs`
+- [x] T024 [P] [US2] Write failing test: unconfirmed user (`EmailConfirmed = false`) attempting `POST /api/auth/login` receives 401 with "confirm your email" message in `backend/WeightTracker.Tests/Integration/Endpoints/EmailConfirmationEndpointsTests.cs`
+- [x] T025 [P] [US2] Write failing tests: `GET /api/auth/confirm-email?token=...` with valid token sets `EmailConfirmed = true` and returns 200; subsequent login succeeds in `backend/WeightTracker.Tests/Integration/Endpoints/EmailConfirmationEndpointsTests.cs`
+- [x] T026 [P] [US2] Write failing tests: expired token returns 400; used token returns 400 in `backend/WeightTracker.Tests/Integration/Endpoints/EmailConfirmationEndpointsTests.cs`
+- [x] T027 [P] [US2] Write failing test: calling `ResendConfirmationAsync` generates a new token and delivers to MailHog (sets up for US4 admin resend action) in `backend/WeightTracker.Tests/Integration/Endpoints/EmailConfirmationEndpointsTests.cs`
 
 ### Implementation for User Story 2
 
-- [ ] T028 [P] [US2] Create `IEmailConfirmationTokenRepository` port (GetActiveByHashAsync, CreateAsync, MarkUsedAsync, InvalidatePreviousAsync) in `backend/WeightTracker.Domain/Interfaces/Repositories/IEmailConfirmationTokenRepository.cs`
-- [ ] T029 [P] [US2] Create `IEmailConfirmationService` port (SendConfirmationAsync, ConfirmAsync, ResendConfirmationAsync) in `backend/WeightTracker.Domain/Interfaces/Services/IEmailConfirmationService.cs`
-- [ ] T030 [US2] Implement `EmailConfirmationTokenRepository` in `backend/WeightTracker.Infrastructure/Repositories/EmailConfirmationTokenRepository.cs` (depends on T028)
-- [ ] T031 [US2] Implement `EmailConfirmationService` — token generation, invalidate previous pending token on resend, handle email-change confirmation path — in `backend/WeightTracker.Infrastructure/Services/EmailConfirmationService.cs` (depends on T029, T030)
-- [ ] T032 [US2] Add `GET /api/auth/confirm-email` endpoint to `backend/WeightTracker.Api/Endpoints/AuthEndpoints.cs`; update `POST /api/auth/login` to reject with 401 if `EmailConfirmed = false` OR `IsActive = false` — both checks must be added in the same login guard update (depends on T031)
-- [ ] T033 [US2] Register `IEmailConfirmationService` → `EmailConfirmationService`, `IEmailConfirmationTokenRepository` → `EmailConfirmationTokenRepository` in `backend/WeightTracker.Api/Program.cs`
+- [x] T028 [P] [US2] Create `IEmailConfirmationTokenRepository` port (GetActiveByHashAsync, CreateAsync, MarkUsedAsync, InvalidatePreviousAsync) in `backend/WeightTracker.Domain/Interfaces/Repositories/IEmailConfirmationTokenRepository.cs`
+- [x] T029 [P] [US2] Create `IEmailConfirmationService` port (SendConfirmationAsync, ConfirmAsync, ResendConfirmationAsync) in `backend/WeightTracker.Domain/Interfaces/Services/IEmailConfirmationService.cs`
+- [x] T030 [US2] Implement `EmailConfirmationTokenRepository` in `backend/WeightTracker.Infrastructure/Repositories/EmailConfirmationTokenRepository.cs` (depends on T028)
+- [x] T031 [US2] Implement `EmailConfirmationService` — token generation, invalidate previous pending token on resend, handle email-change confirmation path — in `backend/WeightTracker.Infrastructure/Services/EmailConfirmationService.cs` (depends on T029, T030)
+- [x] T032 [US2] Add `GET /api/auth/confirm-email` endpoint to `backend/WeightTracker.Api/Endpoints/AuthEndpoints.cs`; update `POST /api/auth/login` to reject with 401 if `EmailConfirmed = false` OR `IsActive = false` — both checks must be added in the same login guard update (depends on T031)
+- [x] T033 [US2] Register `IEmailConfirmationService` → `EmailConfirmationService`, `IEmailConfirmationTokenRepository` → `EmailConfirmationTokenRepository` in `backend/WeightTracker.Api/Program.cs`
 
 **Checkpoint**: `dotnet test --filter EmailConfirmation` passes. Unconfirmed users blocked, confirmation flow works end-to-end.
 

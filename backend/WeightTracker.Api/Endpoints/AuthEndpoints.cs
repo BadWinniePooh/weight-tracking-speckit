@@ -26,6 +26,10 @@ public static class AuthEndpoints
             var user = await userRepository.GetByUsernameAsync(request.Username);
             if (user is null || !passwordHasher.Verify(request.Password, user.PasswordHash))
                 return Results.Json(new { error = "Invalid username or password." }, statusCode: 401);
+            if (!user.IsActive)
+                return Results.Json(new { error = "Your account has been deactivated." }, statusCode: 401);
+            if (!user.EmailConfirmed)
+                return Results.Json(new { error = "Please confirm your email address before logging in." }, statusCode: 401);
 
             var (accessToken, refreshToken) = await tokenService.GenerateTokensAsync(user);
             SetRefreshCookie(httpContext, refreshToken);
@@ -78,6 +82,17 @@ public static class AuthEndpoints
                 expiresIn = 900,
                 tokenType = "Bearer"
             });
+        }).AllowAnonymous();
+
+        // GET /api/auth/confirm-email?token={token}
+        app.MapGet("/api/auth/confirm-email", async (
+            string token,
+            IEmailConfirmationService emailConfirmationService) =>
+        {
+            var success = await emailConfirmationService.ConfirmAsync(token);
+            if (!success)
+                return Results.Json(new { error = "This confirmation link is invalid or has expired." }, statusCode: 400);
+            return Results.Ok(new { message = "Email confirmed. You may now log in." });
         }).AllowAnonymous();
 
         // POST /api/auth/forgot-password
