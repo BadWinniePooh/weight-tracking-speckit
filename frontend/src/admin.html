@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weight Tracker — Admin</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Weight Tracker — Admin</h1>
+        <nav>
+          <a href="/index.html">Dashboard</a>
+          <a href="/profile.html">Profile</a>
+        </nav>
+      </header>
+      <main>
+        <h2>Admin Dashboard</h2>
+
+        <!-- Stats bar -->
+        <section id="stats-bar">
+          <div>Total users: <span id="stats-total-users">—</span></div>
+          <div>Active sessions: <span id="stats-active-sessions">—</span></div>
+        </section>
+
+        <!-- User management -->
+        <section id="user-management">
+          <h3>Users</h3>
+          <button id="create-user-btn">Create User</button>
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Last Login</th>
+                <th>Scheduled Deletion</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="user-table-body"></tbody>
+          </table>
+        </section>
+
+        <!-- Create user dialog -->
+        <dialog id="create-user-modal">
+          <h3>Create User</h3>
+          <form id="create-user-form">
+            <div class="form-row">
+              <label for="cu-username">Username</label>
+              <input id="cu-username" type="text" required />
+            </div>
+            <div class="form-row">
+              <label for="cu-email">Email</label>
+              <input id="cu-email" type="email" required />
+            </div>
+            <div class="form-row">
+              <label for="cu-role">Role</label>
+              <select id="cu-role">
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+            <div id="cu-feedback" role="alert" aria-live="polite"></div>
+            <button type="submit">Create</button>
+            <button type="button" id="cu-cancel-btn">Cancel</button>
+          </form>
+        </dialog>
+
+        <!-- Audit log -->
+        <section id="audit-log">
+          <h3>Audit Log</h3>
+          <div id="audit-filters">
+            <label>From: <input id="audit-filter-from" type="date" /></label>
+            <label>To: <input id="audit-filter-to" type="date" /></label>
+            <label>
+              Action:
+              <select id="audit-filter-action">
+                <option value="">All</option>
+                <option value="UserCreated">UserCreated</option>
+                <option value="UserDeactivated">UserDeactivated</option>
+                <option value="UserReactivated">UserReactivated</option>
+                <option value="UserDeleted">UserDeleted</option>
+                <option value="RoleChanged">RoleChanged</option>
+                <option value="PasswordReset">PasswordReset</option>
+              </select>
+            </label>
+            <button id="audit-apply-btn">Apply</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Target</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-body"></tbody>
+          </table>
+          <div id="audit-pagination">
+            <button id="audit-prev-btn">Previous</button>
+            <span id="audit-page-indicator"></span>
+            <button id="audit-next-btn">Next</button>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="ts/admin.ts"></script>
+  </body>
+</html>

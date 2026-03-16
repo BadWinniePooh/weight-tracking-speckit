@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weight Tracker — Profile</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Weight Tracker</h1>
+        <nav>
+          <a href="/index.html">Dashboard</a>
+        </nav>
+      </header>
+      <main>
+        <h2>My Profile</h2>
+
+        <section>
+          <h3>Change Username</h3>
+          <form id="username-form">
+            <div class="form-row">
+              <label for="username-input">New username</label>
+              <input id="username-input" type="text" required />
+            </div>
+            <div id="username-feedback" role="alert" aria-live="polite"></div>
+            <button type="submit">Change Username</button>
+          </form>
+        </section>
+
+        <section>
+          <h3>Change Email</h3>
+          <form id="email-form">
+            <div class="form-row">
+              <label for="email-input">New email address</label>
+              <input id="email-input" type="email" required />
+            </div>
+            <div id="email-feedback" role="alert" aria-live="polite"></div>
+            <button type="submit">Change Email</button>
+          </form>
+        </section>
+
+        <section>
+          <h3>Change Password</h3>
+          <form id="password-form">
+            <div class="form-row">
+              <label for="current-password-input">Current password</label>
+              <input id="current-password-input" type="password" required />
+            </div>
+            <div class="form-row">
+              <label for="new-password-input">New password</label>
+              <input id="new-password-input" type="password" required />
+            </div>
+            <div class="form-row">
+              <label for="confirm-password-input">Confirm new password</label>
+              <input id="confirm-password-input" type="password" required />
+            </div>
+            <div id="password-feedback" role="alert" aria-live="polite"></div>
+            <button type="submit">Change Password</button>
+          </form>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="ts/profile.ts"></script>
+  </body>
+</html>

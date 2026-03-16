@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weight Tracker — Set New Password</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Weight Tracker</h1>
+      </header>
+      <main>
+        <section class="login-form">
+          <h2>Set New Password</h2>
+          <div id="token-error-msg" role="alert" hidden>
+            This reset link is invalid or has expired. Please request a new one.
+          </div>
+          <form id="reset-complete-form">
+            <div class="form-row">
+              <label for="new-password-input">New password</label>
+              <input id="new-password-input" type="password" required />
+            </div>
+            <div class="form-row">
+              <label for="confirm-password-input">Confirm new password</label>
+              <input id="confirm-password-input" type="password" required />
+            </div>
+            <div id="feedback-msg" role="alert" aria-live="polite"></div>
+            <button id="submit-btn" type="submit">Reset Password</button>
+          </form>
+          <p><a href="/login.html">Back to Sign In</a></p>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="ts/reset-complete.ts"></script>
+  </body>
+</html>
