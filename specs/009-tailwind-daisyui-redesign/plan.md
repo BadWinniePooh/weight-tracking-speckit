@@ -7,8 +7,9 @@
 
 Replace all hand-written CSS across 7 HTML pages with Tailwind CSS v3 + DaisyUI v4, adding a persistent
 responsive navbar to authenticated pages, a centered-card layout to public pages, and automatic OS dark/light
-mode switching. No backend changes. No functional changes. Test suite refactored to use stable DOM identifiers
-before any HTML styling work begins.
+mode switching. No backend changes. Styling redesign plus targeted bug fixes (stats bar live refresh,
+Create User modal centering, audit log datetime format, email change notice). Test suite refactored to use
+stable DOM identifiers before any HTML styling work begins.
 
 ## Technical Context
 
@@ -19,7 +20,7 @@ before any HTML styling work begins.
 **Target Platform**: Browser — static files served by nginx (existing Docker setup)
 **Project Type**: Frontend-only redesign (multi-page app, 7 HTML pages)
 **Performance Goals**: No regression in build time; CSS bundle must be tree-shaken by Tailwind purge
-**Constraints**: No backend changes (FR-022); no functional changes (FR-021); no external JS libraries beyond what already exists
+**Constraints**: No backend changes (FR-022); styling redesign plus targeted bug fixes (FR-021 amended to permit FR-028–031); no external JS libraries beyond what already exists
 **Scale/Scope**: 7 HTML pages, ~15 test files (refactor only), 1 new design-system.md doc
 
 ## Constitution Check

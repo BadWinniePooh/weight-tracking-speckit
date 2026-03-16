@@ -102,8 +102,8 @@ vi.mock("../src/ts/api-client", () => ({
 
 function setupDom() {
   document.body.innerHTML = `
-    <span id="stats-total-users"></span>
-    <span id="stats-active-sessions"></span>
+    <div class="stat-value" id="stat-total-users"></div>
+    <div class="stat-value" id="stat-active-sessions"></div>
     <table><tbody id="user-table-body"></tbody></table>
     <button id="create-user-btn">Create User</button>
     <dialog id="create-user-modal">
@@ -112,8 +112,13 @@ function setupDom() {
         <input id="cu-email" type="email" />
         <select id="cu-role"><option value="user">user</option><option value="admin">admin</option></select>
         <div id="cu-feedback"></div>
-        <button type="submit">Create</button>
+        <button type="submit" id="cu-submit-btn">Create</button>
+        <button type="button" id="cu-cancel-btn">Cancel</button>
       </form>
+    </dialog>
+    <dialog id="confirm-modal">
+      <button id="confirm-modal-yes">Confirm</button>
+      <button id="confirm-modal-cancel">Cancel</button>
     </dialog>
     <table><tbody id="audit-table-body"></tbody></table>
     <input id="audit-filter-from" type="date" />
@@ -150,7 +155,7 @@ describe("admin page — stats bar", () => {
   it("displays total user count from user list length", async () => {
     const { initAdminPage } = await import("../src/ts/admin");
     await initAdminPage();
-    const totalEl = document.getElementById("stats-total-users");
+    const totalEl = document.getElementById("stat-total-users");
     expect(totalEl?.textContent).toBe("3");
   });
 
@@ -160,7 +165,7 @@ describe("admin page — stats bar", () => {
     // admin_user: hasActiveSession=true → counts
     // regular_user: hasActiveSession=false → does not count
     // inactive_user: hasActiveSession=false → does not count
-    const sessionsEl = document.getElementById("stats-active-sessions");
+    const sessionsEl = document.getElementById("stat-active-sessions");
     expect(sessionsEl?.textContent).toBe("1");
   });
 });
@@ -216,10 +221,14 @@ describe("admin page — destructive actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupDom();
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    // Auto-confirm: simulate user clicking "Confirm" in the dialog
+    HTMLDialogElement.prototype.showModal = vi.fn().mockImplementation(function () {
+      document.getElementById("confirm-modal-yes")?.click();
+    });
+    HTMLDialogElement.prototype.close = vi.fn();
   });
 
-  it("calls window.confirm before deactivating a user", async () => {
+  it("calls confirm dialog before deactivating a user", async () => {
     const { adminDeactivateUser } = await import("../src/ts/api-client");
     const { initAdminPage } = await import("../src/ts/admin");
     await initAdminPage();
@@ -227,13 +236,13 @@ describe("admin page — destructive actions", () => {
     const row = document.querySelector(`[data-user-id="user-id-222"]`) as HTMLElement;
     const btn = row.querySelector(`[data-action="deactivate"]`) as HTMLButtonElement;
     btn.click();
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 20));
 
-    expect(window.confirm).toHaveBeenCalled();
+    expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalled();
     expect(adminDeactivateUser).toHaveBeenCalledWith("user-id-222");
   });
 
-  it("calls window.confirm before deleting a user", async () => {
+  it("calls confirm dialog before deleting a user", async () => {
     const { adminDeleteUser } = await import("../src/ts/api-client");
     const { initAdminPage } = await import("../src/ts/admin");
     await initAdminPage();
@@ -241,14 +250,17 @@ describe("admin page — destructive actions", () => {
     const row = document.querySelector(`[data-user-id="user-id-222"]`) as HTMLElement;
     const btn = row.querySelector(`[data-action="delete"]`) as HTMLButtonElement;
     btn.click();
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 20));
 
-    expect(window.confirm).toHaveBeenCalled();
+    expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalled();
     expect(adminDeleteUser).toHaveBeenCalledWith("user-id-222");
   });
 
-  it("does not call API when confirm returns false", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("does not call API when user cancels the dialog", async () => {
+    // Auto-cancel: simulate user clicking "Cancel" in the dialog
+    HTMLDialogElement.prototype.showModal = vi.fn().mockImplementation(function () {
+      document.getElementById("confirm-modal-cancel")?.click();
+    });
     const { adminDeactivateUser, adminDeleteUser } = await import("../src/ts/api-client");
     const { initAdminPage } = await import("../src/ts/admin");
     await initAdminPage();
@@ -256,7 +268,7 @@ describe("admin page — destructive actions", () => {
     const row = document.querySelector(`[data-user-id="user-id-222"]`) as HTMLElement;
     const deactivateBtn = row.querySelector(`[data-action="deactivate"]`) as HTMLButtonElement;
     deactivateBtn.click();
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 20));
 
     expect(adminDeactivateUser).not.toHaveBeenCalled();
     expect(adminDeleteUser).not.toHaveBeenCalled();
@@ -327,10 +339,11 @@ describe("admin page — user status after reactivation (Bug #7)", () => {
     const { initAdminPage } = await import("../src/ts/admin");
     await initAdminPage();
 
-    // Initial status must be "deactivated" (isActive=false takes precedence)
+    // Initial status must be "inactive" badge (isActive=false takes precedence)
     const row = document.querySelector(`[data-user-id="pending-id-999"]`) as HTMLTableRowElement;
     expect(row).toBeTruthy();
-    expect(row.cells[3]?.textContent?.trim()).toBe("deactivated");
+    const initBadge = row.cells[3]?.querySelector("[data-status]") as HTMLElement | null;
+    expect(initBadge?.dataset.status).toBe("inactive");
 
     // Reactivate
     const reactivateBtn = row.querySelector(`[data-action="reactivate"]`) as HTMLButtonElement;
@@ -338,9 +351,10 @@ describe("admin page — user status after reactivation (Bug #7)", () => {
     reactivateBtn.click();
     await new Promise((r) => setTimeout(r, 10));
 
-    // After reactivation: isActive=true, emailConfirmed=false → must show "pending confirmation"
+    // After reactivation: isActive=true, emailConfirmed=false → must show "pending" badge
     const newRow = document.querySelector(`[data-user-id="pending-id-999"]`) as HTMLTableRowElement;
-    expect(newRow.cells[3]?.textContent?.trim()).toBe("pending confirmation"); // fails before fix
+    const newBadge = newRow.cells[3]?.querySelector("[data-status]") as HTMLElement | null;
+    expect(newBadge?.dataset.status).toBe("pending"); // fails before fix
     // Resend Confirmation button must be visible
     expect(newRow.querySelector(`[data-action="resend-confirmation"]`)).toBeTruthy(); // fails before fix
   });
@@ -370,7 +384,8 @@ describe("admin page — user status after reactivation (Bug #7)", () => {
     await new Promise((r) => setTimeout(r, 10));
 
     const newRow = document.querySelector(`[data-user-id="active-id-888"]`) as HTMLTableRowElement;
-    expect(newRow.cells[3]?.textContent?.trim()).toBe("active");
+    const activeBadge = newRow.cells[3]?.querySelector("[data-status]") as HTMLElement | null;
+    expect(activeBadge?.dataset.status).toBe("active");
     expect(newRow.querySelector(`[data-action="resend-confirmation"]`)).toBeNull();
   });
 });
@@ -458,5 +473,104 @@ describe("admin page — audit log section", () => {
 
     const tbody = document.getElementById("audit-table-body")!;
     expect(tbody.querySelectorAll("tr")).toHaveLength(0);
+  });
+});
+
+describe("admin page — stats bar live refresh (FR-028)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDom();
+    HTMLDialogElement.prototype.showModal = vi.fn().mockImplementation(function () {
+      document.getElementById("confirm-modal-yes")?.click();
+    });
+    HTMLDialogElement.prototype.close = vi.fn();
+  });
+
+  it("stat-total-users updates after creating a new user (T055)", async () => {
+    const { adminListUsers } = await import("../src/ts/api-client");
+    const newUser = {
+      id: "new-id-444", username: "new_user", email: "new@example.com",
+      role: "user", isActive: true, emailConfirmed: false,
+      createdAt: "2026-03-16T00:00:00Z", lastLoginAt: null, scheduledDeletionAt: null,
+      hasActiveSession: false,
+    };
+    (adminListUsers as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ users: mockUsers })
+      .mockResolvedValueOnce({ users: [...mockUsers, newUser] });
+
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    expect(document.getElementById("stat-total-users")?.textContent).toBe("3");
+
+    (document.getElementById("cu-username") as HTMLInputElement).value = "new_user";
+    (document.getElementById("cu-email") as HTMLInputElement).value = "new@example.com";
+    (document.getElementById("cu-role") as HTMLSelectElement).value = "user";
+    document.getElementById("create-user-form")!.dispatchEvent(new Event("submit"));
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect(document.getElementById("stat-total-users")?.textContent).toBe("4");
+  });
+
+  it("stat-active-sessions updates after deactivating a user (T055)", async () => {
+    const { adminListUsers } = await import("../src/ts/api-client");
+    const usersAfterDeactivate = mockUsers.map((u) => ({ ...u, hasActiveSession: false }));
+    (adminListUsers as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ users: mockUsers })
+      .mockResolvedValueOnce({ users: usersAfterDeactivate });
+
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    expect(document.getElementById("stat-active-sessions")?.textContent).toBe("1");
+
+    const row = document.querySelector(`[data-user-id="user-id-222"]`) as HTMLElement;
+    const btn = row.querySelector(`[data-action="deactivate"]`) as HTMLButtonElement;
+    btn.click();
+    await new Promise((r) => setTimeout(r, 30));
+
+    expect(document.getElementById("stat-active-sessions")?.textContent).toBe("0");
+  });
+});
+
+describe("admin page — audit log datetime format (FR-030)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDom();
+    HTMLDialogElement.prototype.showModal = vi.fn();
+    HTMLDialogElement.prototype.close = vi.fn();
+  });
+
+  it("renders audit log timestamp as YYYY-MM-DD HH:mm pattern (T061)", async () => {
+    const { adminGetAuditLog } = await import("../src/ts/api-client");
+    (adminGetAuditLog as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      entries: [
+        {
+          id: "entry-id-001",
+          actionType: "UserDeactivated",
+          actorUserId: "admin-id-111",
+          actorUsername: "admin_user",
+          targetUserId: "user-id-222",
+          targetUsername: "regular_user",
+          ipAddress: "127.0.0.1",
+          timestamp: "2026-03-16T14:30:00Z",
+        } as AuditLogEntryDto,
+      ],
+      totalCount: 1,
+      page: 1,
+      pageSize: 20,
+    });
+
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    const tbody = document.getElementById("audit-table-body")!;
+    const firstRow = tbody.querySelector("tr");
+    const timestampCell = firstRow?.cells[0];
+    const text = timestampCell?.textContent?.trim() ?? "";
+
+    // Must be 16 chars and match YYYY-MM-DD HH:mm pattern (not date-only)
+    expect(text).toHaveLength(16);
+    expect(text).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
   });
 });

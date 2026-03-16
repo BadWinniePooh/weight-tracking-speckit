@@ -20,6 +20,8 @@ export async function initResetRequestPage(): Promise<void> {
     e.preventDefault();
     const email = emailInput.value.trim();
     submitBtn.disabled = true;
+    submitBtn.dataset.loading = "true";
+    submitBtn.classList.add("loading");
     feedbackEl.textContent = "";
 
     try {
@@ -30,6 +32,8 @@ export async function initResetRequestPage(): Promise<void> {
 
     feedbackEl.textContent = "If an account with that email exists, a reset link has been sent.";
     submitBtn.disabled = false;
+    submitBtn.dataset.loading = "false";
+    submitBtn.classList.remove("loading");
   });
 }
 

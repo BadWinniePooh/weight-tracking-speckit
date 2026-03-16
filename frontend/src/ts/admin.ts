@@ -21,10 +21,50 @@ function formatDate(iso: string | null): string {
   return iso.slice(0, 10);
 }
 
-function userStatus(user: AdminUserDto): string {
-  if (!user.isActive) return "deactivated";
-  if (!user.emailConfirmed) return "pending confirmation";
-  return "active";
+function formatDateTime(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("sv-SE").slice(0, 16);
+}
+
+function renderStatusBadge(user: AdminUserDto): string {
+  if (!user.isActive) {
+    return '<span data-status="inactive" class="badge badge-error">Deactivated</span>';
+  }
+  if (!user.emailConfirmed) {
+    return '<span data-status="pending" class="badge badge-warning">Pending</span>';
+  }
+  return '<span data-status="active" class="badge badge-success">Active</span>';
+}
+
+function refreshStats(users: AdminUserDto[]): void {
+  const totalEl = document.getElementById("stat-total-users");
+  const sessionsEl = document.getElementById("stat-active-sessions");
+  if (totalEl) totalEl.textContent = String(users.length);
+  if (sessionsEl) sessionsEl.textContent = String(users.filter((u) => u.hasActiveSession).length);
+}
+
+function showConfirmDialog(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("confirm-modal") as HTMLDialogElement | null;
+    const yesBtn = document.getElementById("confirm-modal-yes");
+    const cancelBtn = document.getElementById("confirm-modal-cancel");
+
+    if (!modal || !yesBtn || !cancelBtn) {
+      resolve(window.confirm(message));
+      return;
+    }
+
+    const onYes = () => { cleanup(); modal.close(); resolve(true); };
+    const onCancel = () => { cleanup(); modal.close(); resolve(false); };
+    const cleanup = () => {
+      yesBtn.removeEventListener("click", onYes);
+      cancelBtn.removeEventListener("click", onCancel);
+    };
+
+    yesBtn.addEventListener("click", onYes);
+    cancelBtn.addEventListener("click", onCancel);
+    modal.showModal();
+  });
 }
 
 function renderUserRow(user: AdminUserDto, currentUserId: string | null): HTMLTableRowElement {
@@ -38,22 +78,22 @@ function renderUserRow(user: AdminUserDto, currentUserId: string | null): HTMLTa
     : "<td>—</td>";
 
   const deactivateBtn = user.isActive
-    ? `<button data-action="deactivate" data-user-id="${user.id}"${isOwnAccount ? " disabled title=\"Cannot deactivate own account\"" : ""}>Deactivate</button>`
+    ? `<button class="btn btn-sm btn-ghost" data-action="deactivate" data-user-id="${user.id}"${isOwnAccount ? " disabled title=\"Cannot deactivate own account\"" : ""}>Deactivate</button>`
     : "";
   const reactivateBtn = !user.isActive
-    ? `<button data-action="reactivate" data-user-id="${user.id}">Reactivate</button>`
+    ? `<button class="btn btn-sm btn-ghost" data-action="reactivate" data-user-id="${user.id}">Reactivate</button>`
     : "";
-  const deleteBtn = `<button data-action="delete" data-user-id="${user.id}"${isOwnAccount ? " disabled title=\"Cannot delete own account\"" : ""}>Delete</button>`;
-  const changeRoleBtn = `<button data-action="change-role" data-user-id="${user.id}" data-current-role="${user.role}"${isOwnAccount ? " disabled title=\"Cannot change own role\"" : ""}>Change Role</button>`;
+  const deleteBtn = `<button class="btn btn-sm btn-ghost text-error" data-action="delete" data-user-id="${user.id}"${isOwnAccount ? " disabled title=\"Cannot delete own account\"" : ""}>Delete</button>`;
+  const changeRoleBtn = `<button class="btn btn-sm btn-ghost" data-action="change-role" data-user-id="${user.id}" data-current-role="${user.role}"${isOwnAccount ? " disabled title=\"Cannot change own role\"" : ""}>Change Role</button>`;
   const resendBtn = !user.emailConfirmed
-    ? `<button data-action="resend-confirmation" data-user-id="${user.id}">Resend Confirmation</button>`
+    ? `<button class="btn btn-sm btn-ghost" data-action="resend-confirmation" data-user-id="${user.id}">Resend Confirmation</button>`
     : "";
 
   tr.innerHTML = `
     <td>${user.username}</td>
     <td>${user.email}</td>
     <td>${user.role}</td>
-    <td>${userStatus(user)}</td>
+    <td>${renderStatusBadge(user)}</td>
     <td>${formatDate(user.lastLoginAt)}</td>
     ${deletionCell}
     <td>
@@ -68,6 +108,23 @@ function renderUserRow(user: AdminUserDto, currentUserId: string | null): HTMLTa
   return tr;
 }
 
+function parseRowData(row: HTMLTableRowElement): AdminUserDto {
+  const statusBadge = row.cells[3]?.querySelector("[data-status]") as HTMLElement | null;
+  const status = statusBadge?.dataset.status;
+  return {
+    id: row.dataset.userId ?? "",
+    username: row.cells[0]?.textContent?.trim() ?? "",
+    email: row.cells[1]?.textContent?.trim() ?? "",
+    role: row.cells[2]?.textContent?.trim() ?? "user",
+    isActive: status === "active" || status === "pending",
+    emailConfirmed: row.dataset.emailConfirmed === "true",
+    createdAt: "",
+    lastLoginAt: null,
+    scheduledDeletionAt: null,
+    hasActiveSession: false,
+  };
+}
+
 function wireRowActions(tbody: HTMLElement): void {
   tbody.addEventListener("click", async (e) => {
     const btn = (e.target as Element).closest("[data-action]") as HTMLButtonElement | null;
@@ -77,8 +134,15 @@ function wireRowActions(tbody: HTMLElement): void {
     const userId = btn.dataset.userId;
     if (!userId) return;
 
+    function setLoading(el: HTMLButtonElement, on: boolean): void {
+      el.disabled = on;
+      el.dataset.loading = on ? "true" : "false";
+      if (on) el.classList.add("loading"); else el.classList.remove("loading");
+    }
+
     if (action === "deactivate") {
-      if (!window.confirm("Deactivate this user?")) return;
+      if (!await showConfirmDialog("Deactivate this user?")) return;
+      setLoading(btn, true);
       try {
         await adminDeactivateUser(userId);
         const row = tbody.querySelector(`[data-user-id="${userId}"]`) as HTMLTableRowElement | null;
@@ -89,10 +153,13 @@ function wireRowActions(tbody: HTMLElement): void {
           );
           row.replaceWith(newRow);
         }
-      } catch { /* handled silently */ }
+        const { users: fresh } = await adminListUsers();
+        refreshStats(fresh);
+      } catch { setLoading(btn, false); }
     }
 
     if (action === "reactivate") {
+      setLoading(btn, true);
       try {
         await adminReactivateUser(userId);
         const row = tbody.querySelector(`[data-user-id="${userId}"]`) as HTMLTableRowElement | null;
@@ -103,21 +170,27 @@ function wireRowActions(tbody: HTMLElement): void {
           );
           row.replaceWith(newRow);
         }
-      } catch { /* handled silently */ }
+        const { users: fresh } = await adminListUsers();
+        refreshStats(fresh);
+      } catch { setLoading(btn, false); }
     }
 
     if (action === "delete") {
-      if (!window.confirm("Permanently delete this user?")) return;
+      if (!await showConfirmDialog("Permanently delete this user?")) return;
+      setLoading(btn, true);
       try {
         await adminDeleteUser(userId);
         const row = tbody.querySelector(`[data-user-id="${userId}"]`);
         if (row) row.remove();
-      } catch { /* handled silently */ }
+        const { users: fresh } = await adminListUsers();
+        refreshStats(fresh);
+      } catch { setLoading(btn, false); }
     }
 
     if (action === "change-role") {
       const currentRole = btn.dataset.currentRole ?? "user";
       const newRole = currentRole === "admin" ? "user" : "admin";
+      setLoading(btn, true);
       try {
         await adminAssignRole(userId, newRole);
         const row = tbody.querySelector(`[data-user-id="${userId}"]`) as HTMLTableRowElement | null;
@@ -128,29 +201,18 @@ function wireRowActions(tbody: HTMLElement): void {
           );
           row.replaceWith(newRow);
         }
-      } catch { /* handled silently */ }
+        const { users: fresh } = await adminListUsers();
+        refreshStats(fresh);
+      } catch { setLoading(btn, false); }
     }
 
     if (action === "resend-confirmation") {
+      setLoading(btn, true);
       try {
         await adminResendConfirmation(userId);
-      } catch { /* handled silently */ }
+      } finally { setLoading(btn, false); }
     }
   });
-}
-
-function parseRowData(row: HTMLTableRowElement): AdminUserDto {
-  return {
-    id: row.dataset.userId ?? "",
-    username: row.cells[0]?.textContent?.trim() ?? "",
-    email: row.cells[1]?.textContent?.trim() ?? "",
-    role: row.cells[2]?.textContent?.trim() ?? "user",
-    isActive: row.cells[3]?.textContent?.trim() === "active" || row.cells[3]?.textContent?.trim() === "pending confirmation",
-    emailConfirmed: row.dataset.emailConfirmed === "true",
-    createdAt: "",
-    lastLoginAt: null,
-    scheduledDeletionAt: null,
-  };
 }
 
 let auditPage = 1;
@@ -180,7 +242,7 @@ async function loadAuditLog(page: number): Promise<void> {
     for (const entry of result.entries) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${formatDate(entry.timestamp)}</td>
+        <td>${formatDateTime(entry.timestamp)}</td>
         <td>${entry.actorUsername}</td>
         <td>${entry.actionType}</td>
         <td>${entry.targetUsername ?? "—"}</td>
@@ -207,14 +269,7 @@ export async function initAdminPage(): Promise<void> {
 
   // Load users and populate stats + table
   const { users } = await adminListUsers();
-
-  const totalEl = document.getElementById("stats-total-users");
-  const sessionsEl = document.getElementById("stats-active-sessions");
-  if (totalEl) totalEl.textContent = String(users.length);
-  if (sessionsEl) {
-    const activeSessions = users.filter((u) => u.hasActiveSession).length;
-    sessionsEl.textContent = String(activeSessions);
-  }
+  refreshStats(users);
 
   const tbody = document.getElementById("user-table-body");
   if (tbody) {
@@ -237,6 +292,12 @@ export async function initAdminPage(): Promise<void> {
     });
   }
 
+  // Cancel button for create modal
+  const cancelBtn = document.getElementById("cu-cancel-btn");
+  if (cancelBtn && modal) {
+    cancelBtn.addEventListener("click", () => modal.close());
+  }
+
   if (createForm && modal && tbody) {
     createForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -252,6 +313,8 @@ export async function initAdminPage(): Promise<void> {
         tbody.prepend(newRow);
         modal.close();
         createForm.reset();
+        const { users: fresh } = await adminListUsers();
+        refreshStats(fresh);
       } catch (err) {
         if (cuFeedback) {
           cuFeedback.textContent = err instanceof ApiError ? err.message : "Failed to create user.";

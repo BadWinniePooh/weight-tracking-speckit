@@ -40,10 +40,16 @@
 
         <!-- Stats bar -->
         <section id="stats-bar">
-          <div class="card bg-base-100 shadow mb-6">
-            <div class="card-body">
-              <div>Total users: <span id="stats-total-users">—</span></div>
-              <div>Active sessions: <span id="stats-active-sessions">—</span></div>
+          <div class="stats shadow w-full stats-vertical lg:stats-horizontal mb-6">
+            <div class="stat">
+              <div class="stat-title">Total Users</div>
+              <div class="stat-value" id="stat-total-users">—</div>
+              <div class="stat-desc">Registered accounts</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title">Active Sessions</div>
+              <div class="stat-value" id="stat-active-sessions">—</div>
+              <div class="stat-desc">Currently online</div>
             </div>
           </div>
         </section>
@@ -74,29 +80,45 @@
           </div>
         </section>
 
-        <!-- Create user dialog -->
-        <dialog id="create-user-modal">
-          <h3>Create User</h3>
-          <form id="create-user-form">
-            <div class="form-row">
-              <label for="cu-username">Username</label>
-              <input id="cu-username" type="text" required class="input input-bordered w-full" />
+        <!-- Create user dialog (FR-029: DaisyUI modal for centered display) -->
+        <dialog id="create-user-modal" class="modal">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg">Create User</h3>
+            <form id="create-user-form" class="mt-4">
+              <div class="form-control mb-4">
+                <label class="label" for="cu-username"><span class="label-text">Username</span></label>
+                <input id="cu-username" type="text" required class="input input-bordered w-full" />
+              </div>
+              <div class="form-control mb-4">
+                <label class="label" for="cu-email"><span class="label-text">Email</span></label>
+                <input id="cu-email" type="email" required class="input input-bordered w-full" />
+              </div>
+              <div class="form-control mb-4">
+                <label class="label" for="cu-role"><span class="label-text">Role</span></label>
+                <select id="cu-role" class="select select-bordered w-full">
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+              <div id="cu-feedback" role="alert" aria-live="polite" class="text-error text-sm min-h-4"></div>
+              <div class="modal-action">
+                <button type="submit" class="btn btn-primary" id="cu-submit-btn">Create</button>
+                <button type="button" id="cu-cancel-btn" class="btn">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </dialog>
+
+        <!-- Confirm action dialog (T044) -->
+        <dialog id="confirm-modal" class="modal">
+          <div class="modal-box">
+            <h3 id="confirm-modal-title" class="font-bold text-lg">Confirm Action</h3>
+            <p id="confirm-modal-message" class="py-4"></p>
+            <div class="modal-action">
+              <button id="confirm-modal-yes" class="btn btn-error">Confirm</button>
+              <button id="confirm-modal-cancel" class="btn">Cancel</button>
             </div>
-            <div class="form-row">
-              <label for="cu-email">Email</label>
-              <input id="cu-email" type="email" required class="input input-bordered w-full" />
-            </div>
-            <div class="form-row">
-              <label for="cu-role">Role</label>
-              <select id="cu-role" class="select select-bordered">
-                <option value="user">user</option>
-                <option value="admin">admin</option>
-              </select>
-            </div>
-            <div id="cu-feedback" role="alert" aria-live="polite"></div>
-            <button type="submit" class="btn btn-primary">Create</button>
-            <button type="button" id="cu-cancel-btn" class="btn btn-ghost">Cancel</button>
-          </form>
+          </div>
         </dialog>
 
         <!-- Audit log -->
@@ -135,9 +157,11 @@
                 </table>
               </div>
               <div id="audit-pagination" class="flex items-center gap-2 mt-4">
-                <button id="audit-prev-btn" class="btn btn-sm btn-ghost">Previous</button>
+                <div class="join">
+                  <button id="audit-prev-btn" class="join-item btn btn-sm btn-ghost">Previous</button>
+                  <button id="audit-next-btn" class="join-item btn btn-sm btn-ghost">Next</button>
+                </div>
                 <span id="audit-page-indicator"></span>
-                <button id="audit-next-btn" class="btn btn-sm btn-ghost">Next</button>
               </div>
             </div>
           </div>

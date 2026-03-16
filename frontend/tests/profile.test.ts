@@ -146,3 +146,22 @@ describe("profile page", () => {
     expect(feedback?.textContent).toContain("Incorrect");
   });
 });
+
+describe("profile page — email change notice (FR-031)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDom();
+  });
+
+  it("email change confirmation notice contains the actual new email address", async () => {
+    const { initProfilePage } = await import("../src/ts/profile");
+    await initProfilePage();
+
+    (document.getElementById("email-input") as HTMLInputElement).value = "new@example.com";
+    document.getElementById("email-form")!.dispatchEvent(new Event("submit"));
+    await new Promise((r) => setTimeout(r, 10));
+
+    const feedback = document.getElementById("email-feedback");
+    expect(feedback?.textContent).toContain("new@example.com");
+  });
+});

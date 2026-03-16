@@ -18,8 +18,10 @@ export async function initLoginPage(): Promise<void> {
     const username = (document.getElementById("username") as HTMLInputElement).value.trim();
     const password = (document.getElementById("password") as HTMLInputElement).value;
     const errorEl = document.getElementById("error-message");
+    const submitBtn = form.querySelector<HTMLButtonElement>("button[type='submit']");
 
     if (errorEl) errorEl.textContent = "";
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.dataset.loading = "true"; submitBtn.classList.add("loading"); }
 
     try {
       const response = await fetch(`${getApiUrl()}/api/auth/login`, {
@@ -44,6 +46,8 @@ export async function initLoginPage(): Promise<void> {
       if (errorEl) errorEl.textContent = "Login failed. Please try again.";
     } catch {
       if (errorEl) errorEl.textContent = "Unable to reach server. Please try again.";
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.dataset.loading = "false"; submitBtn.classList.remove("loading"); }
     }
   });
 }

@@ -39,10 +39,16 @@ export async function initResetCompletePage(): Promise<void> {
       return;
     }
 
+    submitBtn.disabled = true;
+    submitBtn.dataset.loading = "true";
+    submitBtn.classList.add("loading");
     try {
       await resetPassword(token, newPassword);
       window.location.href = "/login.html";
     } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.dataset.loading = "false";
+      submitBtn.classList.remove("loading");
       if (err instanceof ApiError) {
         feedbackEl.textContent = err.message;
       } else {

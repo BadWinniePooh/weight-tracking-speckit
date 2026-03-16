@@ -19,6 +19,7 @@ export async function initSetupPage(): Promise<void> {
     const password = (document.getElementById("password") as HTMLInputElement).value;
     const confirmPassword = (document.getElementById("confirm-password") as HTMLInputElement).value;
     const errorEl = document.getElementById("error-message");
+    const submitBtn = form.querySelector<HTMLButtonElement>("button[type='submit']");
 
     if (errorEl) errorEl.textContent = "";
 
@@ -26,6 +27,8 @@ export async function initSetupPage(): Promise<void> {
       if (errorEl) errorEl.textContent = "Passwords do not match.";
       return;
     }
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.dataset.loading = "true"; submitBtn.classList.add("loading"); }
 
     try {
       const response = await fetch(`${getApiUrl()}/api/setup/initialize`, {
@@ -59,6 +62,8 @@ export async function initSetupPage(): Promise<void> {
       if (errorEl) errorEl.textContent = "Setup failed. Please try again.";
     } catch {
       if (errorEl) errorEl.textContent = "Unable to reach server. Please try again.";
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.dataset.loading = "false"; submitBtn.classList.remove("loading"); }
     }
   });
 }

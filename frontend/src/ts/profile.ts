@@ -16,10 +16,19 @@ export async function initProfilePage(): Promise<void> {
   const usernameInput = document.getElementById("username-input") as HTMLInputElement | null;
   const usernameFeedback = document.getElementById("username-feedback");
 
+  function setLoading(form: HTMLFormElement, on: boolean): void {
+    const btn = form.querySelector<HTMLButtonElement>("button[type='submit']");
+    if (!btn) return;
+    btn.disabled = on;
+    btn.dataset.loading = on ? "true" : "false";
+    if (on) btn.classList.add("loading"); else btn.classList.remove("loading");
+  }
+
   if (usernameForm && usernameInput && usernameFeedback) {
     usernameForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       usernameFeedback.textContent = "";
+      setLoading(usernameForm, true);
       try {
         const result = await changeUsername(usernameInput.value.trim());
         usernameFeedback.textContent = `Username changed to ${result.username}.`;
@@ -29,6 +38,8 @@ export async function initProfilePage(): Promise<void> {
         } else {
           usernameFeedback.textContent = "Something went wrong. Please try again.";
         }
+      } finally {
+        setLoading(usernameForm, false);
       }
     });
   }
@@ -42,15 +53,19 @@ export async function initProfilePage(): Promise<void> {
     emailForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       emailFeedback.textContent = "";
+      setLoading(emailForm, true);
       try {
-        await changeEmail(emailInput.value.trim());
-        emailFeedback.textContent = "A confirmation email has been sent to your new address. Your current email remains active until you confirm.";
+        const newEmail = emailInput.value.trim();
+        await changeEmail(newEmail);
+        emailFeedback.textContent = `A confirmation email has been sent to ${newEmail}. Your current email remains active until you confirm.`;
       } catch (err) {
         if (err instanceof ApiError) {
           emailFeedback.textContent = err.message;
         } else {
           emailFeedback.textContent = "Something went wrong. Please try again.";
         }
+      } finally {
+        setLoading(emailForm, false);
       }
     });
   }
@@ -72,6 +87,7 @@ export async function initProfilePage(): Promise<void> {
         return;
       }
 
+      setLoading(passwordForm, true);
       try {
         await changePassword(currentPasswordInput.value, newPasswordInput.value);
         passwordFeedback.textContent = "Password changed successfully.";
@@ -81,6 +97,8 @@ export async function initProfilePage(): Promise<void> {
         } else {
           passwordFeedback.textContent = "Something went wrong. Please try again.";
         }
+      } finally {
+        setLoading(passwordForm, false);
       }
     });
   }
