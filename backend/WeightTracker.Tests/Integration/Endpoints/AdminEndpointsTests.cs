@@ -241,6 +241,32 @@ public class AdminEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
         Assert.False(exists, "User should not be persisted when email send fails.");
     }
 
+    // Bug #9: CreateUser must write a user_created audit log entry
+    [Fact]
+    public async Task CreateUser_AsAdmin_CreatesAuditLogEntry()
+    {
+        fixture.FakeEmail.Clear();
+        fixture.EnsureTestUserExists();
+        var username = $"createaudit_{Guid.NewGuid():N}";
+        var email = $"{username}@example.com";
+
+        var response = await AdminClient.PostAsJsonAsync("/api/admin/users",
+            new { username, email, role = "user" });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var newUserId = Guid.Parse(body.GetProperty("id").GetString()!);
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var entry = await db.AuditLog.FirstOrDefaultAsync(a =>
+            a.ActionType == "user_created" &&
+            a.TargetUserId == newUserId);
+
+        Assert.NotNull(entry); // fails before fix — no audit entry written
+        Assert.Equal(ApiFixture.AdminUserId, entry.ActorUserId);
+    }
+
     // T040: Actions on own account return 400; successful actions create audit log entries
     [Fact]
     public async Task DeactivateOwnAccount_Returns400()

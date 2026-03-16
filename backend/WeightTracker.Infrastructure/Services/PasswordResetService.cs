@@ -38,7 +38,7 @@ public class PasswordResetService(
         });
 
         var baseUrl = configuration["APP_BASE_URL"] ?? "http://localhost:3000";
-        var resetUrl = $"{baseUrl}/reset-password.html?token={plaintext}";
+        var resetUrl = $"{baseUrl}/reset-complete.html?token={plaintext}";
 
         var htmlBody = $"""
             <p>You requested a password reset for your weight tracker account.</p>

@@ -28,6 +28,7 @@ function userStatus(user: AdminUserDto): string {
 function renderUserRow(user: AdminUserDto, currentUserId: string | null): HTMLTableRowElement {
   const tr = document.createElement("tr");
   tr.dataset.userId = user.id;
+  tr.dataset.emailConfirmed = String(user.emailConfirmed);
 
   const isOwnAccount = user.id === currentUserId;
   const deletionCell = user.scheduledDeletionAt
@@ -142,8 +143,8 @@ function parseRowData(row: HTMLTableRowElement): AdminUserDto {
     username: row.cells[0]?.textContent?.trim() ?? "",
     email: row.cells[1]?.textContent?.trim() ?? "",
     role: row.cells[2]?.textContent?.trim() ?? "user",
-    isActive: row.cells[3]?.textContent?.trim() === "active",
-    emailConfirmed: row.cells[3]?.textContent?.trim() !== "pending confirmation",
+    isActive: row.cells[3]?.textContent?.trim() === "active" || row.cells[3]?.textContent?.trim() === "pending confirmation",
+    emailConfirmed: row.dataset.emailConfirmed === "true",
     createdAt: "",
     lastLoginAt: null,
     scheduledDeletionAt: null,

@@ -22,7 +22,8 @@ public static class AdminEndpoints
         adminGroup.MapPost("/users", async (
             CreateUserRequest request,
             IUserManagementService userManagementService,
-            IUserRepository userRepository) =>
+            IUserRepository userRepository,
+            HttpContext httpContext) =>
         {
             if (await userRepository.ExistsByUsernameAsync(request.Username))
                 return Results.Json(new { error = "Username is already taken.", field = "username" }, statusCode: 400);
@@ -30,7 +31,9 @@ public static class AdminEndpoints
             if (await userRepository.ExistsByEmailAsync(request.Email))
                 return Results.Json(new { error = "Email is already in use.", field = "email" }, statusCode: 400);
 
-            var userDto = await userManagementService.CreateUserAsync(request.Username, request.Email, request.Role);
+            var actorId = GetActorId(httpContext);
+            var userDto = await userManagementService.CreateUserAsync(
+                request.Username, request.Email, request.Role, actorId, GetIpAddress(httpContext));
             return Results.Json(userDto, statusCode: 201);
         });
 

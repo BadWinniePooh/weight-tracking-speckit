@@ -15,8 +15,9 @@ public class UserManagementService(
     IConfiguration configuration,
     AppDbContext db) : IUserManagementService
 {
-    public async Task<UserDto> CreateUserAsync(string username, string email, string role)
+    public async Task<UserDto> CreateUserAsync(string username, string email, string role, Guid actorUserId, string actorIp)
     {
+        var actor = await userRepository.GetByIdAsync(actorUserId);
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -41,6 +42,18 @@ public class UserManagementService(
             await tx.RollbackAsync();
             throw;
         }
+
+        await auditLogRepository.AppendAsync(new AuditLogEntry
+        {
+            Id = Guid.NewGuid(),
+            ActionType = "user_created",
+            ActorUserId = actorUserId,
+            ActorUsername = actor?.Username ?? actorUserId.ToString(),
+            TargetUserId = user.Id,
+            TargetUsername = user.Username,
+            IpAddress = actorIp,
+            Timestamp = DateTime.UtcNow
+        });
 
         return new UserDto
         {

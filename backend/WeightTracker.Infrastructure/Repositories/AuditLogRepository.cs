@@ -22,7 +22,14 @@ public class AuditLogRepository(AppDbContext db) : IAuditLogRepository
             baseQuery = baseQuery.Where(e => e.Timestamp >= filter.FromDate.Value);
 
         if (filter.ToDate.HasValue)
-            baseQuery = baseQuery.Where(e => e.Timestamp <= filter.ToDate.Value);
+        {
+            // When only a date is provided (time = midnight), extend to end of day so the
+            // entire calendar day is included (exclusive midnight → inclusive 23:59:59.999…)
+            var toDate = filter.ToDate.Value;
+            if (toDate.TimeOfDay == TimeSpan.Zero)
+                toDate = toDate.Date.AddDays(1).AddTicks(-1);
+            baseQuery = baseQuery.Where(e => e.Timestamp <= toDate);
+        }
 
         if (!string.IsNullOrEmpty(filter.ActionType))
             baseQuery = baseQuery.Where(e => e.ActionType == filter.ActionType);

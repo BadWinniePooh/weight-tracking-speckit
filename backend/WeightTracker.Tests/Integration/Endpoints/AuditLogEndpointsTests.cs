@@ -127,6 +127,27 @@ public class AuditLogEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixtu
         Assert.Equal(0, body.GetProperty("entries").GetArrayLength());
     }
 
+    // Bug #11: toDate must be inclusive of the entire day (entries at any time on toDate must be returned)
+    [Fact]
+    public async Task GetAuditLog_SameDayFromAndTo_ReturnsSameDayEntries()
+    {
+        fixture.EnsureTestUserExists();
+        // Insert an entry timestamped at 2pm today (well after midnight)
+        var today2pm = DateTime.UtcNow.Date.AddHours(14);
+        var uniqueAction = $"sameday_{Guid.NewGuid():N}";
+        await InsertAuditEntriesAsync(MakeEntry(uniqueAction, today2pm));
+
+        var date = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
+        var client = fixture.CreateAuthenticatedAdminClient();
+        var response = await client.GetAsync(
+            $"/api/admin/audit-log?fromDate={date}&toDate={date}&actionType={uniqueAction}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        // Without the fix, toDate resolves to midnight so the 2pm entry is excluded → 0 results
+        Assert.Equal(1, body.GetProperty("entries").GetArrayLength());
+    }
+
     // T061: Non-admin user receives 403
     [Fact]
     public async Task GetAuditLog_NonAdmin_Returns403()

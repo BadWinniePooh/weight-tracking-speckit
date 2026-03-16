@@ -18,6 +18,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-14
 - PostgreSQL 16 — adds `PasswordResetTokens`, `EmailConfirmationTokens`, `AuditLog` tables; alters `Users` table (007-admin-user-management)
 - TypeScript 5.x (browser ES2020) for all frontend work; C# 12 / .NET 8 for the one backend amendmen + Vite 5.x (build + dev server); Vitest 2.x + jsdom (frontend tests); existing `api-client.ts`, `auth-guard.ts`, `auth-token.ts`; xUnit + Testcontainers.PostgreSql (backend amendment test) (008-frontend-admin-ui)
 - No new storage — no `localStorage` usage, no new database columns (008-frontend-admin-ui)
+- TypeScript 5.x (browser target ES2020); HTML5; CSS3 + Tailwind CSS v3 (PostCSS plugin), DaisyUI v4 (Tailwind plugin), Vite 5.x (existing) (009-tailwind-daisyui-redesign)
+- None — no localStorage, no new DB columns (009-tailwind-daisyui-redesign)
 
 - TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing) (001-weight-tracker-app)
 
@@ -54,9 +56,9 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 009-tailwind-daisyui-redesign: Added TypeScript 5.x (browser target ES2020); HTML5; CSS3 + Tailwind CSS v3 (PostCSS plugin), DaisyUI v4 (Tailwind plugin), Vite 5.x (existing)
 - 008-frontend-admin-ui: Added TypeScript 5.x (browser ES2020) for all frontend work; C# 12 / .NET 8 for the one backend amendmen + Vite 5.x (build + dev server); Vitest 2.x + jsdom (frontend tests); existing `api-client.ts`, `auth-guard.ts`, `auth-token.ts`; xUnit + Testcontainers.PostgreSql (backend amendment test)
 - 007-admin-user-management: Added C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend — api-client.ts only) + ASP.NET Core Minimal API, EF Core 8, Npgsql, BCrypt.Net-Next, MailKit 4.x (new), Testcontainers 3.10.0 + MailHog generic container (new)
-- 006-jwt-auth-setup: Added C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend)
 
 
 <!-- MANUAL ADDITIONS START -->

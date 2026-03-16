@@ -118,7 +118,7 @@ function setupDom() {
     <table><tbody id="audit-table-body"></tbody></table>
     <input id="audit-filter-from" type="date" />
     <input id="audit-filter-to" type="date" />
-    <select id="audit-filter-action"><option value="">All</option><option value="UserDeactivated">UserDeactivated</option></select>
+    <select id="audit-filter-action"><option value="">All</option><option value="user_created">UserCreated</option><option value="user_deactivated">UserDeactivated</option><option value="user_reactivated">UserReactivated</option><option value="user_deleted">UserDeleted</option><option value="role_changed">RoleChanged</option><option value="password_reset">PasswordReset</option></select>
     <button id="audit-apply-btn">Apply</button>
     <button id="audit-prev-btn">Previous</button>
     <button id="audit-next-btn">Next</button>
@@ -299,6 +299,82 @@ describe("admin page — create user modal", () => {
   });
 });
 
+describe("admin page — user status after reactivation (Bug #7)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDom();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+  });
+
+  // Bug #7: reactivating a user whose email is unconfirmed must show "pending confirmation"
+  it("reactivated user with emailConfirmed=false shows 'pending confirmation' status and resend button", async () => {
+    const { adminListUsers } = await import("../src/ts/api-client");
+    (adminListUsers as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      users: [{
+        id: "pending-id-999",
+        username: "pending_user",
+        email: "pending@example.com",
+        role: "user",
+        isActive: false,        // deactivated
+        emailConfirmed: false,  // email also unconfirmed
+        createdAt: "2026-01-01T00:00:00Z",
+        lastLoginAt: null,
+        scheduledDeletionAt: "2026-04-15T00:00:00Z",
+        hasActiveSession: false,
+      }],
+    });
+
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    // Initial status must be "deactivated" (isActive=false takes precedence)
+    const row = document.querySelector(`[data-user-id="pending-id-999"]`) as HTMLTableRowElement;
+    expect(row).toBeTruthy();
+    expect(row.cells[3]?.textContent?.trim()).toBe("deactivated");
+
+    // Reactivate
+    const reactivateBtn = row.querySelector(`[data-action="reactivate"]`) as HTMLButtonElement;
+    expect(reactivateBtn).toBeTruthy();
+    reactivateBtn.click();
+    await new Promise((r) => setTimeout(r, 10));
+
+    // After reactivation: isActive=true, emailConfirmed=false → must show "pending confirmation"
+    const newRow = document.querySelector(`[data-user-id="pending-id-999"]`) as HTMLTableRowElement;
+    expect(newRow.cells[3]?.textContent?.trim()).toBe("pending confirmation"); // fails before fix
+    // Resend Confirmation button must be visible
+    expect(newRow.querySelector(`[data-action="resend-confirmation"]`)).toBeTruthy(); // fails before fix
+  });
+
+  it("reactivated user with emailConfirmed=true shows 'active' status and no resend button", async () => {
+    const { adminListUsers } = await import("../src/ts/api-client");
+    (adminListUsers as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      users: [{
+        id: "active-id-888",
+        username: "active_user",
+        email: "active@example.com",
+        role: "user",
+        isActive: false,
+        emailConfirmed: true,
+        createdAt: "2026-01-01T00:00:00Z",
+        lastLoginAt: null,
+        scheduledDeletionAt: "2026-04-15T00:00:00Z",
+        hasActiveSession: false,
+      }],
+    });
+
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    const row = document.querySelector(`[data-user-id="active-id-888"]`) as HTMLTableRowElement;
+    row.querySelector<HTMLButtonElement>(`[data-action="reactivate"]`)!.click();
+    await new Promise((r) => setTimeout(r, 10));
+
+    const newRow = document.querySelector(`[data-user-id="active-id-888"]`) as HTMLTableRowElement;
+    expect(newRow.cells[3]?.textContent?.trim()).toBe("active");
+    expect(newRow.querySelector(`[data-action="resend-confirmation"]`)).toBeNull();
+  });
+});
+
 describe("admin page — audit log section", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -331,7 +407,7 @@ describe("admin page — audit log section", () => {
 
     (document.getElementById("audit-filter-from") as HTMLInputElement).value = "2026-01-01";
     (document.getElementById("audit-filter-to") as HTMLInputElement).value = "2026-03-31";
-    (document.getElementById("audit-filter-action") as HTMLSelectElement).value = "UserDeactivated";
+    (document.getElementById("audit-filter-action") as HTMLSelectElement).value = "user_deactivated";
     document.getElementById("audit-apply-btn")!.click();
     await new Promise((r) => setTimeout(r, 10));
 
@@ -339,9 +415,24 @@ describe("admin page — audit log section", () => {
       expect.objectContaining({
         fromDate: "2026-01-01",
         toDate: "2026-03-31",
-        actionType: "UserDeactivated",
+        actionType: "user_deactivated",
         page: 1,
       })
+    );
+  });
+
+  // Bug #10: dropdown values must use snake_case to match backend expectations
+  it("sends snake_case action type to API (not PascalCase)", async () => {
+    const { adminGetAuditLog } = await import("../src/ts/api-client");
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    (document.getElementById("audit-filter-action") as HTMLSelectElement).value = "user_deactivated";
+    document.getElementById("audit-apply-btn")!.click();
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(adminGetAuditLog).toHaveBeenLastCalledWith(
+      expect.objectContaining({ actionType: "user_deactivated" })
     );
   });
 

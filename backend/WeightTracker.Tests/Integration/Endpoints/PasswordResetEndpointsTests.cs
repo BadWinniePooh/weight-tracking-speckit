@@ -76,7 +76,22 @@ public class PasswordResetEndpointsTests(ApiFixture fixture) : IClassFixture<Api
         var email = fixture.FakeEmail.Messages[0];
         Assert.Equal(user.Email, email.To);
         Assert.Contains("reset", email.Subject, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("http://localhost:3000/reset-password.html?token=", email.Body);
+        Assert.Contains("http://localhost:3000/reset-complete.html?token=", email.Body);
+    }
+
+    // Bug #13: reset email must link to reset-complete.html, not the non-existent reset-password.html
+    [Fact]
+    public async Task ForgotPassword_EmailLinksToResetCompletePage()
+    {
+        fixture.FakeEmail.Clear();
+        var user = await CreateConfirmedUserAsync($"pwreset_page_{Guid.NewGuid():N}", "pass123");
+
+        await _client.PostAsJsonAsync("/api/auth/forgot-password", new { email = user.Email });
+
+        Assert.Single(fixture.FakeEmail.Messages);
+        var body = fixture.FakeEmail.Messages[0].Body;
+        Assert.Contains("/reset-complete.html?token=", body);
+        Assert.DoesNotContain("/reset-password.html", body);
     }
 
     // T016: POST /api/auth/reset-password with valid token resets password; token cannot be reused
