@@ -40,17 +40,17 @@
 
 **Independent Test**: `npm test` — all tests pass; zero CSS class selectors (`.className`) remain in `frontend/tests/ui.test.ts`.
 
-- [ ] T007 [US7] In `frontend/src/ts/ui.ts`, add `data-cell="weight"` to the weight `<td>` of each dynamically generated entry table row (per `contracts/ui-components.md` Entry Table Row contract)
-- [ ] T008 [US7] In `frontend/src/ts/ui.ts`, add `data-cell="date"` to the date `<td>` of each dynamically generated entry table row
-- [ ] T009 [US7] In `frontend/src/ts/ui.ts`, add `data-cell="time"` to the time `<td>` of each dynamically generated entry table row
-- [ ] T010 [US7] In `frontend/src/ts/ui.ts`, add `data-cell="actions"` to the actions `<td>` of each dynamically generated entry table row
-- [ ] T011 [US7] In `frontend/src/ts/ui.ts`, add `id="entry-empty-state"` to the empty-state element rendered when no weight entries exist
-- [ ] T012 [US7] In `frontend/tests/ui.test.ts`, replace all `.entry-weight` class selectors with `[data-cell="weight"]` (~5 occurrences at lines 437, 473, 479, 485, 492)
-- [ ] T013 [US7] In `frontend/tests/ui.test.ts`, replace all `.entry-date` class selectors with `[data-cell="date"]` (~2 occurrences at lines 443, 499)
-- [ ] T014 [US7] In `frontend/tests/ui.test.ts`, replace all `.entry-time` class selectors with `[data-cell="time"]` (~2 occurrences at lines 449, 505)
-- [ ] T015 [US7] In `frontend/tests/ui.test.ts`, replace all `.entry-actions` class selectors with `[data-cell="actions"]` (~1 occurrence at line 455)
-- [ ] T016 [US7] In `frontend/tests/ui.test.ts`, replace all `.empty-state` class selectors with `#entry-empty-state` id selector (~2 occurrences at lines 553, 559)
-- [ ] T017 [US7] Run `npm test` in `frontend/` — all tests must pass; confirm no `.querySelector(".[a-z]")` CSS-class queries remain in `frontend/tests/` (grep check)
+- [x] T007 [US7] In `frontend/src/ts/ui.ts`, add `data-cell="weight"` to the weight `<td>` of each dynamically generated entry table row (per `contracts/ui-components.md` Entry Table Row contract)
+- [x] T008 [US7] In `frontend/src/ts/ui.ts`, add `data-cell="date"` to the date `<td>` of each dynamically generated entry table row
+- [x] T009 [US7] In `frontend/src/ts/ui.ts`, add `data-cell="time"` to the time `<td>` of each dynamically generated entry table row
+- [x] T010 [US7] In `frontend/src/ts/ui.ts`, add `data-cell="actions"` to the actions `<td>` of each dynamically generated entry table row
+- [x] T011 [US7] In `frontend/src/ts/ui.ts`, add `id="entry-empty-state"` to the empty-state element rendered when no weight entries exist
+- [x] T012 [US7] In `frontend/tests/ui.test.ts`, replace all `.entry-weight` class selectors with `[data-cell="weight"]` (~5 occurrences at lines 437, 473, 479, 485, 492)
+- [x] T013 [US7] In `frontend/tests/ui.test.ts`, replace all `.entry-date` class selectors with `[data-cell="date"]` (~2 occurrences at lines 443, 499)
+- [x] T014 [US7] In `frontend/tests/ui.test.ts`, replace all `.entry-time` class selectors with `[data-cell="time"]` (~2 occurrences at lines 449, 505)
+- [x] T015 [US7] In `frontend/tests/ui.test.ts`, replace all `.entry-actions` class selectors with `[data-cell="actions"]` (~1 occurrence at line 455)
+- [x] T016 [US7] In `frontend/tests/ui.test.ts`, replace all `.empty-state` class selectors with `#entry-empty-state` id selector (~2 occurrences at lines 553, 559)
+- [x] T017 [US7] Run `npm test` in `frontend/` — all tests must pass; confirm no `.querySelector(".[a-z]")` CSS-class queries remain in `frontend/tests/` (grep check)
 
 **Checkpoint**: All tests green. Zero CSS class selectors in test suite. HTML styling work may now begin.
 

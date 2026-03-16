@@ -432,27 +432,27 @@ describe("renderEntry — DOM structure", () => {
     expect(row.className).toBe("entry-row");
   });
 
-  it("weight cell has class 'entry-weight'", () => {
+  it("weight cell has data-cell='weight'", () => {
     const row = renderEntry(makeEntry());
-    const cell = row.querySelector(".entry-weight");
+    const cell = row.querySelector("[data-cell=\"weight\"]");
     expect(cell).not.toBeNull();
   });
 
-  it("date cell has class 'entry-date'", () => {
+  it("date cell has data-cell='date'", () => {
     const row = renderEntry(makeEntry());
-    const cell = row.querySelector(".entry-date");
+    const cell = row.querySelector("[data-cell=\"date\"]");
     expect(cell).not.toBeNull();
   });
 
-  it("time cell has class 'entry-time'", () => {
+  it("time cell has data-cell='time'", () => {
     const row = renderEntry(makeEntry());
-    const cell = row.querySelector(".entry-time");
+    const cell = row.querySelector("[data-cell=\"time\"]");
     expect(cell).not.toBeNull();
   });
 
-  it("actions cell has class 'entry-actions'", () => {
+  it("actions cell has data-cell='actions'", () => {
     const row = renderEntry(makeEntry());
-    const cell = row.querySelector(".entry-actions");
+    const cell = row.querySelector("[data-cell=\"actions\"]");
     expect(cell).not.toBeNull();
   });
 
@@ -470,39 +470,39 @@ describe("renderEntry — DOM structure", () => {
 
   it("weight cell shows the weight with 1 decimal and the display unit", () => {
     const row = renderEntry(makeEntry({ weightValue: 82.5, unit: "kg" }), "kg");
-    const cell = row.querySelector(".entry-weight")!;
+    const cell = row.querySelector("[data-cell=\"weight\"]")!;
     expect(cell.textContent).toBe("82.5 kg");
   });
 
   it("default displayUnit falls back to entry.unit", () => {
     const row = renderEntry(makeEntry({ weightValue: 180, unit: "lbs" }));
-    const cell = row.querySelector(".entry-weight")!;
+    const cell = row.querySelector("[data-cell=\"weight\"]")!;
     expect(cell.textContent).toContain("lbs");
   });
 
   it("converts kg to lbs when displayUnit is lbs", () => {
     const row = renderEntry(makeEntry({ weightValue: 100, unit: "kg" }), "lbs");
-    const cell = row.querySelector(".entry-weight")!;
+    const cell = row.querySelector("[data-cell=\"weight\"]")!;
     expect(cell.textContent).toContain("220.5");
     expect(cell.textContent).toContain("lbs");
   });
 
   it("converts lbs to kg when displayUnit is kg", () => {
     const row = renderEntry(makeEntry({ weightValue: 220, unit: "lbs" }), "kg");
-    const cell = row.querySelector(".entry-weight")!;
+    const cell = row.querySelector("[data-cell=\"weight\"]")!;
     expect(cell.textContent).toContain("99.8");
     expect(cell.textContent).toContain("kg");
   });
 
   it("date cell is non-empty for a valid timestamp", () => {
     const row = renderEntry(makeEntry({ timestamp: "2026-03-13T09:15:00.000Z" }));
-    const cell = row.querySelector(".entry-date")!;
+    const cell = row.querySelector("[data-cell=\"date\"]")!;
     expect(cell.textContent).not.toBe("");
   });
 
   it("time cell is non-empty for a valid timestamp", () => {
     const row = renderEntry(makeEntry({ timestamp: "2026-03-13T09:15:00.000Z" }));
-    const cell = row.querySelector(".entry-time")!;
+    const cell = row.querySelector("[data-cell=\"time\"]")!;
     expect(cell.textContent).not.toBe("");
   });
 });
@@ -548,15 +548,15 @@ describe("renderEntryList — table header and structure", () => {
     expect(btn.textContent).toContain("Delete all");
   });
 
-  it("empty-state paragraph has class 'empty-state'", () => {
+  it("empty-state paragraph has id 'entry-empty-state'", () => {
     renderEntryList([], "kg");
-    const el = document.querySelector(".empty-state");
+    const el = document.querySelector("#entry-empty-state");
     expect(el).not.toBeNull();
   });
 
   it("empty-state message text mentions 'log'", () => {
     renderEntryList([], "kg");
-    const el = document.querySelector(".empty-state")!;
+    const el = document.querySelector("#entry-empty-state")!;
     expect(el.textContent?.toLowerCase()).toContain("log");
   });
 

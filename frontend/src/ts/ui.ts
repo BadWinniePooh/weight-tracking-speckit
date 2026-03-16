@@ -73,18 +73,22 @@ export function renderEntry(entry: WeightEntry, displayUnit: WeightUnit = entry.
   const displayValue = convertWeight(entry.weightValue, entry.unit, displayUnit);
   const weightCell = document.createElement("td");
   weightCell.className = "entry-weight";
+  weightCell.setAttribute("data-cell", "weight");
   weightCell.textContent = `${displayValue.toFixed(1)} ${displayUnit}`;
 
   const dateCell = document.createElement("td");
   dateCell.className = "entry-date";
+  dateCell.setAttribute("data-cell", "date");
   dateCell.textContent = dateFormatter.format(date);
 
   const timeCell = document.createElement("td");
   timeCell.className = "entry-time";
+  timeCell.setAttribute("data-cell", "time");
   timeCell.textContent = timeFormatter.format(date);
 
   const actionsCell = document.createElement("td");
   actionsCell.className = "entry-actions";
+  actionsCell.setAttribute("data-cell", "actions");
 
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "Delete";
@@ -108,6 +112,7 @@ export function renderEntryList(entries: Array<{ id: string; weightValue: number
 
   if (entries.length === 0) {
     const msg = document.createElement("p");
+    msg.id = "entry-empty-state";
     msg.className = "empty-state";
     msg.textContent = "No entries yet — log your first weight above.";
     list.appendChild(msg);
