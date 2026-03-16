@@ -1,361 +1,50 @@
-/* ── Reset & base ─────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom overrides for health/fitness theme palette */
+[data-theme="light"],
+:root {
+  --p: 160 84% 39%;
+  --pc: 0 0% 100%;
+  --a: 38 92% 50%;
+  --ac: 220 9% 10%;
+  --su: 152 68% 31%;
+  --er: 0 72% 51%;
+  --wa: 38 92% 50%;
+  --b1: 0 0% 100%;
+  --b2: 210 20% 98%;
+  --b3: 220 14% 96%;
+  --bc: 221 39% 11%;
+  --n: 220 9% 46%;
+  --nc: 0 0% 100%;
 }
 
-body {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #1a1a1a;
-  background: #f5f5f5;
-  min-width: 320px;
+[data-theme="dark"] {
+  --p: 160 84% 60%;
+  --pc: 220 9% 10%;
+  --a: 38 92% 65%;
+  --ac: 220 9% 10%;
+  --su: 160 84% 60%;
+  --er: 0 91% 71%;
+  --wa: 38 92% 65%;
+  --b1: 221 39% 11%;
+  --b2: 215 28% 17%;
+  --b3: 217 19% 27%;
+  --bc: 210 20% 98%;
+  --n: 218 11% 65%;
+  --nc: 221 39% 11%;
 }
 
-/* ── Focus ring (FR-012 keyboard accessibility) ───────────────── */
-:focus-visible {
-  outline: 3px solid #0066cc;
-  outline-offset: 2px;
-}
-
-/* ── Layout: mobile-first single column ──────────────────────── */
-#app {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-header {
-  margin-bottom: 1.5rem;
-}
-
-header h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
-section {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-section h2 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-/* ── Form rows ─────────────────────────────────────────────────── */
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.75rem;
-}
-
-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #555;
-}
-
-input[type="number"],
-select {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
-  background: #fff;
-  appearance: none;
-}
-
-input[type="number"]:focus,
-select:focus {
-  border-color: #0066cc;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
-}
-
-/* ── Buttons ───────────────────────────────────────────────────── */
-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1.25rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-#submit-btn {
-  background: #0066cc;
-  color: #fff;
-  width: 100%;
-  margin-top: 0.25rem;
-}
-
-#submit-btn:hover {
-  background: #0052a3;
-}
-
-#export-btn {
-  background: #555;
-  color: #fff;
-}
-
-#export-btn:hover {
-  background: #333;
-}
-
-/* ── Error message ─────────────────────────────────────────────── */
-.error-msg {
-  color: #c0392b;
-  font-size: 0.875rem;
-  min-height: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-/* ── Entry table ────────────────────────────────────────────────── */
-.entry-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
-
-.entry-table th {
-  text-align: left;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0 0.75rem 0.5rem 0;
-  border-bottom: 2px solid #eee;
-}
-
-.entry-table td {
-  padding: 0.55rem 0.75rem 0.55rem 0;
-  border-bottom: 1px solid #eee;
-  vertical-align: middle;
-}
-
-.entry-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.entry-weight {
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.entry-date,
-.entry-time {
-  color: #555;
-  white-space: nowrap;
-}
-
-.entry-actions,
-.entry-table th:last-child {
-  text-align: right;
-  padding-right: 0;
-}
-
-.entry-table button {
-  padding: 0.3rem 0.75rem;
-  font-size: 0.8rem;
-  background: #fef2f2;
-  color: #c0392b;
-  border: 1px solid #fca5a5;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.entry-table button:hover {
-  background: #fee2e2;
-}
-
-.empty-state {
-  color: #888;
-  font-style: italic;
-  padding: 0.5rem 0;
-}
-
-/* ── Chart section (FR-019) ────────────────────────────────────── */
-#chart-section:not([hidden]) {
-  display: block;
-}
-
+/* Chart container height — no DaisyUI equivalent */
 #chart-container {
   position: relative;
   height: 260px;
   width: 100%;
 }
 
-#chart-info-msg {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: #555;
-  min-height: 1.25rem;
-}
-
-#chart-section h2 {
-  margin-bottom: 0.75rem;
-}
-
-#chart-settings-btn {
-  margin-top: 0.75rem;
-  background: #f0f0f0;
-  color: #333;
-  border: 1px solid #ccc;
-  font-size: 0.875rem;
-  padding: 0.35rem 1rem;
-}
-
-#chart-settings-btn:hover {
-  background: #e0e0e0;
-}
-
 @media (min-width: 768px) {
   #chart-container {
     height: 320px;
-  }
-}
-
-/* ── Settings modal (FR-020) ────────────────────────────────────── */
-#chart-settings-modal {
-  border: none;
-  border-radius: 8px;
-  padding: 1.5rem;
-  max-width: 480px;
-  width: 90vw;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-#chart-settings-modal::backdrop {
-  background: rgba(0, 0, 0, 0.45);
-}
-
-#chart-settings-modal h2 {
-  margin-bottom: 1.25rem;
-}
-
-.field-error {
-  display: block;
-  color: #c0392b;
-  font-size: 0.8rem;
-  min-height: 1rem;
-  margin-top: 0.15rem;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-  justify-content: flex-end;
-}
-
-#settings-save-btn {
-  background: #0066cc;
-  color: #fff;
-}
-
-#settings-save-btn:hover {
-  background: #0052a3;
-}
-
-#settings-cancel-btn {
-  background: #f0f0f0;
-  color: #333;
-  border: 1px solid #ccc;
-}
-
-#settings-cancel-btn:hover {
-  background: #e0e0e0;
-}
-
-/* ── Recovery screen (FR-013) ─────────────────────────────────── */
-#recovery-screen:not([hidden]) {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff3cd;
-  padding: 1rem;
-}
-
-.recovery-content {
-  max-width: 480px;
-  background: #fff;
-  border: 2px solid #e07b00;
-  border-radius: 8px;
-  padding: 2rem;
-  text-align: center;
-}
-
-.recovery-content h1 {
-  font-size: 1.5rem;
-  color: #c05700;
-  margin-bottom: 1rem;
-}
-
-.recovery-content p {
-  margin-bottom: 1.5rem;
-  color: #555;
-}
-
-#download-raw-btn {
-  background: #e07b00;
-  color: #fff;
-  margin-right: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-#download-raw-btn:hover {
-  background: #c05700;
-}
-
-.reset-btn {
-  background: #c0392b;
-  color: #fff;
-}
-
-.reset-btn:hover {
-  background: #a93226;
-}
-
-/* ── Desktop layout (≥ 1024 px) ───────────────────────────────── */
-@media (min-width: 1024px) {
-  #app {
-    padding: 2rem;
-    max-width: 720px;
-  }
-
-  header h1 {
-    font-size: 2rem;
-  }
-
-  .form-row {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .form-row label {
-    width: 6rem;
-    flex-shrink: 0;
-    margin-bottom: 0;
-  }
-
-  #submit-btn {
-    width: auto;
-    padding: 0.5rem 2rem;
   }
 }
