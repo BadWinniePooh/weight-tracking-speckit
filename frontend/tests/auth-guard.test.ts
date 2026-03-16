@@ -77,6 +77,56 @@ describe("enforceRedirect", () => {
   });
 });
 
+describe("enforceRedirect — role-aware page types", () => {
+  it("profile + authenticated → no redirect", () => {
+    const state: AuthState = { isAuthenticated: true, setupRequired: false, role: "user" };
+    enforceRedirect("profile", state);
+    expect(window.location.href).toBe("");
+  });
+
+  it("profile + not authenticated → /login.html", () => {
+    const state: AuthState = { isAuthenticated: false, setupRequired: false };
+    enforceRedirect("profile", state);
+    expect(window.location.href).toBe("/login.html");
+  });
+
+  it("admin + authenticated admin → no redirect", () => {
+    const state: AuthState = { isAuthenticated: true, setupRequired: false, role: "admin" };
+    enforceRedirect("admin", state);
+    expect(window.location.href).toBe("");
+  });
+
+  it("admin + authenticated non-admin → /index.html", () => {
+    const state: AuthState = { isAuthenticated: true, setupRequired: false, role: "user" };
+    enforceRedirect("admin", state);
+    expect(window.location.href).toBe("/index.html");
+  });
+
+  it("admin + authenticated no role → /index.html", () => {
+    const state: AuthState = { isAuthenticated: true, setupRequired: false };
+    enforceRedirect("admin", state);
+    expect(window.location.href).toBe("/index.html");
+  });
+
+  it("admin + not authenticated → /login.html", () => {
+    const state: AuthState = { isAuthenticated: false, setupRequired: false };
+    enforceRedirect("admin", state);
+    expect(window.location.href).toBe("/login.html");
+  });
+
+  it("public + authenticated → no redirect", () => {
+    const state: AuthState = { isAuthenticated: true, setupRequired: false };
+    enforceRedirect("public", state);
+    expect(window.location.href).toBe("");
+  });
+
+  it("public + not authenticated → no redirect", () => {
+    const state: AuthState = { isAuthenticated: false, setupRequired: false };
+    enforceRedirect("public", state);
+    expect(window.location.href).toBe("");
+  });
+});
+
 describe("enforceRedirect — edge cases for survived mutants", () => {
   it("app + isAuthenticated=true + setupRequired=true → no redirect (already authenticated)", () => {
     // The condition is !isAuthenticated && setupRequired — both must be true for /setup.html redirect.

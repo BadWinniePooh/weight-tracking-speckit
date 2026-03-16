@@ -18,7 +18,7 @@
 
 **Purpose**: Wire the new pages into the build system. Must complete before any new page can be loaded or tested via the dev server.
 
-- [ ] T001 Add 4 new Vite entry points (`resetRequest`, `resetComplete`, `profile`, `admin`) to `frontend/vite.config.ts` — see `contracts/frontend.md` for exact keys and paths
+- [x] T001 Add 4 new Vite entry points (`resetRequest`, `resetComplete`, `profile`, `admin`) to `frontend/vite.config.ts` — see `contracts/frontend.md` for exact keys and paths
 
 **Checkpoint**: `npm run build` in `frontend/` produces output for all new pages.
 
@@ -30,10 +30,10 @@
 
 **⚠️ CRITICAL**: No user story page work can begin until this phase is complete.
 
-- [ ] T002 [P] Write failing tests for `getUserRole()` in `frontend/tests/auth-token.test.ts` — cover: null when no token, null on malformed token, returns role string from ASP.NET Core URI claim, fallback to shorthand `"role"` key; confirm tests FAIL before T003
-- [ ] T003 [P] Write failing tests for extended `enforceRedirect` (`"profile"`, `"admin"`, `"public"` page types) and `AuthState.role` field in `frontend/tests/auth-guard.test.ts` — cover all redirect permutations per `contracts/frontend.md`; confirm tests FAIL before T005
-- [ ] T004 Implement `getUserRole(): string | null` in `frontend/src/ts/auth-token.ts` — decode JWT payload via `atob`, check both `http://schemas.microsoft.com/ws/2008/06/identity/claims/role` and `"role"` keys, never throw; confirm T002 tests PASS
-- [ ] T005 Extend `AuthState` (add `role?: string`) and `enforceRedirect` (add `"profile"`, `"admin"`, `"public"` page types) in `frontend/src/ts/auth-guard.ts`; update `checkAuthStatus()` to populate `role` via `getUserRole()` after successful refresh; confirm T003 tests PASS
+- [x] T002 [P] Write failing tests for `getUserRole()` in `frontend/tests/auth-token.test.ts` — cover: null when no token, null on malformed token, returns role string from ASP.NET Core URI claim, fallback to shorthand `"role"` key; confirm tests FAIL before T004
+- [x] T003 [P] Write failing tests for extended `enforceRedirect` (`"profile"`, `"admin"`, `"public"` page types) and `AuthState.role` field in `frontend/tests/auth-guard.test.ts` — cover all redirect permutations per `contracts/frontend.md`; confirm tests FAIL before T005
+- [x] T004 Implement `getUserRole(): string | null` in `frontend/src/ts/auth-token.ts` — decode JWT payload via `atob`, check both `http://schemas.microsoft.com/ws/2008/06/identity/claims/role` and `"role"` keys, never throw; confirm T002 tests PASS
+- [x] T005 Extend `AuthState` (add `role?: string`) and `enforceRedirect` (add `"profile"`, `"admin"`, `"public"` page types) in `frontend/src/ts/auth-guard.ts`; update `checkAuthStatus()` to populate `role` via `getUserRole()` after successful refresh; confirm T003 tests PASS
 
 **Checkpoint**: All auth-guard and auth-token tests green. Role-aware redirect logic is ready for use by all new page entry files.
 
@@ -49,7 +49,7 @@
 
 > **Write these tests FIRST — confirm they FAIL before writing any of T007/T008**
 
-- [ ] T006 Write failing tests for `admin.ts` user management in `frontend/tests/admin.test.ts` — cover: stats bar values derived from user list (`totalUsers`, `activeSessions`), user table renders all columns, deactivate/reactivate/delete/change-role/resend buttons trigger correct `api-client` calls, `window.confirm` called before destructive actions, own-account actions disabled, create user modal opens on button click, create user form submission calls `adminCreateUser` and prepends row; confirm tests FAIL before T008
+- [ ] T006 Write failing tests for `admin.ts` user management in `frontend/tests/admin.test.ts` — cover: stats bar values derived from user list (`totalUsers`, `activeSessions`), user table renders all columns, deactivate/reactivate/delete/change-role/resend buttons trigger correct `api-client` calls, `window.confirm` called before destructive actions, confirm dialog returns false → no API call is made and the user row is unchanged, own-account actions disabled, create user modal opens on button click, create user form submission calls `adminCreateUser` and prepends row; confirm tests FAIL before T008
 
 ### Implementation for User Story 1
 

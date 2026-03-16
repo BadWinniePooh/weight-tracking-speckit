@@ -1,9 +1,10 @@
 import { getApiUrl } from "./config";
-import { setAccessToken } from "./auth-token";
+import { setAccessToken, getUserRole } from "./auth-token";
 
 export interface AuthState {
   isAuthenticated: boolean;
   setupRequired: boolean;
+  role?: string;
   error?: string;
 }
 
@@ -28,7 +29,8 @@ export async function checkAuthStatus(): Promise<AuthState> {
     if (refreshRes.ok) {
       const { accessToken } = (await refreshRes.json()) as { accessToken: string };
       setAccessToken(accessToken);
-      return { isAuthenticated: true, setupRequired: false };
+      const role = getUserRole() ?? undefined;
+      return { isAuthenticated: true, setupRequired: false, role };
     }
   } catch {
     // refresh failed — unauthenticated
@@ -38,7 +40,7 @@ export async function checkAuthStatus(): Promise<AuthState> {
 }
 
 export function enforceRedirect(
-  pageType: "app" | "login" | "setup",
+  pageType: "app" | "login" | "setup" | "profile" | "admin" | "public",
   state: AuthState
 ): void {
   if (pageType === "app") {
@@ -59,5 +61,16 @@ export function enforceRedirect(
     } else if (!state.setupRequired) {
       window.location.href = "/login.html";
     }
+  } else if (pageType === "profile") {
+    if (!state.isAuthenticated) {
+      window.location.href = "/login.html";
+    }
+  } else if (pageType === "admin") {
+    if (!state.isAuthenticated) {
+      window.location.href = "/login.html";
+    } else if (state.role !== "admin") {
+      window.location.href = "/index.html";
+    }
   }
+  // "public" — no redirect
 }
