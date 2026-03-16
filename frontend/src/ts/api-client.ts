@@ -224,6 +224,7 @@ export interface AdminUserDto {
   createdAt: string;
   lastLoginAt: string | null;
   scheduledDeletionAt: string | null;
+  hasActiveSession: boolean;
 }
 
 export interface AdminUserListResponse {

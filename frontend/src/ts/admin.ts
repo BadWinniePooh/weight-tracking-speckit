@@ -207,7 +207,7 @@ export async function initAdminPage(): Promise<void> {
   const sessionsEl = document.getElementById("stats-active-sessions");
   if (totalEl) totalEl.textContent = String(users.length);
   if (sessionsEl) {
-    const activeSessions = users.filter((u) => u.isActive && u.lastLoginAt !== null).length;
+    const activeSessions = users.filter((u) => u.hasActiveSession).length;
     sessionsEl.textContent = String(activeSessions);
   }
 

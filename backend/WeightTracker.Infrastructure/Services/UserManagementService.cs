@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using WeightTracker.Domain.Entities;
 using WeightTracker.Domain.Interfaces.Repositories;
@@ -41,7 +42,19 @@ public class UserManagementService(
             throw;
         }
 
-        return MapToDto(user);
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Role = user.Role,
+            IsActive = user.IsActive,
+            EmailConfirmed = user.EmailConfirmed,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt,
+            ScheduledDeletionAt = user.ScheduledDeletionAt,
+            HasActiveSession = false // newly created users have no tokens
+        };
     }
 
     public async Task DeactivateUserAsync(Guid targetUserId, Guid actorUserId, string actorIp)
@@ -149,20 +162,22 @@ public class UserManagementService(
 
     public async Task<IReadOnlyList<UserDto>> ListUsersAsync()
     {
-        var users = await userRepository.GetAllAsync();
-        return users.Select(MapToDto).ToList();
+        var now = DateTime.UtcNow;
+        return await db.Users
+            .OrderBy(u => u.CreatedAt)
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Email = u.Email,
+                Role = u.Role,
+                IsActive = u.IsActive,
+                EmailConfirmed = u.EmailConfirmed,
+                CreatedAt = u.CreatedAt,
+                LastLoginAt = u.LastLoginAt,
+                ScheduledDeletionAt = u.ScheduledDeletionAt,
+                HasActiveSession = u.RefreshTokens.Any(t => t.RevokedAt == null && t.ExpiresAt > now)
+            })
+            .ToListAsync();
     }
-
-    private static UserDto MapToDto(User user) => new()
-    {
-        Id = user.Id,
-        Username = user.Username,
-        Email = user.Email,
-        Role = user.Role,
-        IsActive = user.IsActive,
-        EmailConfirmed = user.EmailConfirmed,
-        CreatedAt = user.CreatedAt,
-        LastLoginAt = user.LastLoginAt,
-        ScheduledDeletionAt = user.ScheduledDeletionAt
-    };
 }

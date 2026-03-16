@@ -11,4 +11,5 @@ public class UserDto
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public DateTime? ScheduledDeletionAt { get; set; }
+    public bool HasActiveSession { get; set; }
 }

@@ -267,6 +267,84 @@ public class AdminEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // hasActiveSession tests
+    [Fact]
+    public async Task GetUsers_UserWithActiveRefreshToken_HasActiveSessionTrue()
+    {
+        var target = await CreateTestTargetUserAsync("active_session");
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.RefreshTokens.Add(new WeightTracker.Domain.Entities.RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = target.Id,
+            TokenHash = $"valid_{Guid.NewGuid():N}",
+            ExpiresAt = DateTime.UtcNow.AddHours(1),
+            RevokedAt = null,
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        var response = await AdminClient.GetAsync("/api/admin/users");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var user = body.GetProperty("users").EnumerateArray()
+            .FirstOrDefault(u => u.GetProperty("id").GetString() == target.Id.ToString());
+        Assert.NotEqual(JsonValueKind.Undefined, user.ValueKind);
+        Assert.True(user.GetProperty("hasActiveSession").GetBoolean());
+    }
+
+    [Fact]
+    public async Task GetUsers_UserWithNoRefreshTokens_HasActiveSessionFalse()
+    {
+        var target = await CreateTestTargetUserAsync("no_session");
+
+        var response = await AdminClient.GetAsync("/api/admin/users");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var user = body.GetProperty("users").EnumerateArray()
+            .FirstOrDefault(u => u.GetProperty("id").GetString() == target.Id.ToString());
+        Assert.NotEqual(JsonValueKind.Undefined, user.ValueKind);
+        Assert.False(user.GetProperty("hasActiveSession").GetBoolean());
+    }
+
+    [Fact]
+    public async Task GetUsers_UserWithOnlyExpiredOrRevokedTokens_HasActiveSessionFalse()
+    {
+        var target = await CreateTestTargetUserAsync("expired_session");
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        // expired token
+        db.RefreshTokens.Add(new WeightTracker.Domain.Entities.RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = target.Id,
+            TokenHash = $"expired_{Guid.NewGuid():N}",
+            ExpiresAt = DateTime.UtcNow.AddHours(-1),
+            RevokedAt = null,
+            CreatedAt = DateTime.UtcNow.AddDays(-1)
+        });
+        // revoked token
+        db.RefreshTokens.Add(new WeightTracker.Domain.Entities.RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = target.Id,
+            TokenHash = $"revoked_{Guid.NewGuid():N}",
+            ExpiresAt = DateTime.UtcNow.AddHours(1),
+            RevokedAt = DateTime.UtcNow.AddMinutes(-5),
+            CreatedAt = DateTime.UtcNow.AddDays(-1)
+        });
+        await db.SaveChangesAsync();
+
+        var response = await AdminClient.GetAsync("/api/admin/users");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var user = body.GetProperty("users").EnumerateArray()
+            .FirstOrDefault(u => u.GetProperty("id").GetString() == target.Id.ToString());
+        Assert.NotEqual(JsonValueKind.Undefined, user.ValueKind);
+        Assert.False(user.GetProperty("hasActiveSession").GetBoolean());
+    }
+
     [Fact]
     public async Task DeactivateUser_CreatesAuditLogEntry()
     {

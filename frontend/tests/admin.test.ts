@@ -34,6 +34,7 @@ const mockUsers: AdminUserDto[] = [
     createdAt: "2026-01-01T00:00:00Z",
     lastLoginAt: "2026-03-15T10:00:00Z",
     scheduledDeletionAt: null,
+    hasActiveSession: true,
   },
   {
     id: "user-id-222",
@@ -45,6 +46,7 @@ const mockUsers: AdminUserDto[] = [
     createdAt: "2026-01-02T00:00:00Z",
     lastLoginAt: "2026-03-14T10:00:00Z",
     scheduledDeletionAt: null,
+    hasActiveSession: false,
   },
   {
     id: "user-id-333",
@@ -56,6 +58,7 @@ const mockUsers: AdminUserDto[] = [
     createdAt: "2026-01-03T00:00:00Z",
     lastLoginAt: null,
     scheduledDeletionAt: "2026-04-15T00:00:00Z",
+    hasActiveSession: false,
   },
 ];
 
@@ -65,6 +68,7 @@ vi.mock("../src/ts/api-client", () => ({
     id: "new-id-444", username: "new_user", email: "new@example.com",
     role: "user", isActive: true, emailConfirmed: false,
     createdAt: "2026-03-16T00:00:00Z", lastLoginAt: null, scheduledDeletionAt: null,
+    hasActiveSession: false,
   }),
   adminDeactivateUser: vi.fn().mockResolvedValue({ id: "user-id-222", isActive: false, scheduledDeletionAt: "2026-04-15T00:00:00Z" }),
   adminReactivateUser: vi.fn().mockResolvedValue({ id: "user-id-333", isActive: true, scheduledDeletionAt: null }),
@@ -150,14 +154,14 @@ describe("admin page — stats bar", () => {
     expect(totalEl?.textContent).toBe("3");
   });
 
-  it("displays active session count (isActive=true AND lastLoginAt non-null)", async () => {
+  it("displays active session count from hasActiveSession field", async () => {
     const { initAdminPage } = await import("../src/ts/admin");
     await initAdminPage();
-    // admin_user: isActive=true, lastLoginAt set → counts
-    // regular_user: isActive=true, lastLoginAt set → counts
-    // inactive_user: isActive=false → does not count
+    // admin_user: hasActiveSession=true → counts
+    // regular_user: hasActiveSession=false → does not count
+    // inactive_user: hasActiveSession=false → does not count
     const sessionsEl = document.getElementById("stats-active-sessions");
-    expect(sessionsEl?.textContent).toBe("2");
+    expect(sessionsEl?.textContent).toBe("1");
   });
 });
 
