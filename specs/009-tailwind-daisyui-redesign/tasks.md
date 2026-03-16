@@ -64,15 +64,15 @@ typography. Every interactive element uses `btn`, `input`, `card`, or equivalent
 **Independent Test**: Load `login.html` and `index.html`. Both pages use the same emerald/teal
 primary color, same font stack, and same input/button visual treatment. `npm test` passes.
 
-- [ ] T018 [US1] Verify `frontend/src/css/main.css` palette overrides cover all 13 tokens from `data-model.md` Design Token Inventory for both `[data-theme="light"]` and `[data-theme="dark"]`; add any missing token overrides
-- [ ] T019 [P] [US1] Apply DaisyUI form classes to `frontend/src/login.html` — `input input-bordered w-full` on username/password inputs; `btn btn-primary w-full` on submit; `label` + `label-text` on field labels; preserve all existing `id` attributes
-- [ ] T020 [P] [US1] Apply DaisyUI form classes to `frontend/src/setup.html` — same pattern; preserve all existing `id` attributes
-- [ ] T021 [P] [US1] Apply DaisyUI form classes to `frontend/src/reset-request.html` — same pattern; preserve all existing `id` attributes
-- [ ] T022 [P] [US1] Apply DaisyUI form classes to `frontend/src/reset-complete.html` — same pattern; preserve all existing `id` attributes
-- [ ] T023 [P] [US1] Apply DaisyUI component classes to `frontend/src/index.html` main content — `card bg-base-100 shadow` + `card-body` for weight entry form; `input input-bordered` on weight input; `select select-bordered` on unit selector; `btn btn-primary` on add button; `table table-zebra w-full` on history table; `btn btn-sm btn-ghost text-error` on delete buttons
-- [ ] T024 [P] [US1] Apply DaisyUI component classes to `frontend/src/profile.html` main content — `card bg-base-100 shadow` + `card-body` for each form section (display name, email, password); `input input-bordered w-full` on all inputs; `btn btn-primary` on save buttons
-- [ ] T025 [P] [US1] Apply DaisyUI `table table-zebra w-full` and `overflow-x-auto` wrapper to user management table and audit log table in `frontend/src/admin.html`; apply `card bg-base-100 shadow` + `card-body` wrappers to each admin section
-- [ ] T026 [US1] Run `npm run build` and `npm test` in `frontend/` — verify build succeeds and all tests pass
+- [x] T018 [US1] Verify `frontend/src/css/main.css` palette overrides cover all 13 tokens from `data-model.md` Design Token Inventory for both `[data-theme="light"]` and `[data-theme="dark"]`; add any missing token overrides
+- [x] T019 [P] [US1] Apply DaisyUI form classes to `frontend/src/login.html` — `input input-bordered w-full` on username/password inputs; `btn btn-primary w-full` on submit; `label` + `label-text` on field labels; preserve all existing `id` attributes
+- [x] T020 [P] [US1] Apply DaisyUI form classes to `frontend/src/setup.html` — same pattern; preserve all existing `id` attributes
+- [x] T021 [P] [US1] Apply DaisyUI form classes to `frontend/src/reset-request.html` — same pattern; preserve all existing `id` attributes
+- [x] T022 [P] [US1] Apply DaisyUI form classes to `frontend/src/reset-complete.html` — same pattern; preserve all existing `id` attributes
+- [x] T023 [P] [US1] Apply DaisyUI component classes to `frontend/src/index.html` main content — `card bg-base-100 shadow` + `card-body` for weight entry form; `input input-bordered` on weight input; `select select-bordered` on unit selector; `btn btn-primary` on add button; `table table-zebra w-full` on history table; `btn btn-sm btn-ghost text-error` on delete buttons
+- [x] T024 [P] [US1] Apply DaisyUI component classes to `frontend/src/profile.html` main content — `card bg-base-100 shadow` + `card-body` for each form section (display name, email, password); `input input-bordered w-full` on all inputs; `btn btn-primary` on save buttons
+- [x] T025 [P] [US1] Apply DaisyUI `table table-zebra w-full` and `overflow-x-auto` wrapper to user management table and audit log table in `frontend/src/admin.html`; apply `card bg-base-100 shadow` + `card-body` wrappers to each admin section
+- [x] T026 [US1] Run `npm run build` and `npm test` in `frontend/` — verify build succeeds and all tests pass
 
 **Checkpoint**: All 7 pages use DaisyUI component classes. Consistent palette and typography. Tests green.
 

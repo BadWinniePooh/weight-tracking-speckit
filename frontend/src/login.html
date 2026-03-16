@@ -8,27 +8,30 @@
   </head>
   <body>
     <div id="app">
-      <header>
-        <h1>Weight Tracker</h1>
-      </header>
-      <main>
-        <section class="login-form">
-          <h2>Sign In</h2>
-          <form id="login-form">
-            <div class="form-row">
-              <label for="username">Username</label>
-              <input id="username" type="text" required placeholder="Your username" />
-            </div>
-            <div class="form-row">
-              <label for="password">Password</label>
-              <input id="password" type="password" required />
-            </div>
-            <div id="error-message" role="alert" aria-live="polite" class="error-msg"></div>
-            <button type="submit">Sign In</button>
-          </form>
-          <p><a href="/reset-request.html" id="forgot-password-link">Forgot password?</a></p>
-        </section>
-      </main>
+      <div id="public-page-root" class="min-h-screen flex items-center justify-center bg-base-200">
+        <div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 id="page-title" class="card-title justify-center mb-4">Weight Tracker</h2>
+            <form id="login-form">
+              <div class="form-control mb-3">
+                <label class="label" for="username">
+                  <span class="label-text">Username</span>
+                </label>
+                <input id="username" type="text" required placeholder="Your username" class="input input-bordered w-full" />
+              </div>
+              <div class="form-control mb-3">
+                <label class="label" for="password">
+                  <span class="label-text">Password</span>
+                </label>
+                <input id="password" type="password" required class="input input-bordered w-full" />
+              </div>
+              <div id="error-message" role="alert" aria-live="polite" class="error-msg text-error text-sm mb-3"></div>
+              <button type="submit" class="btn btn-primary w-full">Sign In</button>
+            </form>
+            <p class="text-center mt-4"><a href="/reset-request.html" id="forgot-password-link" class="link link-primary">Forgot password?</a></p>
+          </div>
+        </div>
+      </div>
     </div>
     <script type="module" src="ts/login.ts"></script>
   </body>

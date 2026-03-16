@@ -8,23 +8,24 @@
   </head>
   <body>
     <div id="app">
-      <header>
-        <h1>Weight Tracker</h1>
-      </header>
-      <main>
-        <section class="login-form">
-          <h2>Reset Password</h2>
-          <form id="reset-request-form">
-            <div class="form-row">
-              <label for="email-input">Email address</label>
-              <input id="email-input" type="email" required placeholder="your@email.com" />
-            </div>
-            <div id="feedback-msg" role="alert" aria-live="polite"></div>
-            <button id="submit-btn" type="submit">Send Reset Link</button>
-          </form>
-          <p><a href="/login.html">Back to Sign In</a></p>
-        </section>
-      </main>
+      <div id="public-page-root" class="min-h-screen flex items-center justify-center bg-base-200">
+        <div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 id="page-title" class="card-title justify-center mb-4">Reset Password</h2>
+            <form id="reset-request-form">
+              <div class="form-control mb-3">
+                <label class="label" for="email-input">
+                  <span class="label-text">Email address</span>
+                </label>
+                <input id="email-input" type="email" required placeholder="your@email.com" class="input input-bordered w-full" />
+              </div>
+              <div id="feedback-msg" role="alert" aria-live="polite" class="text-sm mb-3"></div>
+              <button id="submit-btn" type="submit" class="btn btn-primary w-full">Send Reset Link</button>
+            </form>
+            <p class="text-center mt-4"><a href="/login.html" class="link link-primary">Back to Sign In</a></p>
+          </div>
+        </div>
+      </div>
     </div>
     <script type="module" src="ts/reset-request.ts"></script>
   </body>

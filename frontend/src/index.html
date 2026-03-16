@@ -22,26 +22,48 @@
 
     <!-- Main app -->
     <div id="app">
-      <header>
-        <h1>Weight Tracker</h1>
-        <nav>
-          <a href="/profile.html" id="nav-profile">Profile</a>
-          <a href="/admin.html" id="nav-admin" hidden>Admin Dashboard</a>
-        </nav>
-        <button id="logout-button" type="button">Log out</button>
-      </header>
+      <nav id="main-navbar" class="navbar bg-base-100 shadow-sm">
+        <div class="navbar-start">
+          <a id="nav-brand" href="/index.html" class="btn btn-ghost text-xl">Weight Tracker</a>
+        </div>
+        <div class="navbar-center hidden lg:flex">
+          <ul id="nav-links-desktop" class="menu menu-horizontal px-1">
+            <li><a id="nav-dashboard" href="/index.html">Dashboard</a></li>
+            <li><a id="nav-profile" href="/profile.html">Profile</a></li>
+            <li><a id="nav-admin" href="/admin.html" hidden>Admin Dashboard</a></li>
+          </ul>
+        </div>
+        <div class="navbar-end">
+          <button id="logout-button" class="btn btn-ghost">Log out</button>
+          <button id="nav-hamburger" class="btn btn-ghost lg:hidden" type="button" aria-label="Open navigation menu">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+        </div>
+      </nav>
+      <div id="nav-mobile-menu" class="lg:hidden" hidden>
+        <ul id="nav-links-mobile" class="menu menu-vertical px-1 bg-base-100 shadow-sm">
+          <li><a id="nav-mobile-dashboard" href="/index.html">Dashboard</a></li>
+          <li><a id="nav-mobile-profile" href="/profile.html">Profile</a></li>
+          <li><a id="nav-mobile-admin" href="/admin.html" hidden>Admin Dashboard</a></li>
+          <li><button id="nav-mobile-logout" type="button" class="btn btn-ghost w-full text-left">Log out</button></li>
+        </ul>
+      </div>
 
-      <main>
+      <main class="container mx-auto px-4 py-6">
         <!-- Chart section (FR-019: first child of <main>, hidden when no data) -->
         <section id="chart-section" hidden aria-labelledby="chart-heading">
-          <h2 id="chart-heading">Weight Trend</h2>
-          <div id="chart-container">
-            <canvas id="chart-canvas"></canvas>
+          <div class="card bg-base-100 shadow mb-6">
+            <div class="card-body">
+              <h2 id="chart-heading" class="card-title">Weight Trend</h2>
+              <div id="chart-container">
+                <canvas id="chart-canvas"></canvas>
+              </div>
+              <div id="chart-info-msg" role="status" aria-live="polite"></div>
+              <button id="chart-settings-btn" type="button" class="btn btn-ghost btn-sm" aria-label="Configure chart settings">
+                Settings
+              </button>
+            </div>
           </div>
-          <div id="chart-info-msg" role="status" aria-live="polite"></div>
-          <button id="chart-settings-btn" type="button" aria-label="Configure chart settings">
-            Settings
-          </button>
         </section>
 
         <!-- Settings modal (FR-020) -->
@@ -50,86 +72,101 @@
           <form id="chart-settings-form" method="dialog">
             <div class="form-row">
               <label for="weight-goal-input">Weight goal</label>
-              <input id="weight-goal-input" type="number" step="any" aria-describedby="weight-goal-error" />
-              <span id="weight-goal-error" role="alert" class="field-error"></span>
+              <input id="weight-goal-input" type="number" step="any" aria-describedby="weight-goal-error" class="input input-bordered" />
+              <span id="weight-goal-error" role="alert" class="field-error text-error text-sm"></span>
             </div>
 
             <div class="form-row">
               <label for="loss-rate-input">Loss rate</label>
-              <input id="loss-rate-input" type="number" step="any" aria-describedby="loss-rate-error" />
-              <span id="loss-rate-error" role="alert" class="field-error"></span>
+              <input id="loss-rate-input" type="number" step="any" aria-describedby="loss-rate-error" class="input input-bordered" />
+              <span id="loss-rate-error" role="alert" class="field-error text-error text-sm"></span>
             </div>
 
             <div class="form-row">
               <label for="carb-fat-ratio-input">Carb/fat ratio</label>
-              <input id="carb-fat-ratio-input" type="number" step="any" aria-describedby="carb-fat-error" />
-              <span id="carb-fat-error" role="alert" class="field-error"></span>
+              <input id="carb-fat-ratio-input" type="number" step="any" aria-describedby="carb-fat-error" class="input input-bordered" />
+              <span id="carb-fat-error" role="alert" class="field-error text-error text-sm"></span>
             </div>
 
             <div class="form-row">
               <label for="buffer-value-input">Buffer value</label>
-              <input id="buffer-value-input" type="number" step="any" aria-describedby="buffer-error" />
-              <span id="buffer-error" role="alert" class="field-error"></span>
+              <input id="buffer-value-input" type="number" step="any" aria-describedby="buffer-error" class="input input-bordered" />
+              <span id="buffer-error" role="alert" class="field-error text-error text-sm"></span>
             </div>
 
             <div class="modal-actions">
-              <button id="settings-save-btn" type="button">Save</button>
-              <button id="settings-cancel-btn" type="button">Cancel</button>
+              <button id="settings-save-btn" type="button" class="btn btn-primary">Save</button>
+              <button id="settings-cancel-btn" type="button" class="btn btn-ghost">Cancel</button>
             </div>
           </form>
         </dialog>
 
         <!-- Entry form -->
         <section class="entry-form" aria-labelledby="form-heading">
-          <h2 id="form-heading">Log your weight</h2>
+          <div class="card bg-base-100 shadow mb-6">
+            <div class="card-body">
+              <h2 id="form-heading" class="card-title">Log your weight</h2>
 
-          <div class="form-row">
-            <label for="unit-select">Unit</label>
-            <select id="unit-select" aria-label="Weight unit">
-              <option value="kg">kg</option>
-              <option value="lbs">lbs</option>
-            </select>
+              <div class="form-row">
+                <label for="unit-select">Unit</label>
+                <select id="unit-select" aria-label="Weight unit" class="select select-bordered">
+                  <option value="kg">kg</option>
+                  <option value="lbs">lbs</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label for="weight-input">Weight</label>
+                <input
+                  id="weight-input"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  placeholder="e.g. 75.5"
+                  aria-label="Weight value"
+                  aria-describedby="error-msg"
+                  class="input input-bordered"
+                />
+              </div>
+
+              <div id="error-msg" role="alert" aria-live="polite" class="error-msg text-error text-sm"></div>
+
+              <button id="submit-btn" type="button" aria-label="Log weight entry" class="btn btn-primary">
+                Log Weight
+              </button>
+            </div>
           </div>
-
-          <div class="form-row">
-            <label for="weight-input">Weight</label>
-            <input
-              id="weight-input"
-              type="number"
-              step="0.1"
-              min="0"
-              placeholder="e.g. 75.5"
-              aria-label="Weight value"
-              aria-describedby="error-msg"
-            />
-          </div>
-
-          <div id="error-msg" role="alert" aria-live="polite" class="error-msg"></div>
-
-          <button id="submit-btn" type="button" aria-label="Log weight entry">
-            Log Weight
-          </button>
         </section>
 
         <!-- History list -->
         <section class="history" aria-labelledby="history-heading">
-          <h2 id="history-heading">History</h2>
-          <div id="entry-list" aria-label="Weight entry history"></div>
+          <div class="card bg-base-100 shadow mb-6">
+            <div class="card-body">
+              <h2 id="history-heading" class="card-title">History</h2>
+              <div class="overflow-x-auto">
+                <div id="entry-list" aria-label="Weight entry history"></div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- Export section -->
         <section class="export-section" aria-labelledby="export-heading">
-          <h2 id="export-heading">Export data</h2>
-          <div class="form-row">
-            <label for="export-format">Format</label>
-            <select id="export-format" aria-label="Export format">
-              <option value="csv">CSV</option>
-              <option value="json">JSON</option>
-            </select>
+          <div class="card bg-base-100 shadow mb-6">
+            <div class="card-body">
+              <h2 id="export-heading" class="card-title">Export data</h2>
+              <div class="form-row">
+                <label for="export-format">Format</label>
+                <select id="export-format" aria-label="Export format" class="select select-bordered">
+                  <option value="csv">CSV</option>
+                  <option value="json">JSON</option>
+                </select>
+              </div>
+              <button id="export-btn" type="button" aria-label="Export weight entries" class="btn btn-primary">
+                Export
+              </button>
+            </div>
           </div>
-          <button id="export-btn" type="button" aria-label="Export weight entries">
-            Export
-          </button>
         </section>
       </main>
     </div>
