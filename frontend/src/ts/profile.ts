@@ -2,8 +2,10 @@ import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { changeUsername, changeEmail, changePassword, ApiError } from "./api-client";
 import { loadConfig } from "./config";
 import { initNavbar } from "./navbar";
+import { initTheme } from "./theme";
 
 export async function initProfilePage(): Promise<void> {
+  initTheme();
   await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("profile", state);

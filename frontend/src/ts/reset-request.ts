@@ -1,8 +1,10 @@
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { requestPasswordReset } from "./api-client";
 import { loadConfig } from "./config";
+import { initTheme } from "./theme";
 
 export async function initResetRequestPage(): Promise<void> {
+  initTheme();
   await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("public", state);

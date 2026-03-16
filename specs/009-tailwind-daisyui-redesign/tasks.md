@@ -108,12 +108,12 @@ hamburger visible; click reveals nav items. Admin link absent for `user` role, p
 
 **Independent Test**: Load `login.html` at 320px and 1280px — centered card renders; no navbar; no horizontal scroll. Repeat for all 4 pages.
 
-- [ ] T036 [US3] Create `frontend/src/ts/theme.ts` — export `initTheme()`: reads `window.matchMedia("(prefers-color-scheme: dark)")`, sets `document.documentElement.setAttribute("data-theme", "dark"|"light")`; registers `addEventListener("change", ...)` for live switching without page reload (per `research.md` Finding 3); call `initTheme()` immediately on module load so theme applies before first paint
-- [ ] T037 [P] [US4] Wrap `frontend/src/login.html` in public card layout: outer `<div id="public-page-root" class="min-h-screen flex items-center justify-center bg-base-200">` + inner `<div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl"><div class="card-body">`; add `<h2 id="page-title" class="card-title">Log In</h2>`; add `<script type="module">` importing `theme.ts` `initTheme()` if no dedicated TS entry point; preserve all existing form field `id` attributes (per `contracts/ui-components.md` Public Page Card contract)
-- [ ] T038 [P] [US4] Wrap `frontend/src/setup.html` in public card layout — same structure; `id="page-title"` text: "Set Up Account"; preserve all existing `id` attributes; import `theme.ts`
-- [ ] T039 [P] [US4] Wrap `frontend/src/reset-request.html` in public card layout — `id="page-title"` text: "Reset Password"; preserve existing ids; import `theme.ts`
-- [ ] T040 [P] [US4] Wrap `frontend/src/reset-complete.html` in public card layout — `id="page-title"` text: "Set New Password"; preserve existing ids; import `theme.ts`
-- [ ] T041 [US4] Run `npm run build` and `npm test` in `frontend/` — verify build and tests pass
+- [x] T036 [US3] Create `frontend/src/ts/theme.ts` — export `initTheme()`: reads `window.matchMedia("(prefers-color-scheme: dark)")`, sets `document.documentElement.setAttribute("data-theme", "dark"|"light")`; registers `addEventListener("change", ...)` for live switching without page reload (per `research.md` Finding 3); call `initTheme()` immediately on module load so theme applies before first paint
+- [x] T037 [P] [US4] Wrap `frontend/src/login.html` in public card layout: outer `<div id="public-page-root" class="min-h-screen flex items-center justify-center bg-base-200">` + inner `<div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl"><div class="card-body">`; add `<h2 id="page-title" class="card-title">Log In</h2>`; add `<script type="module">` importing `theme.ts` `initTheme()` if no dedicated TS entry point; preserve all existing form field `id` attributes (per `contracts/ui-components.md` Public Page Card contract)
+- [x] T038 [P] [US4] Wrap `frontend/src/setup.html` in public card layout — same structure; `id="page-title"` text: "Set Up Account"; preserve all existing `id` attributes; import `theme.ts`
+- [x] T039 [P] [US4] Wrap `frontend/src/reset-request.html` in public card layout — `id="page-title"` text: "Reset Password"; preserve existing ids; import `theme.ts`
+- [x] T040 [P] [US4] Wrap `frontend/src/reset-complete.html` in public card layout — `id="page-title"` text: "Set New Password"; preserve existing ids; import `theme.ts`
+- [x] T041 [US4] Run `npm run build` and `npm test` in `frontend/` — verify build and tests pass
 
 **Checkpoint**: All 4 public pages show centered card layout with no navbar. Tests green.
 

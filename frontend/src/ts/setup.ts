@@ -1,7 +1,9 @@
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { loadConfig, getApiUrl } from "./config";
+import { initTheme } from "./theme";
 
 export async function initSetupPage(): Promise<void> {
+  initTheme();
   await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("setup", state);

@@ -14,6 +14,7 @@ import {
 import { getUserId } from "./auth-token";
 import { loadConfig } from "./config";
 import { initNavbar } from "./navbar";
+import { initTheme } from "./theme";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -196,6 +197,7 @@ async function loadAuditLog(page: number): Promise<void> {
 }
 
 export async function initAdminPage(): Promise<void> {
+  initTheme();
   await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("admin", state);

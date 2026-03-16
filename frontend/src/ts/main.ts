@@ -2,6 +2,7 @@ import { loadConfig, getApiUrl } from "./config";
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { clearAccessToken } from "./auth-token";
 import { initNavbar } from "./navbar";
+import { initTheme } from "./theme";
 import {
   getEntries as fetchEntries,
   createEntry as apiCreateEntry,
@@ -209,6 +210,7 @@ export async function applyNavVisibility(): Promise<void> {
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
+  initTheme();
   await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("app", state);
