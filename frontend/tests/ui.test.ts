@@ -24,6 +24,7 @@ vi.mock("../src/ts/api-client", () => ({
 import {
   renderApp,
   renderRecoveryScreen,
+  renderEntry,
   renderEntryList,
   showError,
   clearError,
@@ -101,6 +102,19 @@ describe("renderApp — corrupt-data recovery screen (FR-013)", () => {
     expect(recovery.hidden).toBe(true);
     expect(app.hidden).toBe(false);
   });
+
+  it("else branch restores app visibility after corrupt was true", () => {
+    vi.mocked(isDataCorrupt).mockReturnValue(true);
+    renderApp(true);
+    // DOM is now: recovery=visible, app=hidden
+    vi.mocked(isDataCorrupt).mockReturnValue(false);
+    renderApp(false);
+    // Else branch must have run to flip these back
+    const recovery = document.getElementById("recovery-screen")!;
+    const app = document.getElementById("app")!;
+    expect(recovery.hidden).toBe(true);
+    expect(app.hidden).toBe(false);
+  });
 });
 
 describe("renderRecoveryScreen", () => {
@@ -133,6 +147,46 @@ describe("renderRecoveryScreen", () => {
     const blobArg = createObjectURL.mock.calls[0][0] as Blob;
     expect(blobArg.type).toBe("text/plain");
 
+    vi.restoreAllMocks();
+  });
+
+  it("download anchor has filename 'weight-data-raw.txt'", () => {
+    vi.mocked(getRawStorageString).mockReturnValue("raw");
+    URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    URL.revokeObjectURL = vi.fn();
+
+    let capturedAnchor: HTMLAnchorElement | undefined;
+    const originalCreate = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      const el = originalCreate(tag);
+      if (tag === "a") {
+        capturedAnchor = el as HTMLAnchorElement;
+        vi.spyOn(capturedAnchor, "click").mockImplementation(vi.fn());
+      }
+      return el;
+    });
+
+    renderRecoveryScreen();
+    document.getElementById("download-raw-btn")!.click();
+    expect(capturedAnchor?.download).toBe("weight-data-raw.txt");
+
+    vi.restoreAllMocks();
+  });
+
+  it("download blob contains the raw data (non-empty size)", () => {
+    vi.mocked(getRawStorageString).mockReturnValue("some raw content here");
+    let capturedBlob: Blob | undefined;
+    URL.createObjectURL = vi.fn((blob: Blob) => { capturedBlob = blob; return "blob:mock-url"; });
+    URL.revokeObjectURL = vi.fn();
+    const originalCreate = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      const el = originalCreate(tag);
+      if (tag === "a") vi.spyOn(el as HTMLAnchorElement, "click").mockImplementation(vi.fn());
+      return el;
+    });
+    renderRecoveryScreen();
+    document.getElementById("download-raw-btn")!.click();
+    expect(capturedBlob?.size).toBeGreaterThan(0);
     vi.restoreAllMocks();
   });
 
@@ -368,6 +422,287 @@ describe("settings modal DOM structure (US2 / FR-020)", () => {
       expect(el).not.toBeNull();
       expect(el?.getAttribute("role")).toBe("alert");
     }
+  });
+});
+
+// ─── renderEntry — direct DOM assertions ──────────────────────────────────────
+describe("renderEntry — DOM structure", () => {
+  it("has class 'entry-row' on the row element", () => {
+    const row = renderEntry(makeEntry({ weightValue: 75, unit: "kg" }));
+    expect(row.className).toBe("entry-row");
+  });
+
+  it("weight cell has class 'entry-weight'", () => {
+    const row = renderEntry(makeEntry());
+    const cell = row.querySelector(".entry-weight");
+    expect(cell).not.toBeNull();
+  });
+
+  it("date cell has class 'entry-date'", () => {
+    const row = renderEntry(makeEntry());
+    const cell = row.querySelector(".entry-date");
+    expect(cell).not.toBeNull();
+  });
+
+  it("time cell has class 'entry-time'", () => {
+    const row = renderEntry(makeEntry());
+    const cell = row.querySelector(".entry-time");
+    expect(cell).not.toBeNull();
+  });
+
+  it("actions cell has class 'entry-actions'", () => {
+    const row = renderEntry(makeEntry());
+    const cell = row.querySelector(".entry-actions");
+    expect(cell).not.toBeNull();
+  });
+
+  it("delete button text is 'Delete'", () => {
+    const row = renderEntry(makeEntry({ id: "del-test" }));
+    const btn = row.querySelector("[data-action='delete']") as HTMLButtonElement;
+    expect(btn.textContent).toBe("Delete");
+  });
+
+  it("delete button aria-label is 'Delete entry'", () => {
+    const row = renderEntry(makeEntry({ id: "del-aria" }));
+    const btn = row.querySelector("[data-action='delete']") as HTMLButtonElement;
+    expect(btn.getAttribute("aria-label")).toBe("Delete entry");
+  });
+
+  it("weight cell shows the weight with 1 decimal and the display unit", () => {
+    const row = renderEntry(makeEntry({ weightValue: 82.5, unit: "kg" }), "kg");
+    const cell = row.querySelector(".entry-weight")!;
+    expect(cell.textContent).toBe("82.5 kg");
+  });
+
+  it("default displayUnit falls back to entry.unit", () => {
+    const row = renderEntry(makeEntry({ weightValue: 180, unit: "lbs" }));
+    const cell = row.querySelector(".entry-weight")!;
+    expect(cell.textContent).toContain("lbs");
+  });
+
+  it("converts kg to lbs when displayUnit is lbs", () => {
+    const row = renderEntry(makeEntry({ weightValue: 100, unit: "kg" }), "lbs");
+    const cell = row.querySelector(".entry-weight")!;
+    expect(cell.textContent).toContain("220.5");
+    expect(cell.textContent).toContain("lbs");
+  });
+
+  it("converts lbs to kg when displayUnit is kg", () => {
+    const row = renderEntry(makeEntry({ weightValue: 220, unit: "lbs" }), "kg");
+    const cell = row.querySelector(".entry-weight")!;
+    expect(cell.textContent).toContain("99.8");
+    expect(cell.textContent).toContain("kg");
+  });
+
+  it("date cell is non-empty for a valid timestamp", () => {
+    const row = renderEntry(makeEntry({ timestamp: "2026-03-13T09:15:00.000Z" }));
+    const cell = row.querySelector(".entry-date")!;
+    expect(cell.textContent).not.toBe("");
+  });
+
+  it("time cell is non-empty for a valid timestamp", () => {
+    const row = renderEntry(makeEntry({ timestamp: "2026-03-13T09:15:00.000Z" }));
+    const cell = row.querySelector(".entry-time")!;
+    expect(cell.textContent).not.toBe("");
+  });
+});
+
+// ─── renderEntryList — table structure ────────────────────────────────────────
+describe("renderEntryList — table header and structure", () => {
+  it("table header contains 'Weight' column", () => {
+    renderEntryList([makeEntry()], "kg");
+    const ths = document.querySelectorAll("#entry-list th");
+    const texts = Array.from(ths).map((th) => th.textContent);
+    expect(texts.some((t) => t?.includes("Weight"))).toBe(true);
+  });
+
+  it("table header contains 'Date' column", () => {
+    renderEntryList([makeEntry()], "kg");
+    const ths = document.querySelectorAll("#entry-list th");
+    const texts = Array.from(ths).map((th) => th.textContent);
+    expect(texts.some((t) => t?.includes("Date"))).toBe(true);
+  });
+
+  it("table header contains 'Time' column", () => {
+    renderEntryList([makeEntry()], "kg");
+    const ths = document.querySelectorAll("#entry-list th");
+    const texts = Array.from(ths).map((th) => th.textContent);
+    expect(texts.some((t) => t?.includes("Time"))).toBe(true);
+  });
+
+  it("renders a 'Delete all' button with data-action='delete-all'", () => {
+    renderEntryList([makeEntry()], "kg");
+    const btn = document.querySelector("[data-action='delete-all']");
+    expect(btn).not.toBeNull();
+  });
+
+  it("'Delete all' button has aria-label 'Delete all entries'", () => {
+    renderEntryList([makeEntry()], "kg");
+    const btn = document.querySelector("[data-action='delete-all']") as HTMLElement;
+    expect(btn.getAttribute("aria-label")).toBe("Delete all entries");
+  });
+
+  it("'Delete all' button text contains 'Delete all'", () => {
+    renderEntryList([makeEntry()], "kg");
+    const btn = document.querySelector("[data-action='delete-all']")!;
+    expect(btn.textContent).toContain("Delete all");
+  });
+
+  it("empty-state paragraph has class 'empty-state'", () => {
+    renderEntryList([], "kg");
+    const el = document.querySelector(".empty-state");
+    expect(el).not.toBeNull();
+  });
+
+  it("empty-state message text mentions 'log'", () => {
+    renderEntryList([], "kg");
+    const el = document.querySelector(".empty-state")!;
+    expect(el.textContent?.toLowerCase()).toContain("log");
+  });
+
+  it("re-rendering clears previous entries (innerHTML reset)", () => {
+    renderEntryList([makeEntry({ id: "first" })], "kg");
+    renderEntryList([makeEntry({ id: "second" })], "kg");
+    const rows = document.querySelectorAll("#entry-list .entry-row");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].getAttribute("data-id")).toBe("second");
+  });
+
+  it("entry table has class 'entry-table'", () => {
+    renderEntryList([makeEntry()], "kg");
+    expect(document.querySelector("#entry-list .entry-table")).not.toBeNull();
+  });
+
+  it("list has exactly one child node (the table) when entries are present", () => {
+    renderEntryList([makeEntry()], "kg");
+    const list = document.getElementById("entry-list")!;
+    expect(list.childNodes).toHaveLength(1);
+    expect(list.firstChild?.nodeName).toBe("TABLE");
+  });
+
+  it("list has exactly one child node (the empty-state paragraph) when entries are absent", () => {
+    renderEntryList([], "kg");
+    const list = document.getElementById("entry-list")!;
+    expect(list.childNodes).toHaveLength(1);
+    expect(list.firstChild?.nodeName).toBe("P");
+  });
+});
+
+// ─── showMigrationButton ──────────────────────────────────────────────────────
+describe("showMigrationButton", () => {
+  beforeEach(() => {
+    buildDOM();
+  });
+
+  it("inserts a migration banner before #app", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    showMigrationButton(async () => {});
+    const banner = document.getElementById("migration-banner");
+    expect(banner).not.toBeNull();
+  });
+
+  it("banner contains a paragraph about previous version data", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    showMigrationButton(async () => {});
+    const banner = document.getElementById("migration-banner")!;
+    expect(banner.textContent).toContain("previous version");
+  });
+
+  it("migration button has id 'migration-btn'", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    showMigrationButton(async () => {});
+    expect(document.getElementById("migration-btn")).not.toBeNull();
+  });
+
+  it("migration button text mentions 'Import'", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    showMigrationButton(async () => {});
+    const btn = document.getElementById("migration-btn")!;
+    expect(btn.textContent).toContain("Import");
+  });
+
+  it("migration banner has class 'migration-banner'", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    showMigrationButton(async () => {});
+    const banner = document.getElementById("migration-banner")!;
+    expect(banner.className).toBe("migration-banner");
+  });
+
+  it("banner paragraph specifically contains 'previous version'", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    showMigrationButton(async () => {});
+    const banner = document.getElementById("migration-banner")!;
+    const p = banner.querySelector("p");
+    expect(p?.textContent).toContain("previous version");
+  });
+
+  it("migration button calls onClick when clicked", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    const onClickSpy = vi.fn().mockResolvedValue(undefined);
+    showMigrationButton(onClickSpy);
+    document.getElementById("migration-btn")!.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(onClickSpy).toHaveBeenCalled();
+  });
+
+  it("calling showMigrationButton twice does not insert a second banner", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    showMigrationButton(async () => {});
+    showMigrationButton(async () => {});
+    const banners = document.querySelectorAll("#migration-banner");
+    expect(banners).toHaveLength(1);
+  });
+
+  it("migration button is disabled and changes text while onClick is pending", async () => {
+    const { showMigrationButton } = await import("../src/ts/ui");
+    let resolveFn!: () => void;
+    const pendingPromise = new Promise<void>((resolve) => { resolveFn = resolve; });
+    showMigrationButton(() => pendingPromise);
+    const btn = document.getElementById("migration-btn") as HTMLButtonElement;
+    btn.click();
+    expect(btn.disabled).toBe(true);
+    expect(btn.textContent).toContain("Import");
+    resolveFn();
+    await pendingPromise;
+  });
+});
+
+// ─── showMigrationResult ──────────────────────────────────────────────────────
+describe("showMigrationResult", () => {
+  beforeEach(() => {
+    buildDOM();
+    const el = document.createElement("div");
+    el.id = "migration-result";
+    el.hidden = true;
+    document.body.appendChild(el);
+  });
+
+  it("sets migration result text with migrated count", async () => {
+    const { showMigrationResult } = await import("../src/ts/ui");
+    showMigrationResult({ migratedEntries: 5, skippedEntries: 0, skippedReasons: [] });
+    const el = document.getElementById("migration-result")!;
+    expect(el.textContent).toContain("5");
+    expect(el.hidden).toBe(false);
+  });
+
+  it("includes skipped count when skippedEntries > 0", async () => {
+    const { showMigrationResult } = await import("../src/ts/ui");
+    showMigrationResult({ migratedEntries: 3, skippedEntries: 2, skippedReasons: [] });
+    const el = document.getElementById("migration-result")!;
+    expect(el.textContent).toContain("Skipped 2");
+  });
+
+  it("does not include skipped text when skippedEntries === 0", async () => {
+    const { showMigrationResult } = await import("../src/ts/ui");
+    showMigrationResult({ migratedEntries: 3, skippedEntries: 0, skippedReasons: [] });
+    const el = document.getElementById("migration-result")!;
+    expect(el.textContent).not.toContain("Skipped");
+  });
+
+  it("makes the migration-result element visible", async () => {
+    const { showMigrationResult } = await import("../src/ts/ui");
+    showMigrationResult({ migratedEntries: 1, skippedEntries: 0, skippedReasons: [] });
+    expect(document.getElementById("migration-result")!.hidden).toBe(false);
   });
 });
 

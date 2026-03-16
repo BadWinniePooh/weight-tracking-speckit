@@ -100,6 +100,50 @@ describe("formatExportFilename", () => {
   });
 });
 
+describe("generateCSV — slice indices", () => {
+  it("extracts YYYY-MM-DD (chars 0-10) correctly from ISO timestamp", () => {
+    const entry = makeEntry({ timestamp: "2026-03-13T09:15:00.000Z" });
+    const result = generateCSV([entry]);
+    expect(result).toContain("2026-03-13");
+    expect(result).not.toContain("2026-03-13T");
+  });
+
+  it("extracts HH:MM (chars 11-16) correctly from ISO timestamp", () => {
+    const entry = makeEntry({ timestamp: "2026-03-13T09:15:00.000Z" });
+    const result = generateCSV([entry]);
+    expect(result).toContain("09:15");
+    expect(result).not.toContain("09:15:00");
+  });
+
+  it("rows are separated by newlines in the output", () => {
+    const entries = [
+      makeEntry({ id: "e1", timestamp: "2026-03-13T09:15:00.000Z" }),
+      makeEntry({ id: "e2", timestamp: "2026-03-12T08:00:00.000Z" }),
+    ];
+    const result = generateCSV(entries);
+    const lines = result.split("\n").filter(Boolean);
+    expect(lines).toHaveLength(3); // header + 2 data rows
+  });
+});
+
+describe("formatExportFilename — padding", () => {
+  it("zero-pads single-digit month", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-05T12:00:00.000Z")); // January = month 1
+    const filename = formatExportFilename("csv");
+    expect(filename).toContain("2026-01-05");
+    vi.useRealTimers();
+  });
+
+  it("zero-pads single-digit day", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-05T12:00:00.000Z")); // day 5
+    const filename = formatExportFilename("csv");
+    expect(filename).toContain("2026-03-05");
+    vi.useRealTimers();
+  });
+});
+
 describe("triggerDownload", () => {
   beforeEach(() => {
     URL.createObjectURL = vi.fn(() => "blob:mock-url");
@@ -126,5 +170,41 @@ describe("triggerDownload", () => {
   it("revokes the object URL after download", () => {
     triggerDownload("content", "test.csv", "text/csv");
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
+  });
+
+  it("creates Blob with the provided MIME type", () => {
+    let capturedBlob: Blob | undefined;
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      capturedBlob = blob;
+      return "blob:mock-url";
+    });
+    triggerDownload("test content", "file.txt", "text/plain");
+    expect(capturedBlob?.type).toBe("text/plain");
+  });
+
+  it("sets anchor download attribute to the provided filename", () => {
+    let capturedAnchor: HTMLAnchorElement | undefined;
+    const originalCreate = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      const el = originalCreate(tag);
+      if (tag === "a") capturedAnchor = el as HTMLAnchorElement;
+      return el;
+    });
+    triggerDownload("content", "myfile.json", "application/json");
+    expect(capturedAnchor?.download).toBe("myfile.json");
+    vi.restoreAllMocks();
+  });
+
+  it("sets anchor href to the object URL", () => {
+    let capturedAnchor: HTMLAnchorElement | undefined;
+    const originalCreate = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+      const el = originalCreate(tag);
+      if (tag === "a") capturedAnchor = el as HTMLAnchorElement;
+      return el;
+    });
+    triggerDownload("content", "file.csv", "text/csv");
+    expect(capturedAnchor?.href).toContain("blob:mock-url");
+    vi.restoreAllMocks();
   });
 });

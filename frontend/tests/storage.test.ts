@@ -103,6 +103,16 @@ describe("loadPreferences", () => {
     localStorage.setItem(PREFS_KEY, "null");
     expect(loadPreferences()).toEqual({ unit: "kg" });
   });
+
+  it("returns defaults when stored value is a JSON number (typeof !== 'object')", () => {
+    localStorage.setItem(PREFS_KEY, "42");
+    expect(loadPreferences()).toEqual({ unit: "kg" });
+  });
+
+  it("returns defaults when stored value is a JSON string (typeof !== 'object')", () => {
+    localStorage.setItem(PREFS_KEY, '"lbs"');
+    expect(loadPreferences()).toEqual({ unit: "kg" });
+  });
 });
 
 describe("savePreferences + loadPreferences round-trip", () => {
@@ -182,6 +192,119 @@ describe("saveChartSettings + loadChartSettings round-trip", () => {
   it("persists a numeric weightGoal", () => {
     saveChartSettings({ preferredUnit: "kg", weightGoal: 80, lossRate: 0.0055, carbFatRatio: 0.6, bufferValue: 0.0075 });
     expect(loadChartSettings().weightGoal).toBe(80);
+  });
+});
+
+describe("loadChartSettings defaults — all fields", () => {
+  it("default preferredUnit is 'kg'", () => {
+    expect(loadChartSettings().preferredUnit).toBe("kg");
+  });
+
+  it("returns defaults when stored value is a JSON number (not an object)", () => {
+    localStorage.setItem("weight_tracker_chart_settings", "42");
+    const settings = loadChartSettings();
+    expect(settings.lossRate).toBe(0.0055);
+    expect(settings.weightGoal).toBeNull();
+  });
+
+  it("returns defaults when stored value is a JSON string (not an object)", () => {
+    localStorage.setItem("weight_tracker_chart_settings", '"hello"');
+    expect(loadChartSettings().lossRate).toBe(0.0055);
+  });
+
+  it("merges saved values over defaults, keeping non-saved defaults intact", () => {
+    localStorage.setItem("weight_tracker_chart_settings", JSON.stringify({ weightGoal: 80 }));
+    const settings = loadChartSettings();
+    expect(settings.weightGoal).toBe(80);
+    expect(settings.lossRate).toBe(0.0055);
+    expect(settings.preferredUnit).toBe("kg");
+  });
+});
+
+describe("loadEntries — non-array JSON handling", () => {
+  it("does not set _dataCorrupt when stored value is null JSON (non-array, no parse error)", () => {
+    localStorage.setItem(ENTRIES_KEY, "null");
+    loadEntries();
+    expect(isDataCorrupt()).toBe(false);
+  });
+
+  it("does not set _dataCorrupt when stored value is a JSON number", () => {
+    localStorage.setItem(ENTRIES_KEY, "42");
+    loadEntries();
+    expect(isDataCorrupt()).toBe(false);
+  });
+
+  it("stores entries under the expected key so a direct lookup matches", () => {
+    const entries: WeightEntry[] = [
+      { id: "x1", weightValue: 70, unit: "kg", timestamp: "2026-01-01T00:00:00.000Z" },
+    ];
+    saveEntries(entries);
+    const raw = localStorage.getItem("weight_tracker_entries");
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    expect(parsed[0].id).toBe("x1");
+  });
+
+  it("stores preferences under the expected key so a direct lookup matches", () => {
+    savePreferences({ unit: "lbs" });
+    const raw = localStorage.getItem("weight_tracker_preferences");
+    expect(raw).not.toBeNull();
+    expect(JSON.parse(raw!).unit).toBe("lbs");
+  });
+
+  it("stores chart settings under the expected key so a direct lookup matches", () => {
+    const settings: ChartSettings = {
+      preferredUnit: "lbs",
+      weightGoal: 70,
+      lossRate: 0.005,
+      carbFatRatio: 0.5,
+      bufferValue: 0.01,
+    };
+    saveChartSettings(settings);
+    const raw = localStorage.getItem("weight_tracker_chart_settings");
+    expect(raw).not.toBeNull();
+    expect(JSON.parse(raw!).preferredUnit).toBe("lbs");
+  });
+});
+
+describe("savePreferences — QuotaExceededError", () => {
+  it("throws user-facing error on QuotaExceededError", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("QuotaExceededError", "QuotaExceededError");
+    });
+    expect(() => savePreferences({ unit: "lbs" })).toThrow(
+      "Storage is full. Please delete some entries first."
+    );
+  });
+
+  it("rethrows non-DOMException errors without wrapping (savePreferences)", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("original error");
+    });
+    expect(() => savePreferences({ unit: "lbs" })).toThrow("original error");
+  });
+
+  it("rethrows DOMException with non-QuotaExceededError name (savePreferences)", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("SecurityError", "SecurityError");
+    });
+    expect(() => savePreferences({ unit: "lbs" })).toThrow(DOMException);
+  });
+});
+
+describe("saveEntries — error handling", () => {
+  it("rethrows non-DOMException errors without wrapping (saveEntries)", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("disk error");
+    });
+    expect(() => saveEntries(sampleEntries)).toThrow("disk error");
+  });
+
+  it("rethrows DOMException with non-QuotaExceededError name (saveEntries)", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("SecurityError", "SecurityError");
+    });
+    expect(() => saveEntries(sampleEntries)).toThrow(DOMException);
   });
 });
 

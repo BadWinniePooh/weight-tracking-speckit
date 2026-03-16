@@ -76,3 +76,38 @@ describe("enforceRedirect", () => {
     expect(window.location.href).toBe("/login.html");
   });
 });
+
+describe("enforceRedirect — edge cases for survived mutants", () => {
+  it("app + isAuthenticated=true + setupRequired=true → no redirect (already authenticated)", () => {
+    // The condition is !isAuthenticated && setupRequired — both must be true for /setup.html redirect.
+    // Changing && to || would incorrectly redirect an authenticated user.
+    const state: AuthState = { isAuthenticated: true, setupRequired: true };
+    enforceRedirect("app", state);
+    expect(window.location.href).toBe("");
+  });
+
+  it("app + isAuthenticated=false + setupRequired=false → /login.html (not /setup.html)", () => {
+    const state: AuthState = { isAuthenticated: false, setupRequired: false };
+    enforceRedirect("app", state);
+    expect(window.location.href).toBe("/login.html");
+  });
+
+  it("login + isAuthenticated=false + setupRequired=false → no redirect (stays on login)", () => {
+    const state: AuthState = { isAuthenticated: false, setupRequired: false };
+    enforceRedirect("login", state);
+    expect(window.location.href).toBe("");
+  });
+
+  it("setup + isAuthenticated=false + setupRequired=true → no redirect (stays on setup)", () => {
+    const state: AuthState = { isAuthenticated: false, setupRequired: true };
+    enforceRedirect("setup", state);
+    expect(window.location.href).toBe("");
+  });
+
+  it("unknown pageType → no redirect (all branches are missed)", () => {
+    const state: AuthState = { isAuthenticated: false, setupRequired: false };
+    // @ts-expect-error — testing runtime fallthrough
+    enforceRedirect("unknown", state);
+    expect(window.location.href).toBe("");
+  });
+});
