@@ -47,6 +47,7 @@ public class DatabaseSeeder(
                     PasswordHash = passwordHasher.Hash(adminPassword!),
                     Role = "admin",
                     IsActive = true,
+                    EmailConfirmed = true,
                     CreatedAt = DateTime.UtcNow
                 };
                 await userRepository.AddAsync(admin);

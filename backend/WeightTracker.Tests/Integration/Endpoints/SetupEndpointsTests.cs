@@ -108,6 +108,25 @@ public class SetupEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task PostSetupInitialize_CreatedAdmin_HasEmailConfirmedTrue()
+    {
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.RefreshTokens.RemoveRange(db.RefreshTokens);
+        db.ChartSettings.RemoveRange(db.ChartSettings);
+        db.WeightEntries.RemoveRange(db.WeightEntries);
+        db.Users.RemoveRange(db.Users);
+        await db.SaveChangesAsync();
+
+        var request = new SetupInitRequest("adminsetup", "adminsetup@example.com", "securepass123");
+        var response = await _client.PostAsJsonAsync("/api/setup/initialize", request);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var user = db.Users.Single(u => u.Username == "adminsetup");
+        Assert.True(user.EmailConfirmed, "Setup wizard admin must have EmailConfirmed = true");
+    }
 }
 
 record SetupStatusResponse(bool FirstRun);

@@ -45,6 +45,7 @@ public static class SetupEndpoints
                 PasswordHash = passwordHasher.Hash(request.Password),
                 Role = "admin",
                 IsActive = true,
+                EmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow
             };
 

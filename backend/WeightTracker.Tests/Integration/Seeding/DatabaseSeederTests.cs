@@ -106,4 +106,22 @@ public class DatabaseSeederTests(ApiFixture fixture) : IClassFixture<ApiFixture>
 
         Assert.False(await db.Users.AnyAsync());
     }
+
+    [Fact]
+    public async Task Seed_AllEnvVarsSet_AdminHasEmailConfirmedTrue()
+    {
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.RefreshTokens.RemoveRange(db.RefreshTokens);
+        db.ChartSettings.RemoveRange(db.ChartSettings);
+        db.WeightEntries.RemoveRange(db.WeightEntries);
+        db.Users.RemoveRange(db.Users);
+        await db.SaveChangesAsync();
+
+        var seeder = CreateSeeder(db, "seedadmin2", "seedadmin2@example.com", "password123");
+        await seeder.SeedAsync();
+
+        var user = db.Users.Single(u => u.Username == "seedadmin2");
+        Assert.True(user.EmailConfirmed, "Env-var seeded admin must have EmailConfirmed = true");
+    }
 }
