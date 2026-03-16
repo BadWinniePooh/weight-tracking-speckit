@@ -3,6 +3,7 @@ using WeightTracker.Domain.Entities;
 using WeightTracker.Domain.Interfaces.Repositories;
 using WeightTracker.Domain.Interfaces.Services;
 using WeightTracker.Domain.Models;
+using WeightTracker.Infrastructure.Data;
 
 namespace WeightTracker.Infrastructure.Services;
 
@@ -10,7 +11,8 @@ public class UserManagementService(
     IUserRepository userRepository,
     IAuditLogRepository auditLogRepository,
     IEmailConfirmationService emailConfirmationService,
-    IConfiguration configuration) : IUserManagementService
+    IConfiguration configuration,
+    AppDbContext db) : IUserManagementService
 {
     public async Task<UserDto> CreateUserAsync(string username, string email, string role)
     {
@@ -26,10 +28,18 @@ public class UserManagementService(
             CreatedAt = DateTime.UtcNow
         };
 
-        await userRepository.AddAsync(user);
-
-        // Send confirmation email
-        await emailConfirmationService.SendConfirmationAsync(user.Id, user.Email);
+        await using var tx = await db.Database.BeginTransactionAsync();
+        try
+        {
+            await userRepository.AddAsync(user);
+            await emailConfirmationService.SendConfirmationAsync(user.Id, user.Email);
+            await tx.CommitAsync();
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
 
         return MapToDto(user);
     }
@@ -41,6 +51,7 @@ public class UserManagementService(
 
         var user = await userRepository.GetByIdAsync(targetUserId)
             ?? throw new KeyNotFoundException($"User {targetUserId} not found.");
+        var actor = await userRepository.GetByIdAsync(actorUserId);
 
         var graceDays = int.TryParse(configuration["USER_DELETION_GRACE_DAYS"], out var gd) ? gd : 30;
         user.IsActive = false;
@@ -52,7 +63,9 @@ public class UserManagementService(
             Id = Guid.NewGuid(),
             ActionType = "user_deactivated",
             ActorUserId = actorUserId,
+            ActorUsername = actor?.Username ?? actorUserId.ToString(),
             TargetUserId = targetUserId,
+            TargetUsername = user.Username,
             IpAddress = actorIp,
             Timestamp = DateTime.UtcNow
         });
@@ -65,6 +78,7 @@ public class UserManagementService(
 
         var user = await userRepository.GetByIdAsync(targetUserId)
             ?? throw new KeyNotFoundException($"User {targetUserId} not found.");
+        var actor = await userRepository.GetByIdAsync(actorUserId);
 
         user.IsActive = true;
         user.ScheduledDeletionAt = null;
@@ -75,7 +89,9 @@ public class UserManagementService(
             Id = Guid.NewGuid(),
             ActionType = "user_reactivated",
             ActorUserId = actorUserId,
+            ActorUsername = actor?.Username ?? actorUserId.ToString(),
             TargetUserId = targetUserId,
+            TargetUsername = user.Username,
             IpAddress = actorIp,
             Timestamp = DateTime.UtcNow
         });
@@ -88,14 +104,17 @@ public class UserManagementService(
 
         var user = await userRepository.GetByIdAsync(targetUserId)
             ?? throw new KeyNotFoundException($"User {targetUserId} not found.");
+        var actor = await userRepository.GetByIdAsync(actorUserId);
 
-        // Write audit log BEFORE deletion (to preserve the reference)
+        // Write audit log BEFORE deletion so username is still available
         await auditLogRepository.AppendAsync(new AuditLogEntry
         {
             Id = Guid.NewGuid(),
             ActionType = "user_deleted",
             ActorUserId = actorUserId,
+            ActorUsername = actor?.Username ?? actorUserId.ToString(),
             TargetUserId = targetUserId,
+            TargetUsername = user.Username,
             IpAddress = actorIp,
             Timestamp = DateTime.UtcNow
         });
@@ -110,6 +129,7 @@ public class UserManagementService(
 
         var user = await userRepository.GetByIdAsync(targetUserId)
             ?? throw new KeyNotFoundException($"User {targetUserId} not found.");
+        var actor = await userRepository.GetByIdAsync(actorUserId);
 
         user.Role = role;
         await userRepository.UpdateAsync(user);
@@ -119,7 +139,9 @@ public class UserManagementService(
             Id = Guid.NewGuid(),
             ActionType = "role_changed",
             ActorUserId = actorUserId,
+            ActorUsername = actor?.Username ?? actorUserId.ToString(),
             TargetUserId = targetUserId,
+            TargetUsername = user.Username,
             IpAddress = actorIp,
             Timestamp = DateTime.UtcNow
         });

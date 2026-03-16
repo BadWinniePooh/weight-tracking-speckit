@@ -222,6 +222,25 @@ public class AdminEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
         Assert.Equal(unconfirmed.Email, fixture.FakeEmail.Messages[0].To);
     }
 
+    // Bug 1: CreateUser must be atomic — email failure must roll back the user insert
+    [Fact]
+    public async Task CreateUser_EmailSendFails_NoUserPersistedInDatabase()
+    {
+        fixture.FakeEmail.Clear();
+        fixture.FakeEmail.SimulateFailure();
+        var username = $"atomic_fail_{Guid.NewGuid():N}";
+        var email = $"{username}@example.com";
+
+        // Act — endpoint will get a 500 because email threw
+        await AdminClient.PostAsJsonAsync("/api/admin/users", new { username, email, role = "user" });
+
+        // Assert — no user record should exist in the database
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var exists = db.Users.Any(u => u.Username == username);
+        Assert.False(exists, "User should not be persisted when email send fails.");
+    }
+
     // T040: Actions on own account return 400; successful actions create audit log entries
     [Fact]
     public async Task DeactivateOwnAccount_Returns400()

@@ -24,7 +24,9 @@ public class AuditLogEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixtu
         Id = Guid.NewGuid(),
         ActionType = actionType,
         ActorUserId = ApiFixture.AdminUserId,
+        ActorUsername = "adminuser",
         TargetUserId = ApiFixture.TestUserId,
+        TargetUsername = "testuser",
         IpAddress = "127.0.0.1",
         Timestamp = timestamp ?? DateTime.UtcNow
     };
@@ -108,7 +110,9 @@ public class AuditLogEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixtu
                 Id = Guid.NewGuid(),
                 ActionType = recentAction,
                 ActorUserId = ApiFixture.AdminUserId,
+                ActorUsername = "adminuser",
                 TargetUserId = ApiFixture.TestUserId,
+                TargetUsername = "testuser",
                 IpAddress = "127.0.0.1",
                 Timestamp = past
             });
@@ -168,7 +172,9 @@ public class AuditLogEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixtu
             Id = Guid.NewGuid(),
             ActionType = uniqueAction,
             ActorUserId = ApiFixture.AdminUserId,
+            ActorUsername = "adminuser",
             TargetUserId = ApiFixture.TestUserId,
+            TargetUsername = "testuser",
             IpAddress = "127.0.0.1",
             Timestamp = DateTime.UtcNow
         });
@@ -197,7 +203,9 @@ public class AuditLogEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixtu
             Id = Guid.NewGuid(),
             ActionType = uniqueAction,
             ActorUserId = ApiFixture.AdminUserId,
+            ActorUsername = "adminuser",
             TargetUserId = null,
+            TargetUsername = null,
             IpAddress = "127.0.0.1",
             Timestamp = DateTime.UtcNow
         });
@@ -211,5 +219,58 @@ public class AuditLogEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixtu
 
         Assert.True(entry.TryGetProperty("targetUsername", out var targetUsername));
         Assert.Equal(JsonValueKind.Null, targetUsername.ValueKind);
+    }
+
+    // Bug 2: Audit log must preserve username as plain string after target user is deleted
+    [Fact]
+    public async Task GetAuditLog_AfterTargetUserDeleted_EntryPreservesTargetUsername()
+    {
+        fixture.EnsureTestUserExists();
+
+        // Create a target user directly in DB
+        await using var setupScope = fixture.Services.CreateAsyncScope();
+        var db = setupScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var username = $"deleteduser_{Guid.NewGuid():N}";
+        var targetUser = new WeightTracker.Domain.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Username = username,
+            Email = $"{username}@example.com",
+            PasswordHash = "testhash",
+            Role = "user",
+            IsActive = true,
+            EmailConfirmed = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(targetUser);
+        await db.SaveChangesAsync();
+
+        var adminClient = fixture.CreateAuthenticatedAdminClient();
+        var uniqueAction = $"delete_persist_{Guid.NewGuid():N}";
+
+        // Deactivate user (creates audit log entry with target username)
+        await adminClient.PostAsync($"/api/admin/users/{targetUser.Id}/deactivate", null);
+
+        // Delete the user — their record disappears
+        await adminClient.DeleteAsync($"/api/admin/users/{targetUser.Id}");
+
+        // Fetch the audit log for the deactivation event
+        var response = await adminClient.GetAsync($"/api/admin/audit-log?actionType=user_deactivated");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        // Find the entry for our specific target user
+        var entries = body.GetProperty("entries").EnumerateArray().ToList();
+        var deactivateEntry = entries.FirstOrDefault(e =>
+        {
+            e.TryGetProperty("targetUsername", out var tn);
+            return tn.GetString() == username;
+        });
+
+        // The entry must still have the username preserved — not null, not empty
+        Assert.True(deactivateEntry.ValueKind != System.Text.Json.JsonValueKind.Undefined,
+            $"Expected an audit entry with targetUsername = '{username}' but none found.");
+        Assert.True(deactivateEntry.TryGetProperty("targetUsername", out var targetUsername));
+        Assert.Equal(username, targetUsername.GetString());
     }
 }

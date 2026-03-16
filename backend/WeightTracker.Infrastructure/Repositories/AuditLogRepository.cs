@@ -16,39 +16,34 @@ public class AuditLogRepository(AppDbContext db) : IAuditLogRepository
 
     public async Task<AuditLogPage> QueryAsync(AuditLogFilter filter)
     {
-        var baseQuery =
-            from entry in db.AuditLog
-            join actor in db.Users on entry.ActorUserId equals actor.Id
-            join target in db.Users on entry.TargetUserId equals target.Id into tg
-            from target in tg.DefaultIfEmpty()
-            select new { entry, actorUsername = actor.Username, targetUsername = (string?)target.Username };
+        var baseQuery = db.AuditLog.AsQueryable();
 
         if (filter.FromDate.HasValue)
-            baseQuery = baseQuery.Where(x => x.entry.Timestamp >= filter.FromDate.Value);
+            baseQuery = baseQuery.Where(e => e.Timestamp >= filter.FromDate.Value);
 
         if (filter.ToDate.HasValue)
-            baseQuery = baseQuery.Where(x => x.entry.Timestamp <= filter.ToDate.Value);
+            baseQuery = baseQuery.Where(e => e.Timestamp <= filter.ToDate.Value);
 
         if (!string.IsNullOrEmpty(filter.ActionType))
-            baseQuery = baseQuery.Where(x => x.entry.ActionType == filter.ActionType);
+            baseQuery = baseQuery.Where(e => e.ActionType == filter.ActionType);
 
         var totalCount = await baseQuery.CountAsync();
 
         var rows = await baseQuery
-            .OrderByDescending(x => x.entry.Timestamp)
+            .OrderByDescending(e => e.Timestamp)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .ToListAsync();
 
-        var entries = rows.Select(x => new AuditLogEntryView(
-            x.entry.Id,
-            x.entry.ActionType,
-            x.entry.ActorUserId,
-            x.actorUsername,
-            x.entry.TargetUserId,
-            x.targetUsername,
-            x.entry.IpAddress,
-            x.entry.Timestamp)).ToList();
+        var entries = rows.Select(e => new AuditLogEntryView(
+            e.Id,
+            e.ActionType,
+            e.ActorUserId,
+            e.ActorUsername,
+            e.TargetUserId,
+            e.TargetUsername,
+            e.IpAddress,
+            e.Timestamp)).ToList();
 
         return new AuditLogPage(entries, totalCount);
     }

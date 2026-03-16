@@ -74,7 +74,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(a => a.Id);
             e.Property(a => a.ActionType).HasMaxLength(50).IsRequired();
             e.Property(a => a.ActorUserId).IsRequired();
+            e.Property(a => a.ActorUsername).HasMaxLength(100).IsRequired();
             e.Property(a => a.TargetUserId);
+            e.Property(a => a.TargetUsername).HasMaxLength(100);
             e.Property(a => a.IpAddress).HasMaxLength(45).IsRequired();
             e.Property(a => a.Timestamp).IsRequired();
             e.HasIndex(a => a.Timestamp).HasDatabaseName("IX_AuditLog_Timestamp");
