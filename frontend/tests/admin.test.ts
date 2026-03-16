@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { AdminUserDto } from "../src/ts/api-client";
+import type { AdminUserDto, AuditLogEntryDto } from "../src/ts/api-client";
 
 vi.mock("../src/ts/auth-guard", () => ({
   checkAuthStatus: vi.fn().mockResolvedValue({ isAuthenticated: true, setupRequired: false, role: "admin" }),
@@ -71,7 +71,23 @@ vi.mock("../src/ts/api-client", () => ({
   adminDeleteUser: vi.fn().mockResolvedValue(undefined),
   adminAssignRole: vi.fn().mockResolvedValue({ id: "user-id-222", role: "admin" }),
   adminResendConfirmation: vi.fn().mockResolvedValue(undefined),
-  adminGetAuditLog: vi.fn().mockResolvedValue({ entries: [], totalCount: 0, page: 1, pageSize: 20 }),
+  adminGetAuditLog: vi.fn().mockResolvedValue({
+    entries: [
+      {
+        id: "entry-id-001",
+        actionType: "UserDeactivated",
+        actorUserId: "admin-id-111",
+        actorUsername: "admin_user",
+        targetUserId: "user-id-222",
+        targetUsername: "regular_user",
+        ipAddress: "127.0.0.1",
+        timestamp: "2026-03-15T10:00:00Z",
+      } as AuditLogEntryDto,
+    ],
+    totalCount: 1,
+    page: 1,
+    pageSize: 20,
+  }),
   ApiError: class ApiError extends Error {
     status: number; field?: string;
     constructor(message: string, status: number, field?: string) {
@@ -98,7 +114,7 @@ function setupDom() {
     <table><tbody id="audit-table-body"></tbody></table>
     <input id="audit-filter-from" type="date" />
     <input id="audit-filter-to" type="date" />
-    <select id="audit-filter-action"><option value="">All</option></select>
+    <select id="audit-filter-action"><option value="">All</option><option value="UserDeactivated">UserDeactivated</option></select>
     <button id="audit-apply-btn">Apply</button>
     <button id="audit-prev-btn">Previous</button>
     <button id="audit-next-btn">Next</button>
@@ -276,5 +292,76 @@ describe("admin page — create user modal", () => {
     expect(adminCreateUser).toHaveBeenCalledWith("new_user", "new@example.com", "user");
     const newRows = document.querySelectorAll("#user-table-body tr").length;
     expect(newRows).toBe(initialRows + 1);
+  });
+});
+
+describe("admin page — audit log section", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDom();
+    HTMLDialogElement.prototype.showModal = vi.fn();
+    HTMLDialogElement.prototype.close = vi.fn();
+  });
+
+  it("renders actorUsername in audit table (not UUID)", async () => {
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    const tbody = document.getElementById("audit-table-body")!;
+    expect(tbody.innerHTML).toContain("admin_user");
+    expect(tbody.innerHTML).not.toContain("admin-id-111");
+  });
+
+  it("renders targetUsername in audit table", async () => {
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    const tbody = document.getElementById("audit-table-body")!;
+    expect(tbody.innerHTML).toContain("regular_user");
+  });
+
+  it("calls adminGetAuditLog with filter params when apply button clicked", async () => {
+    const { adminGetAuditLog } = await import("../src/ts/api-client");
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    (document.getElementById("audit-filter-from") as HTMLInputElement).value = "2026-01-01";
+    (document.getElementById("audit-filter-to") as HTMLInputElement).value = "2026-03-31";
+    (document.getElementById("audit-filter-action") as HTMLSelectElement).value = "UserDeactivated";
+    document.getElementById("audit-apply-btn")!.click();
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(adminGetAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fromDate: "2026-01-01",
+        toDate: "2026-03-31",
+        actionType: "UserDeactivated",
+        page: 1,
+      })
+    );
+  });
+
+  it("shows page indicator with current page", async () => {
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    const indicator = document.getElementById("audit-page-indicator");
+    expect(indicator?.textContent).toContain("1");
+  });
+
+  it("renders empty audit table when entries array is empty", async () => {
+    const { adminGetAuditLog } = await import("../src/ts/api-client");
+    (adminGetAuditLog as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      entries: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 20,
+    });
+
+    const { initAdminPage } = await import("../src/ts/admin");
+    await initAdminPage();
+
+    const tbody = document.getElementById("audit-table-body")!;
+    expect(tbody.querySelectorAll("tr")).toHaveLength(0);
   });
 });

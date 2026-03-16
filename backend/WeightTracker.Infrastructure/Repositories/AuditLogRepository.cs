@@ -16,24 +16,39 @@ public class AuditLogRepository(AppDbContext db) : IAuditLogRepository
 
     public async Task<AuditLogPage> QueryAsync(AuditLogFilter filter)
     {
-        var query = db.AuditLog.AsQueryable();
+        var baseQuery =
+            from entry in db.AuditLog
+            join actor in db.Users on entry.ActorUserId equals actor.Id
+            join target in db.Users on entry.TargetUserId equals target.Id into tg
+            from target in tg.DefaultIfEmpty()
+            select new { entry, actorUsername = actor.Username, targetUsername = (string?)target.Username };
 
         if (filter.FromDate.HasValue)
-            query = query.Where(e => e.Timestamp >= filter.FromDate.Value);
+            baseQuery = baseQuery.Where(x => x.entry.Timestamp >= filter.FromDate.Value);
 
         if (filter.ToDate.HasValue)
-            query = query.Where(e => e.Timestamp <= filter.ToDate.Value);
+            baseQuery = baseQuery.Where(x => x.entry.Timestamp <= filter.ToDate.Value);
 
         if (!string.IsNullOrEmpty(filter.ActionType))
-            query = query.Where(e => e.ActionType == filter.ActionType);
+            baseQuery = baseQuery.Where(x => x.entry.ActionType == filter.ActionType);
 
-        var totalCount = await query.CountAsync();
+        var totalCount = await baseQuery.CountAsync();
 
-        var entries = await query
-            .OrderByDescending(e => e.Timestamp)
+        var rows = await baseQuery
+            .OrderByDescending(x => x.entry.Timestamp)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .ToListAsync();
+
+        var entries = rows.Select(x => new AuditLogEntryView(
+            x.entry.Id,
+            x.entry.ActionType,
+            x.entry.ActorUserId,
+            x.actorUsername,
+            x.entry.TargetUserId,
+            x.targetUsername,
+            x.entry.IpAddress,
+            x.entry.Timestamp)).ToList();
 
         return new AuditLogPage(entries, totalCount);
     }

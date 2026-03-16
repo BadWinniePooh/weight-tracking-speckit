@@ -178,9 +178,9 @@ async function loadAuditLog(page: number): Promise<void> {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${formatDate(entry.timestamp)}</td>
-        <td>${entry.actorUserId}</td>
+        <td>${entry.actorUsername}</td>
         <td>${entry.actionType}</td>
-        <td>${entry.targetUserId ?? "—"}</td>
+        <td>${entry.targetUsername ?? "—"}</td>
       `;
       tbody.appendChild(tr);
     }

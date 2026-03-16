@@ -49,12 +49,12 @@
 
 > **Write these tests FIRST — confirm they FAIL before writing any of T007/T008**
 
-- [ ] T006 Write failing tests for `admin.ts` user management in `frontend/tests/admin.test.ts` — cover: stats bar values derived from user list (`totalUsers`, `activeSessions`), user table renders all columns, deactivate/reactivate/delete/change-role/resend buttons trigger correct `api-client` calls, `window.confirm` called before destructive actions, confirm dialog returns false → no API call is made and the user row is unchanged, own-account actions disabled, create user modal opens on button click, create user form submission calls `adminCreateUser` and prepends row; confirm tests FAIL before T008
+- [x] T006 Write failing tests for `admin.ts` user management in `frontend/tests/admin.test.ts` — cover: stats bar values derived from user list (`totalUsers`, `activeSessions`), user table renders all columns, deactivate/reactivate/delete/change-role/resend buttons trigger correct `api-client` calls, `window.confirm` called before destructive actions, confirm dialog returns false → no API call is made and the user row is unchanged, own-account actions disabled, create user modal opens on button click, create user form submission calls `adminCreateUser` and prepends row; confirm tests FAIL before T008
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] Create `frontend/src/admin.html` — includes full page markup: stats bar (`#stats-total-users`, `#stats-active-sessions`), user management table (`#user-table-body`, `#create-user-btn`), create user `<dialog>` (`#create-user-modal`, `#create-user-form`, `#cu-username`, `#cu-email`, `#cu-role`, `#cu-feedback`), audit log section with table and controls (markup only — see `contracts/frontend.md` for all required element IDs); references `ts/admin.ts` as module script
-- [ ] T008 Implement `frontend/src/ts/admin.ts` — `enforceRedirect("admin", state)` as first action; load user list via `adminListUsers()`; derive and render stats; render user table rows with `data-user-id` and `data-action` attributes; wire deactivate/reactivate/delete/change-role/resend via event delegation using `window.confirm` for destructive actions; disable own-account actions with `title` tooltip; wire create user button to open `<dialog>`; wire create user form submit to call `adminCreateUser` and prepend new row; confirm T006 tests PASS
+- [x] T007 [P] Create `frontend/src/admin.html` — includes full page markup: stats bar (`#stats-total-users`, `#stats-active-sessions`), user management table (`#user-table-body`, `#create-user-btn`), create user `<dialog>` (`#create-user-modal`, `#create-user-form`, `#cu-username`, `#cu-email`, `#cu-role`, `#cu-feedback`), audit log section with table and controls (markup only — see `contracts/frontend.md` for all required element IDs); references `ts/admin.ts` as module script
+- [x] T008 Implement `frontend/src/ts/admin.ts` — `enforceRedirect("admin", state)` as first action; load user list via `adminListUsers()`; derive and render stats; render user table rows with `data-user-id` and `data-action` attributes; wire deactivate/reactivate/delete/change-role/resend via event delegation using `window.confirm` for destructive actions; disable own-account actions with `title` tooltip; wire create user button to open `<dialog>`; wire create user form submit to call `adminCreateUser` and prepend new row; confirm T006 tests PASS
 
 **Checkpoint**: `admin.html` fully functional for user management. Stats bar, table, all per-row actions, and create user modal work. Admin auth guard enforces role.
 
@@ -70,12 +70,12 @@
 
 > **Backend test first (xUnit) — confirm FAIL before T010/T011. Frontend test additions — confirm FAIL before T014.**
 
-- [ ] T009 Add failing integration tests for `actorUsername`/`targetUsername` fields in `backend/WeightTracker.Tests/Integration/Endpoints/AuditLogEndpointsTests.cs` — assert every audit log entry response includes a non-null, non-empty `actorUsername` string; assert `targetUsername` is null for entries with no target user; confirm tests FAIL before T010
-- [ ] T010 Amend `QueryAsync` in `backend/WeightTracker.Infrastructure/Repositories/AuditLogRepository.cs` — add LEFT JOINs to `Users` table on `ActorUserId` and `TargetUserId`; project `ActorUsername` and `TargetUsername` into result; confirm T009 tests still FAIL (endpoint not yet updated)
-- [ ] T011 Update audit log `Results.Ok(...)` projection in `backend/WeightTracker.Api/Endpoints/AdminEndpoints.cs` to include `actorUsername` and `targetUsername` from the amended repository result; confirm T009 backend tests PASS
-- [ ] T012 [P] Update `AuditLogEntryDto` interface in `frontend/src/ts/api-client.ts` — add `actorUsername: string` and `targetUsername: string | null` fields per `contracts/api-amendment.md`
-- [ ] T013 Extend `frontend/tests/admin.test.ts` with audit log section tests — cover: audit table renders `actorUsername` from DTO (not UUID), date range and action-type filter inputs trigger `adminGetAuditLog` with correct params, next/previous buttons increment/decrement page, page indicator updates, empty state shown when entries array is empty; confirm new tests FAIL before T014
-- [ ] T014 Implement audit log section in `frontend/src/ts/admin.ts` — `adminGetAuditLog({ page: _auditPage, pageSize: 20, ...filters })` on load; render audit table rows using `actorUsername` and `targetUsername`; wire filter apply button; wire prev/next pagination buttons; update page indicator; show empty state when entries is empty; confirm T013 tests PASS
+- [x] T009 Add failing integration tests for `actorUsername`/`targetUsername` fields in `backend/WeightTracker.Tests/Integration/Endpoints/AuditLogEndpointsTests.cs` — assert every audit log entry response includes a non-null, non-empty `actorUsername` string; assert `targetUsername` is null for entries with no target user; confirm tests FAIL before T010
+- [x] T010 Amend `QueryAsync` in `backend/WeightTracker.Infrastructure/Repositories/AuditLogRepository.cs` — add LEFT JOINs to `Users` table on `ActorUserId` and `TargetUserId`; project `ActorUsername` and `TargetUsername` into result; confirm T009 tests still FAIL (endpoint not yet updated)
+- [x] T011 Update audit log `Results.Ok(...)` projection in `backend/WeightTracker.Api/Endpoints/AdminEndpoints.cs` to include `actorUsername` and `targetUsername` from the amended repository result; confirm T009 backend tests PASS
+- [x] T012 [P] Update `AuditLogEntryDto` interface in `frontend/src/ts/api-client.ts` — add `actorUsername: string` and `targetUsername: string | null` fields per `contracts/api-amendment.md`
+- [x] T013 Extend `frontend/tests/admin.test.ts` with audit log section tests — cover: audit table renders `actorUsername` from DTO (not UUID), date range and action-type filter inputs trigger `adminGetAuditLog` with correct params, next/previous buttons increment/decrement page, page indicator updates, empty state shown when entries array is empty; confirm new tests FAIL before T014
+- [x] T014 Implement audit log section in `frontend/src/ts/admin.ts` — `adminGetAuditLog({ page: _auditPage, pageSize: 20, ...filters })` on load; render audit table rows using `actorUsername` and `targetUsername`; wire filter apply button; wire prev/next pagination buttons; update page indicator; show empty state when entries is empty; confirm T013 tests PASS
 
 **Checkpoint**: Audit log section fully functional. Backend returns `actorUsername`/`targetUsername`. Frontend displays correct usernames, filters apply correctly, pagination works.
 
@@ -91,16 +91,16 @@
 
 > **Write tests FIRST — confirm FAIL before T017 and T020**
 
-- [ ] T015 [P] Write failing tests for `reset-request.ts` in `frontend/tests/reset-request.test.ts` — cover: `enforceRedirect("public", state)` called; form submit calls `requestPasswordReset(email)`; success message shown for both 200 and 4xx responses (anti-enumeration); network error shows generic error; submit button disabled during in-flight request; confirm tests FAIL before T017
-- [ ] T018 [P] Write failing tests for `reset-complete.ts` in `frontend/tests/reset-complete.test.ts` — cover: `enforceRedirect("public", state)` called; token read from URL `?token=` param; missing token shows `#token-error-msg` and disables submit; password mismatch shows client-side error without API call; 200 response redirects to `/login.html`; 400 response shows error in `#feedback-msg`; confirm tests FAIL before T020
+- [x] T015 [P] Write failing tests for `reset-request.ts` in `frontend/tests/reset-request.test.ts` — cover: `enforceRedirect("public", state)` called; form submit calls `requestPasswordReset(email)`; success message shown for both 200 and 4xx responses (anti-enumeration); network error shows generic error; submit button disabled during in-flight request; confirm tests FAIL before T017
+- [x] T018 [P] Write failing tests for `reset-complete.ts` in `frontend/tests/reset-complete.test.ts` — cover: `enforceRedirect("public", state)` called; token read from URL `?token=` param; missing token shows `#token-error-msg` and disables submit; password mismatch shows client-side error without API call; 200 response redirects to `/login.html`; 400 response shows error in `#feedback-msg`; confirm tests FAIL before T020
 
 ### Implementation for User Story 3
 
-- [ ] T016 [P] Create `frontend/src/reset-request.html` — email input form, feedback div, submit button; references `ts/reset-request.ts` as module script; see `contracts/frontend.md` for required element IDs
-- [ ] T019 [P] Create `frontend/src/reset-complete.html` — new password + confirm password inputs, feedback div, token-error div, submit button; references `ts/reset-complete.ts` as module script; see `contracts/frontend.md` for required element IDs
-- [ ] T017 Implement `frontend/src/ts/reset-request.ts` — `enforceRedirect("public", state)` as first action; wire form submit to call `requestPasswordReset(email)`; always show fixed success message (never vary by response code); disable submit during request; confirm T015 tests PASS
-- [ ] T020 Implement `frontend/src/ts/reset-complete.ts` — `enforceRedirect("public", state)` as first action; read `token` from `URLSearchParams`; if absent, show `#token-error-msg` and disable submit; client-side password match validation; call `resetPassword(token, newPassword)` on submit; redirect to `/login.html` on 200; show error in `#feedback-msg` on 400; confirm T018 tests PASS
-- [ ] T021 Add `<a href="/reset-request.html" id="forgot-password-link">Forgot password?</a>` below the sign-in form in `frontend/src/login.html`
+- [x] T016 [P] Create `frontend/src/reset-request.html` — email input form, feedback div, submit button; references `ts/reset-request.ts` as module script; see `contracts/frontend.md` for required element IDs
+- [x] T019 [P] Create `frontend/src/reset-complete.html` — new password + confirm password inputs, feedback div, token-error div, submit button; references `ts/reset-complete.ts` as module script; see `contracts/frontend.md` for required element IDs
+- [x] T017 Implement `frontend/src/ts/reset-request.ts` — `enforceRedirect("public", state)` as first action; wire form submit to call `requestPasswordReset(email)`; always show fixed success message (never vary by response code); disable submit during request; confirm T015 tests PASS
+- [x] T020 Implement `frontend/src/ts/reset-complete.ts` — `enforceRedirect("public", state)` as first action; read `token` from `URLSearchParams`; if absent, show `#token-error-msg` and disable submit; client-side password match validation; call `resetPassword(token, newPassword)` on submit; redirect to `/login.html` on 200; show error in `#feedback-msg` on 400; confirm T018 tests PASS
+- [x] T021 Add `<a href="/reset-request.html" id="forgot-password-link">Forgot password?</a>` below the sign-in form in `frontend/src/login.html`
 
 **Checkpoint**: Password reset flow fully functional end-to-end. Both pages publicly accessible, login page has link.
 
@@ -116,12 +116,12 @@
 
 > **Write tests FIRST — confirm FAIL before T024**
 
-- [ ] T022 Write failing tests for `profile.ts` in `frontend/tests/profile.test.ts` — cover: `enforceRedirect("profile", state)` called; username form calls `changeUsername(newUsername)` and shows `#username-feedback`; email form calls `changeEmail(newEmail)` and shows confirmation notice in `#email-feedback`; password form calls `changePassword(currentPassword, newPassword)` and shows `#password-feedback`; password mismatch shows error without API call; API errors shown inline; no page reload on any submission; confirm tests FAIL before T024
+- [x] T022 Write failing tests for `profile.ts` in `frontend/tests/profile.test.ts` — cover: `enforceRedirect("profile", state)` called; username form calls `changeUsername(newUsername)` and shows `#username-feedback`; email form calls `changeEmail(newEmail)` and shows confirmation notice in `#email-feedback`; password form calls `changePassword(currentPassword, newPassword)` and shows `#password-feedback`; password mismatch shows error without API call; API errors shown inline; no page reload on any submission; confirm tests FAIL before T024
 
 ### Implementation for User Story 4
 
-- [ ] T023 [P] Create `frontend/src/profile.html` — three independent form sections (change username, change email, change password) each with inputs and a feedback div; references `ts/profile.ts` as module script; see `contracts/frontend.md` for required element IDs
-- [ ] T024 Implement `frontend/src/ts/profile.ts` — `enforceRedirect("profile", state)` as first action; wire username form to `changeUsername()`; wire email form to `changeEmail()` with confirmation notice in feedback; wire password form to `changePassword()` with client-side confirm-password match check; all feedback inline, no page reload; confirm T022 tests PASS
+- [x] T023 [P] Create `frontend/src/profile.html` — three independent form sections (change username, change email, change password) each with inputs and a feedback div; references `ts/profile.ts` as module script; see `contracts/frontend.md` for required element IDs
+- [x] T024 Implement `frontend/src/ts/profile.ts` — `enforceRedirect("profile", state)` as first action; wire username form to `changeUsername()`; wire email form to `changeEmail()` with confirmation notice in feedback; wire password form to `changePassword()` with client-side confirm-password match check; all feedback inline, no page reload; confirm T022 tests PASS
 
 **Checkpoint**: Profile page fully functional. All three self-service sections work with inline feedback. Unauthenticated users redirected.
 
@@ -137,12 +137,12 @@
 
 > **Write tests FIRST — confirm FAIL before T027**
 
-- [ ] T025 Extend `frontend/tests/main.test.ts` with navigation visibility tests — cover: `#nav-admin` hidden when `state.role !== "admin"`; `#nav-admin` visible when `state.role === "admin"`; `#nav-profile` always visible for authenticated users; confirm new tests FAIL before T027
+- [x] T025 Extend `frontend/tests/main.test.ts` with navigation visibility tests — cover: `#nav-admin` hidden when `state.role !== "admin"`; `#nav-admin` visible when `state.role === "admin"`; `#nav-profile` always visible for authenticated users; confirm new tests FAIL before T027
 
 ### Implementation for User Story 5
 
-- [ ] T026 [P] Add `<a href="/profile.html" id="nav-profile">Profile</a>` and `<a href="/admin.html" id="nav-admin" hidden>Admin Dashboard</a>` to `<header>` in `frontend/src/index.html`
-- [ ] T027 Update `frontend/src/ts/main.ts` — after `checkAuthStatus()`, if `state.role === "admin"` remove `hidden` attribute from `#nav-admin`; confirm T025 tests PASS
+- [x] T026 [P] Add `<a href="/profile.html" id="nav-profile">Profile</a>` and `<a href="/admin.html" id="nav-admin" hidden>Admin Dashboard</a>` to `<header>` in `frontend/src/index.html`
+- [x] T027 Update `frontend/src/ts/main.ts` — after `checkAuthStatus()`, if `state.role === "admin"` remove `hidden` attribute from `#nav-admin`; confirm T025 tests PASS
 
 **Checkpoint**: Navigation links complete. Admin Dashboard link conditional on role.
 
@@ -152,9 +152,9 @@
 
 **Purpose**: Verification sweep across all user stories.
 
-- [ ] T028 Run full frontend test suite (`npm test` in `frontend/`) — all tests must pass with no failures or skips
-- [ ] T029 Verify production build includes all new pages (`npm run build` in `frontend/`; confirm `dist/` contains `reset-request`, `reset-complete`, `profile`, `admin` HTML files)
-- [ ] T030 Run backend tests filtering to audit log (`dotnet test --filter AuditLog` in `backend/`) — all tests including the new `actorUsername`/`targetUsername` assertions must pass
+- [x] T028 Run full frontend test suite (`npm test` in `frontend/`) — all tests must pass with no failures or skips
+- [x] T029 Verify production build includes all new pages (`npm run build` in `frontend/`; confirm `dist/` contains `reset-request`, `reset-complete`, `profile`, `admin` HTML files)
+- [x] T030 Run backend tests filtering to audit log (`dotnet test --filter AuditLog` in `backend/`) — all tests including the new `actorUsername`/`targetUsername` assertions must pass
 
 ---
 

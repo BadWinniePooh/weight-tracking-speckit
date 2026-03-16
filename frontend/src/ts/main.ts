@@ -195,12 +195,27 @@ export function initLogout(): void {
   });
 }
 
+// ─── Nav visibility ───────────────────────────────────────────────────────────
+
+export async function applyNavVisibility(): Promise<void> {
+  const state = await checkAuthStatus();
+  const adminLink = document.getElementById("nav-admin") as HTMLElement | null;
+  if (adminLink && state.role === "admin") {
+    adminLink.hidden = false;
+  }
+}
+
 // ─── DOMContentLoaded ─────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("app", state);
+
+  const adminLink = document.getElementById("nav-admin") as HTMLElement | null;
+  if (adminLink && state.role === "admin") {
+    adminLink.hidden = false;
+  }
 
   initLogout();
   renderApp(false);

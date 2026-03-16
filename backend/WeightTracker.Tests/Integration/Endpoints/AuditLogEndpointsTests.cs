@@ -131,4 +131,85 @@ public class AuditLogEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixtu
         var response = await fixture.CreateAuthenticatedClient().GetAsync("/api/admin/audit-log");
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
+
+    // T009: Audit log entries include actorUsername (resolved via JOIN) and targetUsername (nullable)
+    [Fact]
+    public async Task GetAuditLog_EntriesIncludeActorUsername_NonNullNonEmpty()
+    {
+        fixture.EnsureTestUserExists();
+        await InsertAuditEntriesAsync(MakeEntry("role_changed"));
+
+        var client = fixture.CreateAuthenticatedAdminClient();
+        var response = await client.GetAsync("/api/admin/audit-log");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var entries = body.GetProperty("entries");
+        Assert.True(entries.GetArrayLength() >= 1);
+
+        // Every entry must have a non-null, non-empty actorUsername
+        foreach (var entry in entries.EnumerateArray())
+        {
+            Assert.True(entry.TryGetProperty("actorUsername", out var actorUsername),
+                "Entry is missing actorUsername field");
+            Assert.NotNull(actorUsername.GetString());
+            Assert.NotEmpty(actorUsername.GetString()!);
+        }
+    }
+
+    [Fact]
+    public async Task GetAuditLog_EntryWithTargetUser_HasTargetUsername()
+    {
+        fixture.EnsureTestUserExists();
+        // MakeEntry sets TargetUserId = ApiFixture.TestUserId (testuser)
+        var uniqueAction = $"target_test_{Guid.NewGuid():N}";
+        await InsertAuditEntriesAsync(new AuditLogEntry
+        {
+            Id = Guid.NewGuid(),
+            ActionType = uniqueAction,
+            ActorUserId = ApiFixture.AdminUserId,
+            TargetUserId = ApiFixture.TestUserId,
+            IpAddress = "127.0.0.1",
+            Timestamp = DateTime.UtcNow
+        });
+
+        var client = fixture.CreateAuthenticatedAdminClient();
+        var response = await client.GetAsync($"/api/admin/audit-log?actionType={uniqueAction}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var entry = body.GetProperty("entries")[0];
+
+        Assert.True(entry.TryGetProperty("actorUsername", out var actorUsername));
+        Assert.Equal("adminuser", actorUsername.GetString());
+
+        Assert.True(entry.TryGetProperty("targetUsername", out var targetUsername));
+        Assert.Equal("testuser", targetUsername.GetString());
+    }
+
+    [Fact]
+    public async Task GetAuditLog_EntryWithNoTargetUser_HasNullTargetUsername()
+    {
+        fixture.EnsureTestUserExists();
+        var uniqueAction = $"no_target_{Guid.NewGuid():N}";
+        await InsertAuditEntriesAsync(new AuditLogEntry
+        {
+            Id = Guid.NewGuid(),
+            ActionType = uniqueAction,
+            ActorUserId = ApiFixture.AdminUserId,
+            TargetUserId = null,
+            IpAddress = "127.0.0.1",
+            Timestamp = DateTime.UtcNow
+        });
+
+        var client = fixture.CreateAuthenticatedAdminClient();
+        var response = await client.GetAsync($"/api/admin/audit-log?actionType={uniqueAction}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var entry = body.GetProperty("entries")[0];
+
+        Assert.True(entry.TryGetProperty("targetUsername", out var targetUsername));
+        Assert.Equal(JsonValueKind.Null, targetUsername.ValueKind);
+    }
 }

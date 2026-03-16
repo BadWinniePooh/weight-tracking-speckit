@@ -4,6 +4,7 @@ vi.mock("../src/ts/auth-guard", () => ({
   checkAuthStatus: vi.fn().mockResolvedValue({
     setupRequired: false,
     isAuthenticated: true,
+    role: "user",
   }),
   enforceRedirect: vi.fn(),
 }));
@@ -78,5 +79,53 @@ describe("logout button", () => {
 
     expect(mockClearAccessToken).toHaveBeenCalled();
     expect(window.location.href).toBe("/login.html");
+  });
+});
+
+describe("navigation visibility", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    document.body.innerHTML = `
+      <a href="/profile.html" id="nav-profile">Profile</a>
+      <a href="/admin.html" id="nav-admin" hidden>Admin Dashboard</a>
+    `;
+  });
+
+  it("#nav-admin remains hidden when state.role is 'user'", async () => {
+    const { checkAuthStatus } = await import("../src/ts/auth-guard");
+    (checkAuthStatus as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isAuthenticated: true,
+      setupRequired: false,
+      role: "user",
+    });
+
+    const { applyNavVisibility } = await import("../src/ts/main");
+    await applyNavVisibility();
+
+    const adminLink = document.getElementById("nav-admin") as HTMLElement;
+    expect(adminLink.hidden).toBe(true);
+  });
+
+  it("#nav-admin is visible when state.role is 'admin'", async () => {
+    const { checkAuthStatus } = await import("../src/ts/auth-guard");
+    (checkAuthStatus as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      isAuthenticated: true,
+      setupRequired: false,
+      role: "admin",
+    });
+
+    const { applyNavVisibility } = await import("../src/ts/main");
+    await applyNavVisibility();
+
+    const adminLink = document.getElementById("nav-admin") as HTMLElement;
+    expect(adminLink.hidden).toBe(false);
+  });
+
+  it("#nav-profile is always present for authenticated users", async () => {
+    const { applyNavVisibility } = await import("../src/ts/main");
+    await applyNavVisibility();
+
+    const profileLink = document.getElementById("nav-profile");
+    expect(profileLink).toBeTruthy();
   });
 });

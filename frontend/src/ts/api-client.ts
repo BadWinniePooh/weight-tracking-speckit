@@ -242,7 +242,9 @@ export interface AuditLogEntryDto {
   id: string;
   actionType: string;
   actorUserId: string;
+  actorUsername: string;
   targetUserId: string | null;
+  targetUsername: string | null;
   ipAddress: string;
   timestamp: string;
 }

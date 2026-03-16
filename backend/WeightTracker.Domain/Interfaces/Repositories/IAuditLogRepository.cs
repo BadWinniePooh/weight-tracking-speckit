@@ -8,3 +8,4 @@ public interface IAuditLogRepository
     Task AppendAsync(AuditLogEntry entry);
     Task<AuditLogPage> QueryAsync(AuditLogFilter filter);
 }
+
