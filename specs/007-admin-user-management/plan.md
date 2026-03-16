@@ -130,3 +130,7 @@ frontend/
 | 5 new domain ports (IEmailService, IPasswordResetService, IEmailConfirmationService, IUserManagementService, IUserDeletionService) | Ports and Adapters is a stated architecture constraint; each port represents a distinct bounded capability | Combining into fewer interfaces would violate ISP and make individual service testing harder |
 | MailHog Testcontainer in ApiFixture | SMTP integration must be verified end-to-end; no way to assert email delivery without a real SMTP stub | Mock IEmailService would only confirm the interface was called, not that the SMTP adapter works correctly |
 | AuditLog has no FK on ActorUserId/TargetUserId | Preserve audit history after user deletion; deleting an admin should not cascade-delete their audit records | Nullable FK with SET NULL on delete could lose the historical user ID; storing as plain Guid preserves the identifier |
+
+## Assumptions
+
+- Admin-created users have no initial password — they must use the password reset flow to set their password before first login

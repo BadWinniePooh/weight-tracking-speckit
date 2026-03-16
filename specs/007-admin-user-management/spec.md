@@ -180,12 +180,12 @@ The system automatically and permanently deletes users whose scheduled deletion 
 
 **Admin Dashboard UI**
 
-- **FR-032**: The admin dashboard MUST be accessible only to authenticated users with the admin role, following the existing auth-guard pattern
-- **FR-033**: The dashboard MUST display a user management table with: username, email, role, status (active / deactivated / pending confirmation), last login, and scheduled deletion date
-- **FR-034**: Each user row MUST include action controls for: deactivate, reactivate, delete, assign role, and resend confirmation email
-- **FR-035**: The dashboard MUST display summary statistics: total registered users, count of users with a currently valid refresh token (active sessions), and last login time per user
-- **FR-036**: The dashboard MUST include an audit log view with a paginated table filterable by date range and action type
-- **FR-037**: A navigation link to the admin dashboard MUST be visible only to users with the admin role in the main application navigation
+- **FR-032**: The admin dashboard MUST be accessible only to authenticated users with the admin role, following the existing auth-guard pattern *(deferred to iteration 008 — Admin Dashboard UI)*
+- **FR-033**: The dashboard MUST display a user management table with: username, email, role, status (active / deactivated / pending confirmation), last login, and scheduled deletion date *(deferred to iteration 008 — Admin Dashboard UI)*
+- **FR-034**: Each user row MUST include action controls for: deactivate, reactivate, delete, assign role, and resend confirmation email *(deferred to iteration 008 — Admin Dashboard UI)*
+- **FR-035**: The dashboard MUST display summary statistics: total registered users, count of users with a currently valid refresh token (active sessions), and last login time per user *(deferred to iteration 008 — Admin Dashboard UI)*
+- **FR-036**: The dashboard MUST include an audit log view with a paginated table filterable by date range and action type *(deferred to iteration 008 — Admin Dashboard UI)*
+- **FR-037**: A navigation link to the admin dashboard MUST be visible only to users with the admin role in the main application navigation *(deferred to iteration 008 — Admin Dashboard UI)*
 
 ### Key Entities
 
