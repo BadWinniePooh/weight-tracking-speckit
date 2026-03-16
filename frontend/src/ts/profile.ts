@@ -1,11 +1,13 @@
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { changeUsername, changeEmail, changePassword, ApiError } from "./api-client";
 import { loadConfig } from "./config";
+import { initNavbar } from "./navbar";
 
 export async function initProfilePage(): Promise<void> {
   await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("profile", state);
+  initNavbar("profile");
 
   // Change username
   const usernameForm = document.getElementById("username-form") as HTMLFormElement | null;

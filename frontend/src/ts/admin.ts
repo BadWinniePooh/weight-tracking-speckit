@@ -13,6 +13,7 @@ import {
 } from "./api-client";
 import { getUserId } from "./auth-token";
 import { loadConfig } from "./config";
+import { initNavbar } from "./navbar";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -198,6 +199,7 @@ export async function initAdminPage(): Promise<void> {
   await loadConfig();
   const state = await checkAuthStatus();
   enforceRedirect("admin", state);
+  initNavbar("admin");
 
   const currentUserId = getUserId();
 

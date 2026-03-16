@@ -1,6 +1,7 @@
 import { loadConfig, getApiUrl } from "./config";
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { clearAccessToken } from "./auth-token";
+import { initNavbar } from "./navbar";
 import {
   getEntries as fetchEntries,
   createEntry as apiCreateEntry,
@@ -212,11 +213,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const state = await checkAuthStatus();
   enforceRedirect("app", state);
 
-  const adminLink = document.getElementById("nav-admin") as HTMLElement | null;
-  if (adminLink && state.role === "admin") {
-    adminLink.hidden = false;
-  }
-
+  initNavbar("dashboard");
   initLogout();
   renderApp(false);
 
