@@ -1,39 +1,38 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "daisyui";
 
 /* Custom overrides for health/fitness theme palette */
 [data-theme="light"],
 :root {
-  --p: 160 84% 39%;
-  --pc: 0 0% 100%;
-  --a: 38 92% 50%;
-  --ac: 220 9% 10%;
-  --su: 152 68% 31%;
-  --er: 0 72% 51%;
-  --wa: 38 92% 50%;
-  --b1: 0 0% 100%;
-  --b2: 210 20% 98%;
-  --b3: 220 14% 96%;
-  --bc: 221 39% 11%;
-  --n: 220 9% 46%;
-  --nc: 0 0% 100%;
+  --p: oklch(0.59 0.145 163);
+  --pc: oklch(1 0 0);
+  --a: oklch(0.79 0.185 87);
+  --ac: oklch(0.14 0.02 264);
+  --su: oklch(0.53 0.15 150);
+  --er: oklch(0.58 0.24 27);
+  --wa: oklch(0.79 0.185 87);
+  --b1: oklch(1 0 0);
+  --b2: oklch(0.984 0.003 248);
+  --b3: oklch(0.968 0.007 248);
+  --bc: oklch(0.21 0.04 264);
+  --n: oklch(0.55 0.046 257);
+  --nc: oklch(1 0 0);
 }
 
 [data-theme="dark"] {
-  --p: 160 84% 60%;
-  --pc: 220 9% 10%;
-  --a: 38 92% 65%;
-  --ac: 220 9% 10%;
-  --su: 160 84% 60%;
-  --er: 0 91% 71%;
-  --wa: 38 92% 65%;
-  --b1: 221 39% 11%;
-  --b2: 215 28% 17%;
-  --b3: 217 19% 27%;
-  --bc: 210 20% 98%;
-  --n: 218 11% 65%;
-  --nc: 221 39% 11%;
+  --p: oklch(0.77 0.177 162);
+  --pc: oklch(0.14 0.02 264);
+  --a: oklch(0.83 0.182 88);
+  --ac: oklch(0.14 0.02 264);
+  --su: oklch(0.77 0.177 162);
+  --er: oklch(0.70 0.20 22);
+  --wa: oklch(0.83 0.182 88);
+  --b1: oklch(0.21 0.04 264);
+  --b2: oklch(0.28 0.041 260);
+  --b3: oklch(0.37 0.046 262);
+  --bc: oklch(0.984 0.003 248);
+  --n: oklch(0.70 0.040 257);
+  --nc: oklch(0.21 0.04 264);
 }
 
 /* Chart container height — no DaisyUI equivalent */
