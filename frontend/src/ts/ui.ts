@@ -1,6 +1,4 @@
 import type { WeightEntry, WeightUnit, CorridorState } from "./model";
-import { getRawStorageString } from "./storage";
-import { triggerDownload } from "./export";
 
 // ─── Unit conversion ──────────────────────────────────────────────────────────
 
@@ -92,6 +90,7 @@ export function renderEntry(entry: WeightEntry, displayUnit: WeightUnit = entry.
 
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "Delete";
+  deleteBtn.className = "btn btn-sm btn-error";
   deleteBtn.setAttribute("aria-label", "Delete entry");
   deleteBtn.setAttribute("data-action", "delete");
   deleteBtn.setAttribute("data-id", entry.id);
@@ -127,7 +126,7 @@ export function renderEntryList(entries: Array<{ id: string; weightValue: number
   );
 
   const table = document.createElement("table");
-  table.className = "entry-table";
+  table.className = "entry-table table table-zebra w-full";
 
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
@@ -139,6 +138,7 @@ export function renderEntryList(entries: Array<{ id: string; weightValue: number
   const actionsTh = document.createElement("th");
   const deleteAllBtn = document.createElement("button");
   deleteAllBtn.textContent = "Delete all";
+  deleteAllBtn.className = "btn btn-sm btn-error";
   deleteAllBtn.setAttribute("data-action", "delete-all");
   deleteAllBtn.setAttribute("aria-label", "Delete all entries");
   actionsTh.appendChild(deleteAllBtn);
@@ -180,33 +180,6 @@ export function clearApiError(): void {
   if (el) {
     el.textContent = "";
     el.hidden = true;
-  }
-}
-
-// ─── Recovery screen (FR-013) ─────────────────────────────────────────────────
-
-export function renderRecoveryScreen(): void {
-  const downloadBtn = document.getElementById("download-raw-btn");
-  const resetBtn = document.getElementById("reset-btn");
-
-  if (downloadBtn) {
-    downloadBtn.addEventListener("click", () => {
-      const raw = getRawStorageString();
-      const blob = new Blob([raw], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = "weight-data-raw.txt";
-      anchor.click();
-      URL.revokeObjectURL(url);
-    });
-  }
-
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      localStorage.clear();
-      location.reload();
-    });
   }
 }
 
@@ -261,17 +234,7 @@ export function showMigrationResult(result: { migratedEntries: number; skippedEn
   el.hidden = false;
 }
 
-export function renderApp(corrupt: boolean): void {
-  const recovery = document.getElementById("recovery-screen");
+export function renderApp(_corrupt?: boolean): void {
   const app = document.getElementById("app");
-  if (!recovery || !app) return;
-
-  if (corrupt) {
-    recovery.hidden = false;
-    app.hidden = true;
-    renderRecoveryScreen();
-  } else {
-    recovery.hidden = true;
-    app.hidden = false;
-  }
+  if (app) app.hidden = false;
 }

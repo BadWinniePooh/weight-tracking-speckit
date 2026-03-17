@@ -1,5 +1,5 @@
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
-import { changeUsername, changeEmail, changePassword, ApiError } from "./api-client";
+import { changeUsername, changeEmail, changePassword, getMe, ApiError } from "./api-client";
 import { loadConfig } from "./config";
 import { initNavbar } from "./navbar";
 import { initTheme } from "./theme";
@@ -10,6 +10,17 @@ export async function initProfilePage(): Promise<void> {
   const state = await checkAuthStatus();
   enforceRedirect("profile", state);
   initNavbar("profile");
+
+  // Pre-populate current values
+  try {
+    const me = await getMe();
+    const usernameInput = document.getElementById("username-input") as HTMLInputElement | null;
+    const emailInput = document.getElementById("email-input") as HTMLInputElement | null;
+    if (usernameInput) usernameInput.value = me.username;
+    if (emailInput) emailInput.value = me.email;
+  } catch {
+    // Non-fatal — inputs remain empty if profile can't be fetched
+  }
 
   // Change username
   const usernameForm = document.getElementById("username-form") as HTMLFormElement | null;

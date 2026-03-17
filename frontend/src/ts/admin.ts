@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import {
   adminListUsers,
@@ -23,7 +24,7 @@ function formatDate(iso: string | null): string {
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleString("sv-SE").slice(0, 16);
+  return format(new Date(iso), "MMM d, yyyy HH:mm");
 }
 
 function renderStatusBadge(user: AdminUserDto): string {
@@ -83,7 +84,7 @@ function renderUserRow(user: AdminUserDto, currentUserId: string | null): HTMLTa
   const reactivateBtn = !user.isActive
     ? `<button class="btn btn-sm btn-ghost" data-action="reactivate" data-user-id="${user.id}">Reactivate</button>`
     : "";
-  const deleteBtn = `<button class="btn btn-sm btn-ghost text-error" data-action="delete" data-user-id="${user.id}"${isOwnAccount ? " disabled title=\"Cannot delete own account\"" : ""}>Delete</button>`;
+  const deleteBtn = `<button class="btn btn-sm btn-error" data-action="delete" data-user-id="${user.id}"${isOwnAccount ? " disabled title=\"Cannot delete own account\"" : ""}>Delete</button>`;
   const changeRoleBtn = `<button class="btn btn-sm btn-ghost" data-action="change-role" data-user-id="${user.id}" data-current-role="${user.role}"${isOwnAccount ? " disabled title=\"Cannot change own role\"" : ""}>Change Role</button>`;
   const resendBtn = !user.emailConfirmed
     ? `<button class="btn btn-sm btn-ghost" data-action="resend-confirmation" data-user-id="${user.id}">Resend Confirmation</button>`
@@ -144,11 +145,11 @@ function wireRowActions(tbody: HTMLElement): void {
       if (!await showConfirmDialog("Deactivate this user?")) return;
       setLoading(btn, true);
       try {
-        await adminDeactivateUser(userId);
+        const result = await adminDeactivateUser(userId);
         const row = tbody.querySelector(`[data-user-id="${userId}"]`) as HTMLTableRowElement | null;
         if (row) {
           const newRow = renderUserRow(
-            { ...parseRowData(row), isActive: false, scheduledDeletionAt: new Date(Date.now() + 30 * 86400000).toISOString() },
+            { ...parseRowData(row), isActive: false, scheduledDeletionAt: result.scheduledDeletionAt },
             getUserId()
           );
           row.replaceWith(newRow);

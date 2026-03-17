@@ -191,6 +191,17 @@ export async function confirmEmail(token: string): Promise<void> {
 
 // ─── Account self-service ─────────────────────────────────────────────────────
 
+export interface MeResponse {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+}
+
+export async function getMe(): Promise<MeResponse> {
+  return request<MeResponse>("/api/account/me");
+}
+
 export async function changeUsername(newUsername: string): Promise<{ username: string }> {
   return request<{ username: string }>("/api/account/username", {
     method: "PUT",

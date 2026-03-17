@@ -94,9 +94,9 @@ async function openSettingsModal(): Promise<void> {
   const bufferInput = document.getElementById("buffer-value-input") as HTMLInputElement | null;
 
   if (goalInput) goalInput.value = settings.weightGoal !== null ? String(settings.weightGoal) : "";
-  if (lossInput) lossInput.value = String(settings.lossRate);
-  if (carbInput) carbInput.value = String(settings.carbFatRatio);
-  if (bufferInput) bufferInput.value = String(settings.bufferValue);
+  if (lossInput) lossInput.value = settings.lossRate.toFixed(4);
+  if (carbInput) carbInput.value = settings.carbFatRatio.toFixed(4);
+  if (bufferInput) bufferInput.value = settings.bufferValue.toFixed(4);
 
   ["weight-goal-error", "loss-rate-error", "carb-fat-error", "buffer-error"].forEach((id) => {
     const el = document.getElementById(id);
@@ -216,7 +216,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   enforceRedirect("app", state);
 
   initNavbar("dashboard");
-  initLogout();
   renderApp(false);
 
   const unitSelect = document.getElementById("unit-select") as HTMLSelectElement | null;

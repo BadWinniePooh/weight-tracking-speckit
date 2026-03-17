@@ -15,6 +15,7 @@ export async function initResetCompletePage(): Promise<void> {
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement | null;
   const feedbackEl = document.getElementById("feedback-msg");
   const tokenErrorEl = document.getElementById("token-error-msg") as HTMLElement | null;
+  const successPanel = document.getElementById("success-panel");
 
   if (!form || !newPasswordInput || !confirmPasswordInput || !submitBtn || !feedbackEl) return;
 
@@ -22,8 +23,9 @@ export async function initResetCompletePage(): Promise<void> {
   const token = params.get("token");
 
   if (!token) {
-    if (tokenErrorEl) tokenErrorEl.hidden = false;
+    if (tokenErrorEl) tokenErrorEl.classList.remove("hidden");
     if (submitBtn) submitBtn.disabled = true;
+    form.classList.add("hidden");
     return;
   }
 
@@ -44,7 +46,9 @@ export async function initResetCompletePage(): Promise<void> {
     submitBtn.classList.add("loading");
     try {
       await resetPassword(token, newPassword);
-      window.location.href = "/login.html";
+      form.classList.add("hidden");
+      successPanel?.classList.remove("hidden");
+      setTimeout(() => { window.location.href = "/login.html"; }, 2500);
     } catch (err) {
       submitBtn.disabled = false;
       submitBtn.dataset.loading = "false";

@@ -1,4 +1,5 @@
-import { getUserRole } from "./auth-token";
+import { getUserRole, clearAccessToken, getAccessToken } from "./auth-token";
+import { getApiUrl } from "./config";
 
 export function initNavbar(activePage: "dashboard" | "profile" | "admin"): void {
   // Role-based link visibility
@@ -37,4 +38,28 @@ export function initNavbar(activePage: "dashboard" | "profile" | "admin"): void 
       mobileMenu.hidden = !mobileMenu.hidden;
     });
   }
+
+  // Logout buttons (desktop + mobile)
+  async function handleLogout(): Promise<void> {
+    try {
+      const headers = new Headers();
+      const token = getAccessToken();
+      if (token) {
+        headers.append("Authorization", `Bearer ${token}`);
+      }
+      await fetch(`${getApiUrl()}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers,
+      });
+    } catch {
+      // always clear session regardless of server response
+    } finally {
+      clearAccessToken();
+      window.location.href = "/login.html";
+    }
+  }
+
+  document.getElementById("logout-button")?.addEventListener("click", handleLogout);
+  document.getElementById("nav-mobile-logout")?.addEventListener("click", handleLogout);
 }
