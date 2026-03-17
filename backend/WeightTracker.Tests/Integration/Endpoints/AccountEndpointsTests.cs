@@ -40,6 +40,22 @@ public class AccountEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixtur
         return (user, client);
     }
 
+    // GET /api/account/me returns 200 with the authenticated user's data
+    [Fact]
+    public async Task GetMe_AuthenticatedUser_Returns200WithUserData()
+    {
+        var (user, client) = await CreateAuthUserAsync("me");
+
+        var response = await client.GetAsync("/api/account/me");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(user.Id.ToString(), body.GetProperty("id").GetString());
+        Assert.Equal(user.Username, body.GetProperty("username").GetString());
+        Assert.Equal(user.Email, body.GetProperty("email").GetString());
+        Assert.Equal("user", body.GetProperty("role").GetString());
+    }
+
     // T054: PUT /api/account/username updates username; duplicate returns 400
     [Fact]
     public async Task ChangeUsername_Valid_Returns200WithNewUsername()

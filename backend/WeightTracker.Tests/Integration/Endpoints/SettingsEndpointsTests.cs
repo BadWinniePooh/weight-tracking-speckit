@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using WeightTracker.Domain.Entities;
+using WeightTracker.Infrastructure.Data;
 using WeightTracker.Tests.Integration.Fixtures;
 using Xunit;
 
@@ -8,6 +10,45 @@ namespace WeightTracker.Tests.Integration.Endpoints;
 public class SettingsEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
 {
     private readonly HttpClient _client = fixture.CreateAuthenticatedClient();
+
+    // ── Bug #1: GET /api/settings returns 404 for user with no settings record ─
+
+    [Fact]
+    public async Task GetSettings_UserWithNoSettingsRecord_Returns200WithDefaults()
+    {
+        // Create a fresh user with no ChartSettings record
+        var freshUserId = Guid.NewGuid();
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Users.Add(new User
+        {
+            Id = freshUserId,
+            Username = $"fresh_{freshUserId:N}",
+            Email = $"fresh_{freshUserId:N}@example.com",
+            PasswordHash = "testhash",
+            Role = "user",
+            IsActive = true,
+            EmailConfirmed = true,
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        var client = fixture.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer", ApiFixture.GenerateTestJwt(freshUserId));
+
+        var response = await client.GetAsync("/api/settings");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<GetSettingsResponse>();
+        Assert.NotNull(body);
+        Assert.Equal("kg", body.PreferredUnit);
+        Assert.Null(body.WeightGoal);
+        Assert.True(body.LossRate > 0, "lossRate default should be positive");
+        Assert.True(body.CarbFatRatio > 0, "carbFatRatio default should be positive");
+        Assert.True(body.BufferValue > 0, "bufferValue default should be positive");
+    }
 
     // ── GET /api/settings ───────────────────────────────────────────────────────
 

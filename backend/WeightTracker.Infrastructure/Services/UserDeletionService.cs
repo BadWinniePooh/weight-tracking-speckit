@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using WeightTracker.Domain.Entities;
+using WeightTracker.Domain.Interfaces.Repositories;
 using WeightTracker.Domain.Interfaces.Services;
 using WeightTracker.Infrastructure.Data;
 
 namespace WeightTracker.Infrastructure.Services;
 
-public class UserDeletionService(AppDbContext db, ILogger<UserDeletionService> logger) : IUserDeletionService
+public class UserDeletionService(AppDbContext db, IAuditLogRepository auditLogRepository, ILogger<UserDeletionService> logger) : IUserDeletionService
 {
     public async Task DeleteExpiredUsersAsync(CancellationToken cancellationToken = default)
     {
@@ -23,6 +25,17 @@ public class UserDeletionService(AppDbContext db, ILogger<UserDeletionService> l
                 await db.SaveChangesAsync(cancellationToken);
                 logger.LogInformation("Deleted expired user {UserId} (scheduled: {ScheduledAt})",
                     user.Id, user.ScheduledDeletionAt);
+                await auditLogRepository.AppendAsync(new AuditLogEntry
+                {
+                    Id = Guid.NewGuid(),
+                    ActionType = "user_deleted",
+                    ActorUserId = Guid.Empty, // system action
+                    ActorUsername = "system",
+                    TargetUserId = user.Id,
+                    TargetUsername = user.Username,
+                    IpAddress = string.Empty,
+                    Timestamp = DateTime.UtcNow
+                });
             }
             catch (Exception ex)
             {

@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
@@ -43,7 +44,7 @@ public class PasswordResetService(
         var htmlBody = $"""
             <p>You requested a password reset for your weight tracker account.</p>
             <p><a href="{resetUrl}">Reset your password</a></p>
-            <p>This link expires in {TokenExpiryHours} hour(s). If you did not request this, ignore this email.</p>
+            <p>This link expires in {TokenExpiryHours} hour{(TokenExpiryHours > 1 ? "s" : "")}. If you did not request this, ignore this email.</p>
             """;
 
         await emailService.SendAsync(user.Email, "Reset your password", htmlBody);

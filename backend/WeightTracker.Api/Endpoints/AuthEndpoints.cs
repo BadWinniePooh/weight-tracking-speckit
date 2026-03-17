@@ -21,6 +21,7 @@ public static class AuthEndpoints
             IUserRepository userRepository,
             IPasswordHasher passwordHasher,
             ITokenService tokenService,
+            IAuditLogRepository auditLogRepository,
             HttpContext httpContext) =>
         {
             var user = await userRepository.GetByUsernameAsync(request.Username);
@@ -31,8 +32,23 @@ public static class AuthEndpoints
             if (!user.EmailConfirmed)
                 return Results.Json(new { error = "Please confirm your email address before logging in." }, statusCode: 401);
 
+            user.LastLoginAt = DateTime.UtcNow;
+            await userRepository.UpdateAsync(user);
+
             var (accessToken, refreshToken) = await tokenService.GenerateTokensAsync(user);
             SetRefreshCookie(httpContext, refreshToken);
+
+            await auditLogRepository.AppendAsync(new AuditLogEntry
+            {
+                Id = Guid.NewGuid(),
+                ActionType = "user_login",
+                ActorUserId = user.Id,
+                ActorUsername = user.Username,
+                TargetUserId = null,
+                TargetUsername = null,
+                IpAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                Timestamp = DateTime.UtcNow
+            });
 
             return Results.Ok(new
             {

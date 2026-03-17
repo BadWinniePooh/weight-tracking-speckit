@@ -109,6 +109,28 @@ public class SetupEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    // ── Bug #7: Audit log entries missing for setup ──────────────────────────
+
+    [Fact]
+    public async Task PostSetupInitialize_WritesUserCreatedAuditEntry()
+    {
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.AuditLog.RemoveRange(db.AuditLog);
+        db.RefreshTokens.RemoveRange(db.RefreshTokens);
+        db.ChartSettings.RemoveRange(db.ChartSettings);
+        db.WeightEntries.RemoveRange(db.WeightEntries);
+        db.Users.RemoveRange(db.Users);
+        await db.SaveChangesAsync();
+
+        var request = new SetupInitRequest("auditadmin", "auditadmin@example.com", "secretpass123");
+        await _client.PostAsJsonAsync("/api/setup/initialize", request);
+
+        var auditEntry = db.AuditLog.FirstOrDefault(e => e.ActionType == "user_created");
+        Assert.NotNull(auditEntry);
+        Assert.Equal("auditadmin", auditEntry.TargetUsername);
+    }
+
     [Fact]
     public async Task PostSetupInitialize_CreatedAdmin_HasEmailConfirmedTrue()
     {

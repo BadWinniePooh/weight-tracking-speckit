@@ -14,7 +14,17 @@ public static class SettingsEndpoints
             var userId = (Guid)httpContext.Items["CurrentUserId"]!;
             var settings = await settingsRepo.GetByUserAsync(userId);
             if (settings is null)
-                return Results.NotFound(new { error = "Settings not found" });
+            {
+                return Results.Ok(new
+                {
+                    preferredUnit = "kg",
+                    weightGoal = (decimal?)null,
+                    lossRate = 0.005500m,
+                    carbFatRatio = 0.600000m,
+                    bufferValue = 0.007500m,
+                    updatedAt = DateTime.UtcNow.ToString("o"),
+                });
+            }
 
             return Results.Ok(new
             {

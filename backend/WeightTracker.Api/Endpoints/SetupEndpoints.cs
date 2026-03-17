@@ -18,7 +18,9 @@ public static class SetupEndpoints
         app.MapPost("/api/setup/initialize", async (
             SetupRequest request,
             IUserRepository userRepository,
-            IPasswordHasher passwordHasher) =>
+            IPasswordHasher passwordHasher,
+            IAuditLogRepository auditLogRepository,
+            HttpContext httpContext) =>
         {
             if (await userRepository.ExistsAnyAsync())
                 return Results.Conflict(new { error = "Setup has already been completed." });
@@ -50,6 +52,19 @@ public static class SetupEndpoints
             };
 
             await userRepository.AddAsync(user);
+
+            await auditLogRepository.AppendAsync(new AuditLogEntry
+            {
+                Id = Guid.NewGuid(),
+                ActionType = "user_created",
+                ActorUserId = user.Id,
+                ActorUsername = user.Username,
+                TargetUserId = user.Id,
+                TargetUsername = user.Username,
+                IpAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                Timestamp = DateTime.UtcNow
+            });
+
             return Results.Created("/api/setup/initialize", new { message = "Setup complete. Please log in." });
         }).AllowAnonymous();
     }

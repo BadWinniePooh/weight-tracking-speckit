@@ -10,6 +10,22 @@ public static class AccountEndpoints
     {
         var accountGroup = app.MapGroup("/api/account").RequireAuthorization();
 
+        // GET /api/account/me
+        accountGroup.MapGet("/me", async (
+            IUserRepository userRepository,
+            HttpContext httpContext) =>
+        {
+            var userId = GetUserId(httpContext);
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var user = await userRepository.GetByIdAsync(userId);
+            if (user is null)
+                return Results.NotFound();
+
+            return Results.Ok(new { id = user.Id.ToString(), user.Username, user.Email, user.Role });
+        });
+
         // PUT /api/account/username
         accountGroup.MapPut("/username", async (
             ChangeUsernameRequest request,

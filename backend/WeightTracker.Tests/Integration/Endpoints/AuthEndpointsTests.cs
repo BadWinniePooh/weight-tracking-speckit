@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
 using WeightTracker.Domain.Entities;
 using WeightTracker.Infrastructure.Data;
 using WeightTracker.Infrastructure.Services;
@@ -31,6 +32,43 @@ public class AuthEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
         db.Users.Add(user);
         await db.SaveChangesAsync();
         return user;
+    }
+
+    // ── Bug #6: lastLoginAt never recorded ──────────────────────────────────
+
+    [Fact]
+    public async Task Login_ValidCredentials_UpdatesLastLoginAt()
+    {
+        var username = $"lastlogintest_{Guid.NewGuid():N}";
+        await CreateTestUserAsync(username, "mypassword123");
+
+        await _client.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest(username, "mypassword123"));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var user = await db.Users.SingleAsync(u => u.Username == username);
+        Assert.NotNull(user.LastLoginAt);
+        Assert.True(user.LastLoginAt > DateTime.UtcNow.AddMinutes(-1));
+    }
+
+    // ── Bug #7: Audit log entries missing for login ─────────────────────────
+
+    [Fact]
+    public async Task Login_ValidCredentials_WritesUserLoginAuditEntry()
+    {
+        var username = $"auditlogintest_{Guid.NewGuid():N}";
+        var user = await CreateTestUserAsync(username, "mypassword123");
+
+        await _client.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest(username, "mypassword123"));
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var auditEntry = await db.AuditLog
+            .Where(e => e.ActionType == "user_login" && e.ActorUserId == user.Id)
+            .FirstOrDefaultAsync();
+        Assert.NotNull(auditEntry);
     }
 
     // ── POST /api/auth/login ─────────────────────────────────────────────────
