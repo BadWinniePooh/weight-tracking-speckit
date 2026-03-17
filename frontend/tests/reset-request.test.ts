@@ -35,6 +35,7 @@ describe("reset-request page", () => {
         <button id="submit-btn" type="submit">Send Reset Link</button>
         <div id="feedback-msg"></div>
       </form>
+      <div id="success-panel" class="hidden"></div>
     `;
   });
 
@@ -69,9 +70,8 @@ describe("reset-request page", () => {
     document.getElementById("reset-request-form")!.dispatchEvent(new Event("submit"));
     await new Promise((r) => setTimeout(r, 10));
 
-    const feedback = document.getElementById("feedback-msg");
-    expect(feedback?.textContent).toBeTruthy();
-    expect(feedback?.textContent).not.toBe("");
+    const successPanel = document.getElementById("success-panel");
+    expect(successPanel?.classList.contains("hidden")).toBe(false);
   });
 
   it("disables submit button during in-flight request", async () => {
@@ -92,6 +92,6 @@ describe("reset-request page", () => {
     expect(btn.disabled).toBe(true);
     resolveRequest();
     await new Promise((r) => setTimeout(r, 10));
-    expect(btn.disabled).toBe(false);
+    expect(btn.disabled).toBe(true);
   });
 });

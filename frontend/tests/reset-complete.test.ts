@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("../src/ts/auth-guard", () => ({
   checkAuthStatus: vi.fn().mockResolvedValue({ isAuthenticated: false, setupRequired: false }),
@@ -41,6 +41,10 @@ function setSearch(search: string) {
 }
 
 describe("reset-complete page", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     setSearch("?token=valid-token-123");
@@ -70,7 +74,7 @@ describe("reset-complete page", () => {
 
     const tokenErr = document.getElementById("token-error-msg") as HTMLElement;
     const btn = document.getElementById("submit-btn") as HTMLButtonElement;
-    expect(tokenErr.hidden).toBe(false);
+    expect(tokenErr.classList.contains("hidden")).toBe(false);
     expect(btn.disabled).toBe(true);
   });
 
@@ -103,6 +107,7 @@ describe("reset-complete page", () => {
   });
 
   it("redirects to /login.html on success", async () => {
+    vi.useFakeTimers();
     const { resetPassword } = await import("../src/ts/api-client");
     (resetPassword as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
     const { initResetCompletePage } = await import("../src/ts/reset-complete");
@@ -111,7 +116,12 @@ describe("reset-complete page", () => {
     (document.getElementById("new-password-input") as HTMLInputElement).value = "newpass123";
     (document.getElementById("confirm-password-input") as HTMLInputElement).value = "newpass123";
     document.getElementById("reset-complete-form")!.dispatchEvent(new Event("submit"));
-    await new Promise((r) => setTimeout(r, 10));
+    // Flush microtasks so the async submit handler runs and the setTimeout is registered
+    await Promise.resolve();
+    await Promise.resolve();
+    vi.advanceTimersByTime(2500);
+    // Flush again so the redirect assignment executes
+    await Promise.resolve();
 
     expect(window.location.href).toBe("/login.html");
   });
