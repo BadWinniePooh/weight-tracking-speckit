@@ -329,6 +329,63 @@ export async function adminGetAuditLog(params: AuditLogParams = {}): Promise<Aud
   return request<AuditLogResponse>(`/api/admin/audit-log${qs ? `?${qs}` : ""}`);
 }
 
+// ─── CSV Import ───────────────────────────────────────────────────────────────
+
+export interface ImportRowError {
+  row: number;
+  reason: string;
+}
+
+export interface ImportResult {
+  importedCount: number;
+  failedCount: number;
+  errors: ImportRowError[];
+}
+
+export async function importCsvFile(file: File): Promise<ImportResult> {
+  const url = `${getApiUrl()}/api/import`;
+  const token = getAccessToken();
+
+  const body = new FormData();
+  body.append("file", file);
+
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const response = await fetch(url, { method: "POST", headers, body });
+
+  if (response.status === 401) {
+    const refreshed = await attemptRefresh();
+    if (refreshed) {
+      const newToken = getAccessToken();
+      const retryHeaders: Record<string, string> = {};
+      if (newToken) retryHeaders["Authorization"] = `Bearer ${newToken}`;
+      const retry = await fetch(url, { method: "POST", headers: retryHeaders, body });
+      if (retry.status === 401) {
+        clearAccessToken();
+        window.location.href = "/login.html";
+        throw new ApiError("Authentication required.", 401);
+      }
+      if (!retry.ok) {
+        const err = await retry.json().catch(() => ({})) as { error?: string };
+        throw new ApiError(err.error ?? `HTTP ${retry.status}`, retry.status);
+      }
+      return retry.json() as Promise<ImportResult>;
+    } else {
+      clearAccessToken();
+      window.location.href = "/login.html";
+      throw new ApiError("Authentication required.", 401);
+    }
+  }
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({})) as { error?: string };
+    throw new ApiError(err.error ?? `HTTP ${response.status}`, response.status);
+  }
+
+  return response.json() as Promise<ImportResult>;
+}
+
 // ─── Migration ────────────────────────────────────────────────────────────────
 
 export async function migrateFromLocalStorage(payload: {

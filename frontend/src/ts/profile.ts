@@ -3,6 +3,7 @@ import { changeUsername, changeEmail, changePassword, getMe, ApiError } from "./
 import { loadConfig } from "./config";
 import { initNavbar } from "./navbar";
 import { initTheme } from "./theme";
+import { initImport } from "./import";
 
 export async function initProfilePage(): Promise<void> {
   initTheme();
@@ -10,6 +11,7 @@ export async function initProfilePage(): Promise<void> {
   const state = await checkAuthStatus();
   enforceRedirect("profile", state);
   initNavbar("profile");
+  initImport();
 
   // Pre-populate current values
   try {

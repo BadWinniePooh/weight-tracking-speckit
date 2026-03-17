@@ -103,6 +103,24 @@
             </div>
           </div>
         </section>
+        <section>
+          <div class="card bg-base-100 shadow mb-6">
+            <div class="card-body">
+              <h3 class="card-title text-lg">Import Data</h3>
+              <p class="text-sm text-base-content/70 mb-3">Upload a CSV file to import historical weight entries. Each row must contain a date (<code>YYYY-MM-DD</code>) and a weight value. An optional third column specifies the unit (<code>kg</code> or <code>lbs</code>); if omitted, your account's preferred unit is used.</p>
+              <form id="import-form">
+                <div class="form-control mb-3">
+                  <label class="label" for="import-file-input">
+                    <span class="label-text">CSV file</span>
+                  </label>
+                  <input id="import-file-input" type="file" accept=".csv" required class="file-input file-input-bordered w-full" />
+                </div>
+                <button type="submit" class="btn btn-primary">Import</button>
+              </form>
+              <div id="import-feedback" role="status" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
     <script type="module" src="ts/profile.ts"></script>

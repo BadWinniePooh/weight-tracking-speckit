@@ -24,6 +24,14 @@ public class WeightEntryRepository(AppDbContext db) : IWeightEntryRepository
         return (entry, true);
     }
 
+    public async Task<int> AddRangeAsync(IEnumerable<WeightEntry> entries)
+    {
+        var list = entries.ToList();
+        db.WeightEntries.AddRange(list);
+        await db.SaveChangesAsync();
+        return list.Count;
+    }
+
     public async Task<bool> DeleteAsync(Guid id, Guid userId)
     {
         var entry = await db.WeightEntries
