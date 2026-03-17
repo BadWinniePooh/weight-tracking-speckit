@@ -49,11 +49,38 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "3000:80"
+    networks:
+      - default
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${TRAEFIK_NETWORK:-traefik}"
+      - "traefik.http.services.weight-tracker.loadbalancer.server.port=80"
+      # Catch-all router (no rate limit)
+      - "traefik.http.routers.weight-tracker.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.weight-tracker.entrypoints=websecure"
+      - "traefik.http.routers.weight-tracker.tls=true"
+      - "traefik.http.routers.weight-tracker.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      # Auth-specific router (rate limited, higher priority)
+      - "traefik.http.routers.weight-tracker-auth.rule=Host(`${APP_DOMAIN}`) && (Path(`/api/auth/login`) || Path(`/api/auth/reset-password/request`))"
+      - "traefik.http.routers.weight-tracker-auth.priority=10"
+      - "traefik.http.routers.weight-tracker-auth.entrypoints=websecure"
+      - "traefik.http.routers.weight-tracker-auth.tls=true"
+      - "traefik.http.routers.weight-tracker-auth.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}"
+      - "traefik.http.routers.weight-tracker-auth.service=weight-tracker"
+      - "traefik.http.routers.weight-tracker-auth.middlewares=weight-tracker-auth-ratelimit"
+      # Rate limit middleware (5 requests per minute average, burst 10)
+      - "traefik.http.middlewares.weight-tracker-auth-ratelimit.ratelimit.average=${AUTH_RATE_LIMIT_AVERAGE:-5}"
+      - "traefik.http.middlewares.weight-tracker-auth-ratelimit.ratelimit.period=${AUTH_RATE_LIMIT_PERIOD:-1m}"
+      - "traefik.http.middlewares.weight-tracker-auth-ratelimit.ratelimit.burst=${AUTH_RATE_LIMIT_BURST:-10}"
     depends_on:
       backend:
         condition: service_healthy
 
 volumes:
   weighttracker-data:
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}
