@@ -23,7 +23,6 @@ vi.mock("../src/ts/api-client", () => ({
 
 import {
   renderApp,
-  renderRecoveryScreen,
   renderEntry,
   renderEntryList,
   showError,
@@ -33,17 +32,11 @@ import {
   showApiError,
   clearApiError,
 } from "../src/ts/ui";
-import { isDataCorrupt, getRawStorageString } from "../src/ts/storage";
 import type { WeightEntry } from "../src/ts/model";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function buildDOM() {
   document.body.innerHTML = `
-    <div id="recovery-screen" hidden>
-      <p id="recovery-msg"></p>
-      <button id="download-raw-btn">Download raw data</button>
-      <button id="reset-btn">Reset</button>
-    </div>
     <div id="app">
       <select id="unit-select">
         <option value="kg">kg</option>
@@ -76,135 +69,26 @@ function makeEntry(overrides: Partial<WeightEntry> = {}): WeightEntry {
 
 beforeEach(() => {
   buildDOM();
-  vi.mocked(isDataCorrupt).mockReturnValue(false);
-  vi.mocked(getRawStorageString).mockReturnValue("");
 });
 
 afterEach(() => {
   vi.clearAllMocks();
 });
 
-// ─── FR-013: Recovery screen (T015) ───────────────────────────────────────────
-describe("renderApp — corrupt-data recovery screen (FR-013)", () => {
-  it("shows #recovery-screen and hides #app when corrupt=true", () => {
-    vi.mocked(isDataCorrupt).mockReturnValue(true);
-    renderApp(true);
-    const recovery = document.getElementById("recovery-screen")!;
+// ─── renderApp ────────────────────────────────────────────────────────────────
+describe("renderApp", () => {
+  it("shows #app", () => {
     const app = document.getElementById("app")!;
-    expect(recovery.hidden).toBe(false);
-    expect(app.hidden).toBe(true);
-  });
-
-  it("shows #app and hides #recovery-screen when corrupt=false", () => {
-    renderApp(false);
-    const recovery = document.getElementById("recovery-screen")!;
-    const app = document.getElementById("app")!;
-    expect(recovery.hidden).toBe(true);
+    app.hidden = true;
+    renderApp();
     expect(app.hidden).toBe(false);
   });
 
-  it("else branch restores app visibility after corrupt was true", () => {
-    vi.mocked(isDataCorrupt).mockReturnValue(true);
-    renderApp(true);
-    // DOM is now: recovery=visible, app=hidden
-    vi.mocked(isDataCorrupt).mockReturnValue(false);
-    renderApp(false);
-    // Else branch must have run to flip these back
-    const recovery = document.getElementById("recovery-screen")!;
+  it("shows #app regardless of argument", () => {
     const app = document.getElementById("app")!;
-    expect(recovery.hidden).toBe(true);
+    app.hidden = true;
+    renderApp(true);
     expect(app.hidden).toBe(false);
-  });
-});
-
-describe("renderRecoveryScreen", () => {
-  it("clicking 'Download raw data' triggers a file download named weight-data-raw.txt", () => {
-    const rawData = '[{"id":"x","weightValue":70,"unit":"kg","timestamp":"2026-01-01T00:00:00.000Z"}]';
-    vi.mocked(getRawStorageString).mockReturnValue(rawData);
-
-    const createObjectURL = vi.fn(() => "blob:mock-url");
-    const revokeObjectURL = vi.fn();
-    URL.createObjectURL = createObjectURL;
-    URL.revokeObjectURL = revokeObjectURL;
-
-    const clickSpy = vi.fn();
-    const originalCreate = document.createElement.bind(document);
-    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
-      const el = originalCreate(tag);
-      if (tag === "a") {
-        vi.spyOn(el as HTMLAnchorElement, "click").mockImplementation(clickSpy);
-      }
-      return el;
-    });
-
-    renderRecoveryScreen();
-    const downloadBtn = document.getElementById("download-raw-btn") as HTMLButtonElement;
-    downloadBtn.click();
-
-    expect(getRawStorageString).toHaveBeenCalled();
-    expect(createObjectURL).toHaveBeenCalled();
-    expect(clickSpy).toHaveBeenCalled();
-    const blobArg = createObjectURL.mock.calls[0][0] as Blob;
-    expect(blobArg.type).toBe("text/plain");
-
-    vi.restoreAllMocks();
-  });
-
-  it("download anchor has filename 'weight-data-raw.txt'", () => {
-    vi.mocked(getRawStorageString).mockReturnValue("raw");
-    URL.createObjectURL = vi.fn(() => "blob:mock-url");
-    URL.revokeObjectURL = vi.fn();
-
-    let capturedAnchor: HTMLAnchorElement | undefined;
-    const originalCreate = document.createElement.bind(document);
-    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
-      const el = originalCreate(tag);
-      if (tag === "a") {
-        capturedAnchor = el as HTMLAnchorElement;
-        vi.spyOn(capturedAnchor, "click").mockImplementation(vi.fn());
-      }
-      return el;
-    });
-
-    renderRecoveryScreen();
-    document.getElementById("download-raw-btn")!.click();
-    expect(capturedAnchor?.download).toBe("weight-data-raw.txt");
-
-    vi.restoreAllMocks();
-  });
-
-  it("download blob contains the raw data (non-empty size)", () => {
-    vi.mocked(getRawStorageString).mockReturnValue("some raw content here");
-    let capturedBlob: Blob | undefined;
-    URL.createObjectURL = vi.fn((blob: Blob) => { capturedBlob = blob; return "blob:mock-url"; });
-    URL.revokeObjectURL = vi.fn();
-    const originalCreate = document.createElement.bind(document);
-    vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
-      const el = originalCreate(tag);
-      if (tag === "a") vi.spyOn(el as HTMLAnchorElement, "click").mockImplementation(vi.fn());
-      return el;
-    });
-    renderRecoveryScreen();
-    document.getElementById("download-raw-btn")!.click();
-    expect(capturedBlob?.size).toBeGreaterThan(0);
-    vi.restoreAllMocks();
-  });
-
-  it("clicking 'Reset' calls localStorage.clear() and location.reload()", () => {
-    const clearSpy = vi.spyOn(Storage.prototype, "clear");
-    const reloadSpy = vi.fn();
-    Object.defineProperty(window, "location", {
-      value: { ...window.location, reload: reloadSpy },
-      writable: true,
-      configurable: true,
-    });
-
-    renderRecoveryScreen();
-    const resetBtn = document.getElementById("reset-btn") as HTMLButtonElement;
-    resetBtn.click();
-
-    expect(clearSpy).toHaveBeenCalled();
-    expect(reloadSpy).toHaveBeenCalled();
   });
 });
 

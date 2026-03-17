@@ -541,7 +541,7 @@ describe("admin page — audit log datetime format (FR-030)", () => {
     HTMLDialogElement.prototype.close = vi.fn();
   });
 
-  it("renders audit log timestamp as YYYY-MM-DD HH:mm pattern (T061)", async () => {
+  it("renders audit log timestamp as human-friendly format (T061)", async () => {
     const { adminGetAuditLog } = await import("../src/ts/api-client");
     (adminGetAuditLog as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       entries: [
@@ -569,8 +569,7 @@ describe("admin page — audit log datetime format (FR-030)", () => {
     const timestampCell = firstRow?.cells[0];
     const text = timestampCell?.textContent?.trim() ?? "";
 
-    // Must be 16 chars and match YYYY-MM-DD HH:mm pattern (not date-only)
-    expect(text).toHaveLength(16);
-    expect(text).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+    // Must match human-friendly format: e.g. "Mar 16, 2026 14:30"
+    expect(text).toMatch(/^[A-Z][a-z]{2} \d{1,2}, \d{4} \d{2}:\d{2}$/);
   });
 });

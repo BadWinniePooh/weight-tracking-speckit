@@ -5,10 +5,11 @@ vi.mock("../src/ts/auth-guard", () => ({
   enforceRedirect: vi.fn(),
 }));
 
+const mockClearAccessToken = vi.fn();
 vi.mock("../src/ts/auth-token", () => ({
   setAccessToken: vi.fn(),
   getAccessToken: vi.fn().mockReturnValue("mock-token"),
-  clearAccessToken: vi.fn(),
+  clearAccessToken: mockClearAccessToken,
   getUserRole: vi.fn().mockReturnValue("user"),
   getUserId: vi.fn().mockReturnValue("user-id-123"),
 }));
@@ -23,6 +24,7 @@ vi.mock("../src/ts/config", async (importOriginal) => {
 });
 
 vi.mock("../src/ts/api-client", () => ({
+  getMe: vi.fn().mockResolvedValue({ id: "user-id-123", username: "testuser", email: "testuser@example.com", role: "user" }),
   changeUsername: vi.fn().mockResolvedValue({ username: "newuser" }),
   changeEmail: vi.fn().mockResolvedValue({ message: "Confirmation sent." }),
   changePassword: vi.fn().mockResolvedValue(undefined),
@@ -34,8 +36,12 @@ vi.mock("../src/ts/api-client", () => ({
   },
 }));
 
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
 function setupDom() {
   document.body.innerHTML = `
+    <button id="logout-button">Log out</button>
     <form id="username-form">
       <input id="username-input" type="text" />
       <div id="username-feedback"></div>
@@ -55,6 +61,34 @@ function setupDom() {
     </form>
   `;
 }
+
+describe("profile page — logout button", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDom();
+    mockFetch.mockResolvedValue({ ok: true, status: 204 });
+    Object.defineProperty(window, "location", {
+      value: { href: "" },
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("calls POST /api/auth/logout and redirects to /login.html on logout click", async () => {
+    const { initProfilePage } = await import("../src/ts/profile");
+    await initProfilePage();
+
+    document.getElementById("logout-button")!.click();
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/auth/logout"),
+      expect.objectContaining({ method: "POST", credentials: "include" })
+    );
+    expect(mockClearAccessToken).toHaveBeenCalled();
+    expect(window.location.href).toBe("/login.html");
+  });
+});
 
 describe("profile page", () => {
   beforeEach(() => {
