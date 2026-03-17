@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,19 +7,6 @@
     <link rel="stylesheet" href="css/main.css" />
   </head>
   <body>
-    <!-- Recovery screen — shown only when localStorage data is corrupt (FR-013) -->
-    <div id="recovery-screen" hidden aria-live="assertive">
-      <div class="recovery-content">
-        <h1>Data Recovery</h1>
-        <p id="recovery-msg">
-          Your stored weight data appears to be corrupt and cannot be loaded.
-          You can download the raw data for safekeeping, or reset the app to start fresh.
-        </p>
-        <button id="download-raw-btn" type="button">Download raw data</button>
-        <button id="reset-btn" type="button" class="reset-btn">Reset app</button>
-      </div>
-    </div>
-
     <!-- Main app -->
     <div id="app">
       <nav id="main-navbar" class="navbar bg-base-100 shadow-sm">
@@ -67,38 +54,40 @@
         </section>
 
         <!-- Settings modal (FR-020) -->
-        <dialog id="chart-settings-modal" aria-labelledby="settings-modal-title">
-          <h2 id="settings-modal-title">Chart Settings</h2>
-          <form id="chart-settings-form" method="dialog">
-            <div class="form-row">
-              <label for="weight-goal-input">Weight goal</label>
-              <input id="weight-goal-input" type="number" step="any" aria-describedby="weight-goal-error" class="input input-bordered" />
-              <span id="weight-goal-error" role="alert" class="field-error text-error text-sm"></span>
-            </div>
+        <dialog id="chart-settings-modal" class="modal" aria-labelledby="settings-modal-title">
+          <div class="modal-box">
+            <h3 id="settings-modal-title" class="font-bold text-lg mb-4">Chart Settings</h3>
+            <form id="chart-settings-form" method="dialog">
+              <div class="form-control mb-3">
+                <label class="label" for="weight-goal-input"><span class="label-text">Weight goal</span></label>
+                <input id="weight-goal-input" type="number" step="any" aria-describedby="weight-goal-error" class="input input-bordered w-full" />
+                <span id="weight-goal-error" role="alert" class="field-error text-error text-sm"></span>
+              </div>
 
-            <div class="form-row">
-              <label for="loss-rate-input">Loss rate</label>
-              <input id="loss-rate-input" type="number" step="any" aria-describedby="loss-rate-error" class="input input-bordered" />
-              <span id="loss-rate-error" role="alert" class="field-error text-error text-sm"></span>
-            </div>
+              <div class="form-control mb-3">
+                <label class="label" for="loss-rate-input"><span class="label-text">Loss rate</span></label>
+                <input id="loss-rate-input" type="number" step="any" aria-describedby="loss-rate-error" class="input input-bordered w-full" />
+                <span id="loss-rate-error" role="alert" class="field-error text-error text-sm"></span>
+              </div>
 
-            <div class="form-row">
-              <label for="carb-fat-ratio-input">Carb/fat ratio</label>
-              <input id="carb-fat-ratio-input" type="number" step="any" aria-describedby="carb-fat-error" class="input input-bordered" />
-              <span id="carb-fat-error" role="alert" class="field-error text-error text-sm"></span>
-            </div>
+              <div class="form-control mb-3">
+                <label class="label" for="carb-fat-ratio-input"><span class="label-text">Carb/fat ratio</span></label>
+                <input id="carb-fat-ratio-input" type="number" step="any" aria-describedby="carb-fat-error" class="input input-bordered w-full" />
+                <span id="carb-fat-error" role="alert" class="field-error text-error text-sm"></span>
+              </div>
 
-            <div class="form-row">
-              <label for="buffer-value-input">Buffer value</label>
-              <input id="buffer-value-input" type="number" step="any" aria-describedby="buffer-error" class="input input-bordered" />
-              <span id="buffer-error" role="alert" class="field-error text-error text-sm"></span>
-            </div>
+              <div class="form-control mb-3">
+                <label class="label" for="buffer-value-input"><span class="label-text">Buffer value</span></label>
+                <input id="buffer-value-input" type="number" step="any" aria-describedby="buffer-error" class="input input-bordered w-full" />
+                <span id="buffer-error" role="alert" class="field-error text-error text-sm"></span>
+              </div>
 
-            <div class="modal-actions">
-              <button id="settings-save-btn" type="button" class="btn btn-primary">Save</button>
-              <button id="settings-cancel-btn" type="button" class="btn btn-ghost">Cancel</button>
-            </div>
-          </form>
+              <div class="modal-action">
+                <button id="settings-save-btn" type="button" class="btn btn-primary">Save</button>
+                <button id="settings-cancel-btn" type="button" class="btn btn-ghost">Cancel</button>
+              </div>
+            </form>
+          </div>
         </dialog>
 
         <!-- Entry form -->
@@ -107,33 +96,34 @@
             <div class="card-body">
               <h2 id="form-heading" class="card-title">Log your weight</h2>
 
-              <div class="form-row">
-                <label for="unit-select">Unit</label>
-                <select id="unit-select" aria-label="Weight unit" class="select select-bordered">
+              <div class="form-control mb-3">
+                <label class="label" for="unit-select"><span class="label-text">Unit</span></label>
+                <select id="unit-select" aria-label="Weight unit" class="select select-bordered w-full">
                   <option value="kg">kg</option>
                   <option value="lbs">lbs</option>
                 </select>
               </div>
 
-              <div class="form-row">
-                <label for="weight-input">Weight</label>
-                <input
-                  id="weight-input"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  placeholder="e.g. 75.5"
-                  aria-label="Weight value"
-                  aria-describedby="error-msg"
-                  class="input input-bordered"
-                />
+              <div class="form-control mb-3">
+                <label class="label" for="weight-input"><span class="label-text">Weight</span></label>
+                <div class="flex gap-2">
+                  <input
+                    id="weight-input"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    placeholder="e.g. 75.5"
+                    aria-label="Weight value"
+                    aria-describedby="error-msg"
+                    class="input input-bordered flex-1"
+                  />
+                  <button id="submit-btn" type="button" aria-label="Log weight entry" class="btn btn-primary">
+                    Log Weight
+                  </button>
+                </div>
               </div>
 
               <div id="error-msg" role="alert" aria-live="polite" class="error-msg text-error text-sm"></div>
-
-              <button id="submit-btn" type="button" aria-label="Log weight entry" class="btn btn-primary">
-                Log Weight
-              </button>
             </div>
           </div>
         </section>

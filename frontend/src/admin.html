@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -59,7 +59,7 @@
           <div class="card bg-base-100 shadow mb-6">
             <div class="card-body">
               <h3 class="card-title">Users</h3>
-              <button id="create-user-btn" class="btn btn-primary btn-sm mb-4">Create User</button>
+              <button id="create-user-btn" class="btn btn-primary btn-sm w-fit mb-4">Create User</button>
               <div class="overflow-x-auto">
                 <table class="table table-zebra w-full">
                   <thead>
@@ -126,11 +126,17 @@
           <div class="card bg-base-100 shadow mb-6">
             <div class="card-body">
               <h3 class="card-title">Audit Log</h3>
-              <div id="audit-filters" class="flex flex-wrap gap-2 mb-4">
-                <label>From: <input id="audit-filter-from" type="date" class="input input-bordered input-sm" /></label>
-                <label>To: <input id="audit-filter-to" type="date" class="input input-bordered input-sm" /></label>
-                <label>
-                  Action:
+              <div id="audit-filters" class="flex flex-wrap gap-2 mb-4 items-end">
+                <div class="form-control">
+                  <label class="label" for="audit-filter-from"><span class="label-text">From</span></label>
+                  <input id="audit-filter-from" type="date" class="input input-bordered input-sm" />
+                </div>
+                <div class="form-control">
+                  <label class="label" for="audit-filter-to"><span class="label-text">To</span></label>
+                  <input id="audit-filter-to" type="date" class="input input-bordered input-sm" />
+                </div>
+                <div class="form-control">
+                  <label class="label" for="audit-filter-action"><span class="label-text">Action</span></label>
                   <select id="audit-filter-action" class="select select-bordered select-sm">
                     <option value="">All</option>
                     <option value="user_created">UserCreated</option>
@@ -140,7 +146,7 @@
                     <option value="role_changed">RoleChanged</option>
                     <option value="password_reset">PasswordReset</option>
                   </select>
-                </label>
+                </div>
                 <button id="audit-apply-btn" class="btn btn-sm btn-primary">Apply</button>
               </div>
               <div class="overflow-x-auto">

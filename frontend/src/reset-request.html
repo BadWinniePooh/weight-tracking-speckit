@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +8,7 @@
   </head>
   <body>
     <div id="app">
-      <div id="public-page-root" class="min-h-screen flex items-center justify-center bg-base-200">
+      <div id="public-page-root" class="min-h-screen flex items-center justify-center bg-base-200 py-4">
         <div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl">
           <div class="card-body">
             <h2 id="page-title" class="card-title justify-center mb-4">Reset Password</h2>
@@ -22,6 +22,10 @@
               <div id="feedback-msg" role="alert" aria-live="polite" class="text-sm mb-3"></div>
               <button id="submit-btn" type="submit" class="btn btn-primary w-full">Send Reset Link</button>
             </form>
+            <div id="success-panel" class="hidden">
+              <p class="text-center mb-4">Check your inbox — we've sent a reset link to your email address.</p>
+              <button id="send-again-btn" type="button" class="btn btn-ghost w-full">Send again</button>
+            </div>
             <p class="text-center mt-4"><a href="/login.html" class="link link-primary">Back to Sign In</a></p>
           </div>
         </div>
