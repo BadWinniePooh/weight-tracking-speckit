@@ -51,8 +51,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    environment:
-      API_URL: ${API_URL}
     ports:
       - "3000:80"
     depends_on:

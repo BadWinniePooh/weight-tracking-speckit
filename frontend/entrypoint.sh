@@ -1,4 +1,4 @@
 #!/bin/sh
 set -e
-envsubst '$API_URL' < /usr/share/nginx/html/config.json.template > /usr/share/nginx/html/config.json
+cp /usr/share/nginx/html/config.json.template /usr/share/nginx/html/config.json
 exec nginx -g 'daemon off;'
