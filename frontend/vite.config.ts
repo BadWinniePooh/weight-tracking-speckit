@@ -15,6 +15,7 @@ export default defineConfig({
         setup: resolve(__dirname, "src/setup.html"),
         resetRequest: resolve(__dirname, "src/reset-request.html"),
         resetComplete: resolve(__dirname, "src/reset-complete.html"),
+        confirmEmail: resolve(__dirname, "src/confirm-email.html"),
         profile: resolve(__dirname, "src/profile.html"),
         admin: resolve(__dirname, "src/admin.html"),
       },
