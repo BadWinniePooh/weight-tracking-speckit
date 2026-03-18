@@ -1,13 +1,22 @@
 # Weight Tracker
 
-A personal weight tracking web application that lets you log weight measurements over time, visualize trends with an interactive chart, and monitor progress toward a goal weight. Built for self-hosting — you own your data.
+A personal weight tracking web application for self-hosters. Log weight measurements over time, visualize trends with an interactive chart, and monitor progress toward a goal weight. You own your data — everything runs on your own server.
 
-## Prerequisites
+Built for individuals who want a private, no-subscription alternative to cloud fitness apps. Designed to be deployed in under five minutes with Docker Compose.
 
-- Docker Engine 20.10 or later
-- Docker Compose v2.0 or later
+## Features
+
+- **Weight logging** — record measurements in kg or lbs; edit or delete past entries
+- **Trend chart** — interactive Chart.js graph with date-range filtering and a goal-weight line
+- **Calorie & macro targets** — configure daily calorie budget and carb/fat ratio from your chart settings
+- **Goal tracking** — set a target weight and track projected completion date
+- **Admin panel** — manage user accounts, audit logs, and account lifecycle
+- **CSV import** — bulk-import historical weight data from a spreadsheet export
+- **Self-hosted** — all data stays on your server; no accounts, no telemetry, no subscriptions
 
 ## Quick Start
+
+> For production deployments with HTTPS and a custom domain, see the full [Deployment Guide](docs/deployment.md).
 
 **Step 1 — Clone the repository**
 
@@ -16,15 +25,13 @@ git clone https://github.com/your-username/weight-tracking.git
 cd weight-tracking
 ```
 
-You now have the source code on your machine.
-
 **Step 2 — Configure credentials**
 
 ```sh
 cp .env.example .env
 ```
 
-Open `.env` in a text editor and set all required values — especially `DB_PASSWORD`. Do not leave `DB_PASSWORD` as the placeholder value before exposing the app to any network.
+Open `.env` and set at minimum: `DB_PASSWORD`, `JWT_SECRET`, `ALLOWED_ORIGIN`, and `APP_DOMAIN`.
 
 **Step 3 — Start the stack**
 
@@ -32,12 +39,22 @@ Open `.env` in a text editor and set all required values — especially `DB_PASS
 docker compose up -d
 ```
 
-Open http://localhost:3000 in your browser. The app is running with all data persisted in a local Docker volume.
+Requires Docker Engine 20.10+ and Docker Compose v2.0+.
 
-## Configuration
+**Step 4 — Open the app**
 
-All configurable variables are defined in `.env.example` at the repository root. Each variable has a one-line comment explaining its purpose and valid values. `.env.example` is the authoritative reference — copy it to `.env` and fill in values for your environment.
+```
+http://localhost:3000
+```
+
+**Step 5 — Complete the setup wizard**
+
+On first startup with no existing users, the app redirects to a setup wizard where you create the initial admin account.
 
 ## Further Reading
 
-See [docs/runbook.md](docs/runbook.md) for operator guidance on updates, backups, restores, rollbacks, and troubleshooting.
+| Document | Contents |
+|----------|----------|
+| [docs/deployment.md](docs/deployment.md) | Full deployment guide: prerequisites, environment variable reference, Docker Compose startup, Traefik TLS configuration, first-run setup |
+| [docs/architecture.md](docs/architecture.md) | System overview, component diagram, technology stack, data model |
+| [docs/runbook.md](docs/runbook.md) | Operational procedures: health checks, version upgrades, rollbacks, troubleshooting |

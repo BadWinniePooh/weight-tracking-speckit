@@ -24,6 +24,7 @@ Auto-generated from all feature plans. Last updated: 2026-03-14
 - N/A — no database schema changes (010-production-hardening)
 - C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql; Vite 5.x, Tailwind CSS v3, DaisyUI v4 (frontend — no new packages needed) (011-data-import)
 - PostgreSQL 16 — no schema changes; new repository method only (011-data-import)
+- Markdown (CommonMark + GitHub Flavored Markdown); MermaidJS for diagrams + None — documentation only; MermaidJS renders natively on GitHub (012-docs-overhaul)
 
 - TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing) (001-weight-tracker-app)
 
@@ -60,9 +61,9 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 012-docs-overhaul: Added Markdown (CommonMark + GitHub Flavored Markdown); MermaidJS for diagrams + None — documentation only; MermaidJS renders natively on GitHub
 - 011-data-import: Added C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql; Vite 5.x, Tailwind CSS v3, DaisyUI v4 (frontend — no new packages needed)
 - 011-data-import: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 010-production-hardening: Added YAML (Docker Compose v2), nginx config syntax, shell (env var substitution) + Docker Compose v2, Traefik v2.x (labels compatible with v3.x), nginx:alpine (existing)
 
 
 <!-- MANUAL ADDITIONS START -->
