@@ -29,10 +29,18 @@ export async function initConfirmEmailPage(): Promise<void> {
   // T006 [US1]: Show loading panel, call API
   loadingPanel?.classList.remove("hidden");
   try {
-    await confirmEmail(token);
-    // T007 [US1]: Success — hide loading, show success
+    const response = await confirmEmail(token);
     loadingPanel?.classList.add("hidden");
-    successPanel?.classList.remove("hidden");
+    if (!response.passwordResetToken) {
+      // FR-006: missing token treated as error
+      errorPanel?.classList.remove("hidden");
+      if (errorMessageEl) {
+        errorMessageEl.textContent =
+          "Email confirmed but setup link could not be generated. Please contact support.";
+      }
+      return;
+    }
+    window.location.href = `/reset-complete.html?token=${encodeURIComponent(response.passwordResetToken)}`;
   } catch (err) {
     // T008 [US2]: API error — hide loading, show error panel
     loadingPanel?.classList.add("hidden");

@@ -132,6 +132,31 @@ public class EmailConfirmationEndpointsTests(ApiFixture fixture) : IClassFixture
         Assert.Equal(HttpStatusCode.BadRequest, secondConfirm.StatusCode);
     }
 
+    // 014: GET /api/auth/confirm-email success response includes passwordResetToken
+    [Fact]
+    public async Task ConfirmEmail_ValidToken_ResponseIncludesPasswordResetToken()
+    {
+        fixture.FakeEmail.Clear();
+        var user = await CreateUnconfirmedUserAsync($"pwsetup_{Guid.NewGuid():N}", "pass123");
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var emailConfirmSvc = scope.ServiceProvider.GetRequiredService<WeightTracker.Domain.Interfaces.Services.IEmailConfirmationService>();
+        await emailConfirmSvc.SendConfirmationAsync(user.Id, user.Email);
+
+        var emailBody = fixture.FakeEmail.Messages.Last().Body;
+        var token = ExtractTokenFromEmailBody(emailBody);
+
+        var response = await _client.GetAsync($"/api/auth/confirm-email?token={token}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(body.TryGetProperty("passwordResetToken", out var resetTokenProp),
+            "Response should contain a 'passwordResetToken' property");
+        var resetToken = resetTokenProp.GetString();
+        Assert.False(string.IsNullOrWhiteSpace(resetToken),
+            "passwordResetToken should be a non-empty string");
+    }
+
     // T027: ResendConfirmationAsync generates a new token and delivers email
     [Fact]
     public async Task ResendConfirmation_GeneratesNewTokenAndSendsEmail()

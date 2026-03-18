@@ -103,12 +103,15 @@ public static class AuthEndpoints
         // GET /api/auth/confirm-email?token={token}
         app.MapGet("/api/auth/confirm-email", async (
             string token,
-            IEmailConfirmationService emailConfirmationService) =>
+            IEmailConfirmationService emailConfirmationService,
+            IPasswordResetService passwordResetService) =>
         {
-            var success = await emailConfirmationService.ConfirmAsync(token);
-            if (!success)
+            var confirmedUserId = await emailConfirmationService.ConfirmAsync(token);
+            if (confirmedUserId is null)
                 return Results.Json(new { error = "This confirmation link is invalid or has expired." }, statusCode: 400);
-            return Results.Ok(new { message = "Email confirmed. You may now log in." });
+
+            var resetToken = await passwordResetService.CreateResetTokenAsync(confirmedUserId.Value);
+            return Results.Ok(new { message = "Email confirmed. You may now log in.", passwordResetToken = resetToken });
         }).AllowAnonymous();
 
         // POST /api/auth/forgot-password

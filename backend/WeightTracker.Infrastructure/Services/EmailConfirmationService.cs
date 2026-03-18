@@ -45,16 +45,16 @@ public class EmailConfirmationService(
         await emailService.SendAsync(targetEmail, "Confirm your email address", htmlBody);
     }
 
-    public async Task<bool> ConfirmAsync(string token)
+    public async Task<Guid?> ConfirmAsync(string token)
     {
         var hash = HashToken(token);
         var stored = await tokenRepository.GetActiveByHashAsync(hash);
         if (stored is null)
-            return false;
+            return null;
 
         var user = await userRepository.GetByIdAsync(stored.UserId);
         if (user is null)
-            return false;
+            return null;
 
         // Email change path vs new account confirmation path
         if (stored.TargetEmail.Equals(user.Email, StringComparison.OrdinalIgnoreCase))
@@ -73,7 +73,7 @@ public class EmailConfirmationService(
         await userRepository.UpdateAsync(user);
         await tokenRepository.MarkUsedAsync(stored.Id);
 
-        return true;
+        return user.Id;
     }
 
     public async Task ResendConfirmationAsync(Guid userId)

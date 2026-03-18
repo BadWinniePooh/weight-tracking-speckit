@@ -50,6 +50,24 @@ public class PasswordResetService(
         await emailService.SendAsync(user.Email, "Reset your password", htmlBody);
     }
 
+    public async Task<string> CreateResetTokenAsync(Guid userId)
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        var plaintext = Base64UrlEncode(bytes);
+        var hash = HashToken(plaintext);
+
+        await tokenRepository.CreateAsync(new PasswordResetToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TokenHash = hash,
+            ExpiresAt = DateTime.UtcNow.AddHours(TokenExpiryHours),
+            CreatedAt = DateTime.UtcNow
+        });
+
+        return plaintext;
+    }
+
     public async Task<bool> ResetPasswordAsync(string token, string newPassword)
     {
         var hash = HashToken(token);

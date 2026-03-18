@@ -23,7 +23,7 @@ vi.mock("../src/ts/config", async (importOriginal) => {
 });
 
 vi.mock("../src/ts/api-client", () => ({
-  confirmEmail: vi.fn().mockResolvedValue(undefined),
+  confirmEmail: vi.fn().mockResolvedValue({ message: "Email confirmed.", passwordResetToken: "test-reset-token" }),
   ApiError: class ApiError extends Error {
     status: number; field?: string;
     constructor(message: string, status: number, field?: string) {
@@ -38,6 +38,10 @@ function setSearch(search: string) {
     writable: true,
     configurable: true,
   });
+}
+
+function getLocationHref(): string {
+  return (window.location as { href: string }).href;
 }
 
 describe("confirm-email page", () => {
@@ -109,23 +113,18 @@ describe("confirm-email page", () => {
     await initPromise;
   });
 
-  it("shows success-panel and hides loading-panel after successful confirmation", async () => {
+  it("redirects to /reset-complete.html?token=<passwordResetToken> after successful confirmation", async () => {
     const { initConfirmEmailPage } = await import("../src/ts/confirm-email");
     await initConfirmEmailPage();
 
-    const loadingPanel = document.getElementById("loading-panel")!;
-    const successPanel = document.getElementById("success-panel")!;
-    expect(loadingPanel.classList.contains("hidden")).toBe(true);
-    expect(successPanel.classList.contains("hidden")).toBe(false);
+    expect(getLocationHref()).toBe("/reset-complete.html?token=test-reset-token");
   });
 
-  it("success-panel contains a link to /login.html", async () => {
+  it("redirect URL after successful confirmation contains the passwordResetToken", async () => {
     const { initConfirmEmailPage } = await import("../src/ts/confirm-email");
     await initConfirmEmailPage();
 
-    const successPanel = document.getElementById("success-panel")!;
-    const loginLink = successPanel.querySelector<HTMLAnchorElement>("a[href='/login.html']");
-    expect(loginLink).not.toBeNull();
+    expect(getLocationHref()).toContain("/reset-complete.html?token=");
   });
 
   it("shows error-panel and hides loading-panel after API error", async () => {

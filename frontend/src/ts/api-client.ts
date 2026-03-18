@@ -185,8 +185,13 @@ export async function resetPassword(token: string, newPassword: string): Promise
   });
 }
 
-export async function confirmEmail(token: string): Promise<void> {
-  return request<void>(`/api/auth/confirm-email?token=${encodeURIComponent(token)}`);
+export interface ConfirmEmailResponse {
+  message: string;
+  passwordResetToken: string;
+}
+
+export async function confirmEmail(token: string): Promise<ConfirmEmailResponse> {
+  return request<ConfirmEmailResponse>(`/api/auth/confirm-email?token=${encodeURIComponent(token)}`);
 }
 
 // ─── Account self-service ─────────────────────────────────────────────────────

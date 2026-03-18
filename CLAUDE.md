@@ -26,6 +26,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-14
 - PostgreSQL 16 — no schema changes; new repository method only (011-data-import)
 - Markdown (CommonMark + GitHub Flavored Markdown); MermaidJS for diagrams + None — documentation only; MermaidJS renders natively on GitHub (012-docs-overhaul)
 - TypeScript 5.x (browser target ES2020) + Vite 5.x (build), Vitest 2.x + jsdom (tests), Tailwind CSS v3 + DaisyUI v4 (UI), existing `api-client.ts`, `auth-guard.ts`, `config.ts`, `theme.ts` (013-confirm-email-page)
+- C# 12 / .NET 8 (backend); TypeScript 5.x ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql (backend); Vite 5.x, Vitest 2.x + jsdom (frontend) (014-confirm-email-password-setup)
+- PostgreSQL 16 — no schema changes; `PasswordResetTokens` table is written to via existing infrastructure (014-confirm-email-password-setup)
 
 - TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing) (001-weight-tracker-app)
 
@@ -62,9 +64,9 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 014-confirm-email-password-setup: Added C# 12 / .NET 8 (backend); TypeScript 5.x ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql (backend); Vite 5.x, Vitest 2.x + jsdom (frontend)
 - 013-confirm-email-page: Added TypeScript 5.x (browser target ES2020) + Vite 5.x (build), Vitest 2.x + jsdom (tests), Tailwind CSS v3 + DaisyUI v4 (UI), existing `api-client.ts`, `auth-guard.ts`, `config.ts`, `theme.ts`
 - 012-docs-overhaul: Added Markdown (CommonMark + GitHub Flavored Markdown); MermaidJS for diagrams + None — documentation only; MermaidJS renders natively on GitHub
-- 011-data-import: Added C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql; Vite 5.x, Tailwind CSS v3, DaisyUI v4 (frontend — no new packages needed)
 
 
 <!-- MANUAL ADDITIONS START -->
