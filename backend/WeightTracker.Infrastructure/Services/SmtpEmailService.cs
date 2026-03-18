@@ -24,7 +24,7 @@ public class SmtpEmailService(IConfiguration configuration) : IEmailService
 
         using var client = new SmtpClient();
         // For MailHog and dev SMTP, use None (no TLS); for production use Auto
-        await client.ConnectAsync(host, port, SecureSocketOptions.None, cancellationToken);
+        await client.ConnectAsync(host, port, SecureSocketOptions.Auto, cancellationToken);
 
         if (!string.IsNullOrEmpty(user))
             await client.AuthenticateAsync(user, password, cancellationToken);
