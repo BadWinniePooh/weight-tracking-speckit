@@ -28,6 +28,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-14
 - TypeScript 5.x (browser target ES2020) + Vite 5.x (build), Vitest 2.x + jsdom (tests), Tailwind CSS v3 + DaisyUI v4 (UI), existing `api-client.ts`, `auth-guard.ts`, `config.ts`, `theme.ts` (013-confirm-email-page)
 - C# 12 / .NET 8 (backend); TypeScript 5.x ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql (backend); Vite 5.x, Vitest 2.x + jsdom (frontend) (014-confirm-email-password-setup)
 - PostgreSQL 16 — no schema changes; `PasswordResetTokens` table is written to via existing infrastructure (014-confirm-email-password-setup)
+- TypeScript 5.x (browser target ES2020); Node.js 20+ (build tooling) + Vite 5.x (build), `vite-plugin-pwa` (new), Workbox (via plugin), Tailwind CSS v4 + DaisyUI v5 (existing) (015-pwa-support)
+- N/A — no new data storage; static build artifacts only (015-pwa-support)
 
 - TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing) (001-weight-tracker-app)
 
@@ -64,9 +66,9 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 015-pwa-support: Added TypeScript 5.x (browser target ES2020); Node.js 20+ (build tooling) + Vite 5.x (build), `vite-plugin-pwa` (new), Workbox (via plugin), Tailwind CSS v4 + DaisyUI v5 (existing)
 - 014-confirm-email-password-setup: Added C# 12 / .NET 8 (backend); TypeScript 5.x ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql (backend); Vite 5.x, Vitest 2.x + jsdom (frontend)
 - 013-confirm-email-page: Added TypeScript 5.x (browser target ES2020) + Vite 5.x (build), Vitest 2.x + jsdom (tests), Tailwind CSS v3 + DaisyUI v4 (UI), existing `api-client.ts`, `auth-guard.ts`, `config.ts`, `theme.ts`
-- 012-docs-overhaul: Added Markdown (CommonMark + GitHub Flavored Markdown); MermaidJS for diagrams + None — documentation only; MermaidJS renders natively on GitHub
 
 
 <!-- MANUAL ADDITIONS START -->

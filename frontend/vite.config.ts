@@ -1,10 +1,42 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
 import tailwindcss from "@tailwindcss/vite";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  plugins: [tailwindcss()],
+  plugins: [
+    tailwindcss(),
+    VitePWA({
+      registerType: "autoUpdate",
+      strategies: "generateSW",
+      workbox: {
+        globPatterns: [],
+      },
+      manifest: {
+        name: "Weight Tracker",
+        short_name: "WeightTracker",
+        start_url: "/",
+        scope: "/",
+        display: "standalone",
+        theme_color: "#4f46e5",
+        background_color: "#ffffff",
+        icons: [
+          {
+            src: "/icons/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "/icons/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+        ],
+      },
+    }),
+  ],
   root: "src",
+  publicDir: "../public",
   build: {
     outDir: "../dist",
     emptyOutDir: true,
