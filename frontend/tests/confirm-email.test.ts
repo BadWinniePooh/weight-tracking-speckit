@@ -40,10 +40,6 @@ function setSearch(search: string) {
   });
 }
 
-function getLocationHref(): string {
-  return (window.location as { href: string }).href;
-}
-
 describe("confirm-email page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -51,7 +47,7 @@ describe("confirm-email page", () => {
     document.body.innerHTML = `
       <div id="loading-panel" class="hidden"></div>
       <div id="success-panel" class="hidden">
-        <a href="/login.html">Sign In</a>
+        <a id="setup-password-link" href="#">Set Up Password</a>
       </div>
       <div id="error-panel" class="hidden">
         <span id="error-message"></span>
@@ -113,18 +109,25 @@ describe("confirm-email page", () => {
     await initPromise;
   });
 
-  it("redirects to /reset-complete.html?token=<passwordResetToken> after successful confirmation", async () => {
+  it("shows success-panel and hides loading-panel after successful confirmation", async () => {
     const { initConfirmEmailPage } = await import("../src/ts/confirm-email");
     await initConfirmEmailPage();
 
-    expect(getLocationHref()).toBe("/reset-complete.html?token=test-reset-token");
+    const loadingPanel = document.getElementById("loading-panel")!;
+    const successPanel = document.getElementById("success-panel")!;
+    expect(loadingPanel.classList.contains("hidden")).toBe(true);
+    expect(successPanel.classList.contains("hidden")).toBe(false);
   });
 
-  it("redirect URL after successful confirmation contains the passwordResetToken", async () => {
+  it("success-panel contains a link to /reset-complete.html?token=<passwordResetToken>", async () => {
     const { initConfirmEmailPage } = await import("../src/ts/confirm-email");
     await initConfirmEmailPage();
 
-    expect(getLocationHref()).toContain("/reset-complete.html?token=");
+    const successPanel = document.getElementById("success-panel")!;
+    const setupLink = successPanel.querySelector<HTMLAnchorElement>("#setup-password-link");
+    expect(setupLink).not.toBeNull();
+    expect(setupLink!.href).toContain("/reset-complete.html?token=");
+    expect(setupLink!.href).toContain("test-reset-token");
   });
 
   it("shows error-panel and hides loading-panel after API error", async () => {
