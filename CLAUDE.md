@@ -30,6 +30,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-14
 - PostgreSQL 16 — no schema changes; `PasswordResetTokens` table is written to via existing infrastructure (014-confirm-email-password-setup)
 - TypeScript 5.x (browser target ES2020); Node.js 20+ (build tooling) + Vite 5.x (build), `vite-plugin-pwa` (new), Workbox (via plugin), Tailwind CSS v4 + DaisyUI v5 (existing) (015-pwa-support)
 - N/A — no new data storage; static build artifacts only (015-pwa-support)
+- Markdown (CommonMark + GitHub Flavored Markdown); no code compilation + None — documentation only (016-fullstack-arch-docs)
+- N/A — no new data storage; output files only (016-fullstack-arch-docs)
 
 - TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing) (001-weight-tracker-app)
 
@@ -66,10 +68,34 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 016-fullstack-arch-docs: Added Markdown (CommonMark + GitHub Flavored Markdown); no code compilation + None — documentation only
 - 015-pwa-support: Added TypeScript 5.x (browser target ES2020); Node.js 20+ (build tooling) + Vite 5.x (build), `vite-plugin-pwa` (new), Workbox (via plugin), Tailwind CSS v4 + DaisyUI v5 (existing)
 - 014-confirm-email-password-setup: Added C# 12 / .NET 8 (backend); TypeScript 5.x ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql (backend); Vite 5.x, Vitest 2.x + jsdom (frontend)
-- 013-confirm-email-page: Added TypeScript 5.x (browser target ES2020) + Vite 5.x (build), Vitest 2.x + jsdom (tests), Tailwind CSS v3 + DaisyUI v4 (UI), existing `api-client.ts`, `auth-guard.ts`, `config.ts`, `theme.ts`
 
 
 <!-- MANUAL ADDITIONS START -->
+## Architecture Quick Reference (016-fullstack-arch-docs)
+
+See `ARCHITECTURE.md` for full context, rationale, and worked example.
+
+### Backend Layer Placement
+
+| What | Project | Directory |
+|------|---------|-----------|
+| New entity | `WeightTracker.Domain` | `Entities/` |
+| Repository interface | `WeightTracker.Domain` | `Interfaces/Repositories/` |
+| Service interface | `WeightTracker.Domain` | `Interfaces/Services/` |
+| Repository implementation | `WeightTracker.Infrastructure` | `Repositories/` |
+| Service implementation | `WeightTracker.Infrastructure` | `Services/` |
+| API endpoint group | `WeightTracker.Api` | `Endpoints/` (as `MapXxxEndpoints()` extension) |
+| Integration test | `WeightTracker.Tests` | `Integration/` (mirrors source path) |
+
+Register all new services and repositories as **Scoped** in `WeightTracker.Api/Program.cs`.
+
+### Critical Patterns
+
+- **Current user in endpoints**: `var userId = (Guid)httpContext.Items["CurrentUserId"]!;` — never read JWT claims directly in handlers.
+- **Frontend API calls**: Always use `request<T>()` from `api-client.ts` — never raw `fetch()` — to inherit silent token refresh.
+- **New authenticated pages**: Call `checkAuthStatus()` then `enforceRedirect(pageType, state)` from `auth-guard.ts` at page load before rendering.
+- **Integration tests**: Use `ApiFixture` with `CreateAuthenticatedClient()`. Real PostgreSQL via Testcontainers — no mocks.
 <!-- MANUAL ADDITIONS END -->
