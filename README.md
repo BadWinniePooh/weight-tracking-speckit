@@ -56,5 +56,5 @@ On first startup with no existing users, the app redirects to a setup wizard whe
 | Document | Contents |
 |----------|----------|
 | [docs/deployment.md](docs/deployment.md) | Full deployment guide: prerequisites, environment variable reference, Docker Compose startup, Traefik TLS configuration, first-run setup |
-| [docs/architecture.md](docs/architecture.md) | System overview, component diagram, technology stack, data model |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System overview, component diagram, technology stack, data model, code architecture patterns, implementation guide |
 | [docs/runbook.md](docs/runbook.md) | Operational procedures: health checks, version upgrades, rollbacks, troubleshooting |

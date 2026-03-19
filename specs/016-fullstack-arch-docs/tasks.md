@@ -99,6 +99,7 @@ description: "Task list for Full-Stack Architecture Documentation"
 
 - [x] T020 [P] Review all sections of `ARCHITECTURE.md` for terminology consistency: verify all class names (`AppDbContext`, `WeightTracker.Domain`, `ApiFixture`, `CurrentUserMiddleware`, `JwtTokenService`, `BcryptPasswordHasher`), file names (`api-client.ts`, `auth-guard.ts`, `auth-token.ts`), and method names (`checkAuthStatus`, `enforceRedirect`, `CreateAuthenticatedClient`, `MapXxxEndpoints`) match actual codebase names exactly (cross-reference against codebase using Grep/Read)
 - [x] T021 [P] Add a **Table of Contents** near the top of `ARCHITECTURE.md` with anchor links to all 17 sections, enabling quick navigation in GitHub Markdown rendering
+- [x] T022 Merge `docs/ARCHITECTURE.md` into root `ARCHITECTURE.md`: add a  **System Overview** section containing the Mermaid infrastructure diagram and request flow steps verbatim; add a **Data Model** section containing the Mermaid ER diagram and all key entity notes verbatim; merge the Technology Stack table into or immediately after the existing rationale section (keep the table format — it is a useful quick-reference even where rationale prose already exists); then delete `docs/ARCHITECTURE.md` and update any links to it in `docs/README.md` or other docs files to point to `/ARCHITECTURE.md` at the repository root    
 
 ---
 
