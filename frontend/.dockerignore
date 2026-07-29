@@ -1,0 +1,10 @@
+# The build context is ./frontend, so the repository-root .dockerignore does not
+# apply here. Without this file `COPY . .` would overwrite the node_modules that
+# `npm ci` just installed from the lockfile with whatever the host happens to have.
+node_modules/
+dist/
+coverage/
+reports/
+.stryker-tmp/
+*.log
+.env*
