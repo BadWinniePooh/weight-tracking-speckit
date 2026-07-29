@@ -5,8 +5,15 @@ export type WeightUnit = "kg" | "lbs";
 export type CorridorState = "ready" | "no-goal" | "calibrating" | "no-data";
 
 export interface ChartPoint {
-  date: string;  // "YYYY-MM-DD" — matches API response
+  date: Date;  // calendar-day start in local time — Chart.js time scale consumes Date directly
   value: number;
+}
+
+export interface DailyAverage {
+  date: Date;
+  dayIndex: number;
+  avgWeight: number;
+  origin: "measured" | "interpolated";
 }
 
 export interface ChartSettings {

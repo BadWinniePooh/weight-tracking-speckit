@@ -14,7 +14,7 @@ vi.mock("../src/ts/auth-token", () => ({
 }));
 
 vi.mock("../src/ts/config", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<typeof import("../src/ts/config")>();
   return {
     ...actual,
     loadConfig: vi.fn().mockResolvedValue(undefined),
@@ -78,7 +78,7 @@ describe("reset-request page", () => {
     let resolveRequest!: () => void;
     const { requestPasswordReset } = await import("../src/ts/api-client");
     (requestPasswordReset as ReturnType<typeof vi.fn>).mockImplementationOnce(
-      () => new Promise((res) => { resolveRequest = res; })
+      () => new Promise<void>((res) => { resolveRequest = res; })
     );
 
     const { initResetRequestPage } = await import("../src/ts/reset-request");

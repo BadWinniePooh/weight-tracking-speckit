@@ -193,6 +193,7 @@ export function computeChartData(
     ceiling: null,
     ideal: null,
     corridorState: "no-data",
+    unit: preferredUnit,
   };
 
   if (!entries || entries.length === 0) return empty;
@@ -226,5 +227,5 @@ export function computeChartData(
     }
   }
 
-  return { dataPoints, trendline, floor, ceiling, ideal, corridorState };
+  return { dataPoints, trendline, floor, ceiling, ideal, corridorState, unit: preferredUnit };
 }

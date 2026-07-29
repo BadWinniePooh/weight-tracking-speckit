@@ -10,7 +10,7 @@ vi.mock("../src/ts/auth-guard", () => ({
 }));
 
 vi.mock("../src/ts/config", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal<typeof import("../src/ts/config")>();
   return {
     ...actual,
     loadConfig: vi.fn().mockResolvedValue(undefined),

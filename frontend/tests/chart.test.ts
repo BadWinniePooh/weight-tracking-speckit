@@ -38,12 +38,12 @@ function makeCanvas(): HTMLCanvasElement {
 function makeDataset(overrides: Partial<ChartDataSet> = {}): ChartDataSet {
   return {
     dataPoints: [
-      { date: "2026-03-01", value: 80 },
-      { date: "2026-03-02", value: 79 },
+      { date: new Date("2026-03-01"), value: 80 },
+      { date: new Date("2026-03-02"), value: 79 },
     ],
     trendline: [
-      { date: "2026-03-01", value: 80 },
-      { date: "2026-03-02", value: 79 },
+      { date: new Date("2026-03-01"), value: 80 },
+      { date: new Date("2026-03-02"), value: 79 },
     ],
     floor: null,
     ceiling: null,
@@ -92,8 +92,8 @@ describe("renderChart", () => {
 
   it("includes floor, ceiling, ideal datasets when provided", () => {
     const corridorPts = [
-      { date: "2026-03-07", value: 78 },
-      { date: "2026-03-08", value: 77.9 },
+      { date: new Date("2026-03-07"), value: 78 },
+      { date: new Date("2026-03-08"), value: 77.9 },
     ];
     const dataset = makeDataset({
       floor: corridorPts,
