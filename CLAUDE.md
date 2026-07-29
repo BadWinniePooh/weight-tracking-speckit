@@ -50,11 +50,21 @@ docker-compose.yml             # Full stack: db + backend + frontend
 
 ## Commands
 
-# Frontend
-cd frontend && npm test && npm run lint
+```bash
+# Frontend — `npm run build` MUST precede `npm test`:
+# tests/pwa/pwa-build.test.ts asserts against generated files in dist/,
+# and 35 tests fail on a clean checkout without it.
+cd frontend && npm ci && npm run lint && npm run typecheck && npm run build && npm test
 
-# Backend (from backend/ directory)
+# Frontend mutation testing (slow; runs on every PR in CI)
+cd frontend && npm run test:mutation
+
+# Backend (from backend/ directory) — Testcontainers needs a running Docker daemon
 cd backend && dotnet test
+```
+
+These are the same gates CI enforces in `.github/workflows/ci.yml`. Run them before
+pushing.
 
 ## Backend Testing Rules (003-backend-api-migration)
 - TDD mandatory: failing test in WeightTracker.Tests first, then implementation
@@ -68,6 +78,7 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 017-cicd-pipeline: Added GitHub Actions CI (backend tests, frontend lint/typecheck/tests, mutation testing, image builds) + GHCR publishing on trunk pushes + ESLint 9 flat config with `typescript-eslint` (new dev dependencies)
 - 016-fullstack-arch-docs: Added Markdown (CommonMark + GitHub Flavored Markdown); no code compilation + None — documentation only
 - 015-pwa-support: Added TypeScript 5.x (browser target ES2020); Node.js 20+ (build tooling) + Vite 5.x (build), `vite-plugin-pwa` (new), Workbox (via plugin), Tailwind CSS v4 + DaisyUI v5 (existing)
 - 014-confirm-email-password-setup: Added C# 12 / .NET 8 (backend); TypeScript 5.x ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql (backend); Vite 5.x, Vitest 2.x + jsdom (frontend)
