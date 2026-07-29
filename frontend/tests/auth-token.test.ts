@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { setAccessToken, getAccessToken, clearAccessToken, getUserRole, getUserId } from "../src/ts/auth-token";
 
 describe("auth-token", () => {

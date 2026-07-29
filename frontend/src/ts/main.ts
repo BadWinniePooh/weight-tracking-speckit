@@ -311,7 +311,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
           await apiDeleteEntry(id);
           await refreshEntries();
-        } catch (err) {
+        } catch {
           showApiError("Failed to delete entry.");
         } finally {
           hideApiLoading();
@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
           await apiDeleteAllEntries();
           await refreshEntries();
-        } catch (err) {
+        } catch {
           showApiError("Failed to delete all entries.");
         } finally {
           hideApiLoading();
@@ -350,7 +350,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const content = generateJSON(entries);
         triggerDownload(content, formatExportFilename("json"), "application/json");
       }
-    } catch (err) {
+    } catch {
       showApiError("Failed to export entries.");
     } finally {
       hideApiLoading();

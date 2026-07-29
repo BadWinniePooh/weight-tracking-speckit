@@ -52,7 +52,7 @@ describe("api-client 401 retry with silent refresh", () => {
     });
 
     const { getEntries } = await import("../src/ts/api-client");
-    const result = await getEntries();
+    await getEntries();
 
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/auth/refresh"),

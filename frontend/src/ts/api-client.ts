@@ -21,7 +21,7 @@ export interface EntryListResponse {
   entries: WeightEntry[];
 }
 
-export interface EntryResponse extends WeightEntry {}
+export type EntryResponse = WeightEntry;
 
 export interface MigrationResult {
   migratedEntries: number;
