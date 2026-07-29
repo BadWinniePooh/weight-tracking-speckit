@@ -82,6 +82,18 @@ These cannot be completed from a branch and are the maintainer's to action:
 - [ ] **T030** Mark the `backend`, `frontend`, and `images` checks as required for
       merging, once the pipeline has completed one successful run.
 
+## Mutation Testing Baseline
+
+A full local run completed in **8 minutes 50 seconds** with a mutation score of
+**49.40%** (785 killed, 270 survived, 536 uncovered, 601 compile errors).
+
+`stryker.config.json` sets no `thresholds`, and Stryker's default `thresholds.break` is
+`null`, so the job **reports but does not gate** — the run exited 0 at 49.40%. To make a
+low score fail the build, add a `thresholds.break` value to `stryker.config.json`.
+
+The HTML report is written to `frontend/reports/mutation/mutation.html` (the schema
+default for `htmlReporter.fileName`), which is the path the workflow uploads.
+
 ## Verification Status
 
 | Gate | Runnable here | Result |
@@ -89,7 +101,7 @@ These cannot be completed from a branch and are the maintainer's to action:
 | `npm run lint` | yes | clean |
 | `npm run typecheck` | yes | clean |
 | `npm run build` + `npm test` | yes | 388/388 pass |
-| `npm run test:mutation` | yes | see run notes |
+| `npm run test:mutation` | yes | passes — 8m50s, score 49.40% |
 | `docker compose config` (overlay) | yes | resolves correctly |
 | `dotnet test` | **no** — no .NET SDK in this environment | first pipeline run |
 | image builds | **no** — no Docker daemon in this environment | first pipeline run |
