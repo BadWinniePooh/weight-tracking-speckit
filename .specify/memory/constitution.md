@@ -1,50 +1,170 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  SYNC IMPACT REPORT
+  ==================
+  Version change: 1.1.0 → 1.1.1
+  Modified principles: None
+  Added sections: None
+  Removed sections: None
+  Modified sections:
+    - Development Workflow: added commit cadence and message format rules
+      (commit after each completed phase and after any bug fix; imperative
+      mood; reference task ID or phase where applicable)
+  Templates requiring updates:
+    - .specify/templates/plan-template.md ✅ No changes needed
+    - .specify/templates/spec-template.md ✅ No changes needed
+    - .specify/templates/tasks-template.md ✅ No changes needed
+  Follow-up TODOs:
+    - None.
+-->
+
+# Weight Tracking Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Specification-First
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Every feature MUST begin with a written specification (`spec.md`) before any
+implementation work starts. Implementation without a signed-off spec is not
+permitted. Specs MUST define user stories with acceptance scenarios and measurable
+success criteria before the planning phase begins.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: Weight tracking is a personal-health domain. Ambiguous requirements
+lead to data model mistakes that are expensive to migrate. Writing the spec first
+forces clarity on user intent before any code is written.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Privacy & Data Ownership
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+Personal health data (weight entries, goals, trends) MUST be treated as sensitive
+by default. The system MUST:
+- Store data locally or in user-controlled storage unless the user explicitly opts
+  into cloud sync.
+- Never transmit raw weight data to third-party analytics services.
+- Provide a full data-export capability so users own their data.
+- Apply input validation on all health metrics to prevent corruption.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale**: Weight data is personal. Users MUST be able to trust the app with
+their data. Violating this principle erodes user trust irreparably.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Test-First (NON-NEGOTIABLE)
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+TDD is mandatory for all non-trivial logic (data models, calculations, business
+rules). The sequence is strictly:
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+1. Write failing tests that capture the acceptance scenarios.
+2. Get approval that the tests reflect the correct behaviour.
+3. Tests MUST fail for the right reason.
+4. Implement until tests pass.
+5. Refactor — keep tests green.
+
+No implementation task is "done" until the acceptance scenarios from the spec
+are covered by automated tests.
+
+**Rationale**: Health-metric calculations (BMI, trend lines, goal projections)
+MUST be correct. TDD prevents silent regressions and documents expected behaviour
+as living tests.
+
+### IV. Incremental Delivery (MVP First)
+
+Features MUST be broken into independently deliverable user-story slices. Each
+slice MUST be:
+- Implementable without depending on unfinished later slices.
+- Testable in isolation.
+- Demonstrable to the user.
+
+The P1 user story of every feature MUST constitute a usable MVP. No "big bang"
+releases.
+
+**Rationale**: Building the full feature set before any user feedback risks
+building the wrong thing. Incremental delivery keeps the feedback loop tight.
+
+### V. Simplicity (YAGNI)
+
+The simplest solution that satisfies the current spec MUST be preferred. Complexity
+MUST be justified by a concrete current requirement. Specifically:
+
+- Do NOT add abstractions for hypothetical future requirements.
+- Do NOT introduce a new dependency when a standard-library solution exists.
+- Do NOT build configurability that no current user story requires.
+- Each complexity deviation MUST be documented in the plan's Complexity Tracking
+  table with a clear justification.
+
+**Rationale**: Personal-health apps accrete complexity quickly. Keeping solutions
+simple reduces maintenance burden and makes the codebase easier to reason about.
+
+## Privacy & Data Standards
+
+- All weight entries and health metrics are classified as **sensitive personal
+  data** and MUST be handled accordingly throughout the stack.
+- **Storage encryption (v1)**: The current stack uses browser `localStorage`, which
+  stores data as plaintext managed by the browser. No additional at-rest encryption
+  is applied at the application layer in v1. This is acceptable because: (a) data
+  never leaves the user's device, (b) the app is single-user per browser profile,
+  and (c) OS-level disk encryption (FileVault, BitLocker, etc.) is the user's
+  responsibility. If cloud sync or multi-device features are added in a future
+  version, at-rest encryption MUST be revisited before those features ship.
+- **Secure transport**: The app is served as static files from an nginx container.
+  HTTPS MUST be enforced at the deployment layer (via reverse proxy, load balancer,
+  or nginx TLS configuration). The application itself has no server-side code to
+  enforce HTTPS, so this is a deployment-time requirement documented in the
+  quickstart guide.
+- Input validation MUST reject physically implausible values (e.g., weight entries
+  outside a configurable but sane range) and surface meaningful errors to the user.
+- Data export format MUST be human-readable (CSV or JSON) so users are never
+  locked in. The filename MUST include the export date to prevent overwriting prior
+  exports (pattern: `weight-entries-YYYY-MM-DD.{csv,json}`).
+
+## Development Workflow
+
+1. **Specify** — Run `/speckit.specify` to create or update `spec.md`.
+2. **Clarify** — Run `/speckit.clarify` to resolve ambiguities before planning.
+3. **Plan** — Run `/speckit.plan` to generate research, data model, and contracts.
+4. **Tasks** — Run `/speckit.tasks` to generate the ordered `tasks.md`.
+5. **Implement** — Run `/speckit.implement` to execute tasks one by one.
+6. **Analyze** — Run `/speckit.analyze` after task generation to verify
+   consistency across all design artifacts.
+
+### Commit Cadence
+
+Commits MUST be made regularly throughout implementation — not batched at the end:
+
+- **After each completed phase** in `tasks.md` (e.g., after Phase 1 Setup,
+  after Phase 2 Foundational, after each user-story phase).
+- **After any bug fix**, as a standalone commit separate from feature work.
+
+### Commit Message Format
+
+All commit messages MUST:
+
+- Use **imperative mood** in the subject line (e.g., "add", "fix", "implement",
+  "wire" — not "added", "fixed", "implementing").
+- **Reference the task ID or phase** where applicable
+  (e.g., `feat(T009): implement model validation` or `feat(phase-2): add
+  foundational storage and model modules`).
+- Keep the subject line under 72 characters.
+- Use the body to explain *why* when the change is non-obvious.
+
+All pull requests MUST reference the spec that drove the change. The Constitution
+Check in `plan.md` MUST be filled out and pass before implementation starts.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other ad-hoc development practices for this
+project. Any deviation MUST be recorded in the plan's Complexity Tracking table.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Amendment procedure**:
+1. Propose the change with a rationale.
+2. Update this file, incrementing the version number per the semver policy below.
+3. Propagate changes to affected templates (use `/speckit.constitution` command).
+4. Record the amendment date in `Last Amended`.
+
+**Versioning policy**:
+- MAJOR: Removal or redefinition of a principle (backward-incompatible governance
+  change).
+- MINOR: New principle or section added, or materially expanded guidance.
+- PATCH: Clarification, wording improvement, or typo fix.
+
+**Compliance review**: Each feature's `plan.md` Constitution Check section serves
+as the per-feature compliance gate. Reviews MUST verify all five principles before
+approving a feature for implementation.
+
+**Version**: 1.1.1 | **Ratified**: 2026-03-13 | **Last Amended**: 2026-03-13

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="WeightTracker" />
+    <title>Weight Tracker — Confirm Email</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="public-page-root" class="min-h-screen flex items-center justify-center bg-base-200 py-4">
+        <div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 id="page-title" class="card-title justify-center mb-4">Email Confirmation</h2>
+            <div id="loading-panel" class="hidden flex flex-col items-center gap-4 py-4">
+              <span class="loading loading-spinner loading-lg text-primary"></span>
+              <p class="text-center">Confirming your email&hellip;</p>
+            </div>
+            <div id="success-panel" class="hidden">
+              <div role="alert" class="alert alert-success mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Your email has been confirmed. Set up your password to continue.</span>
+              </div>
+              <p class="text-center mt-4">
+                <a id="setup-password-link" href="#" class="btn btn-primary w-full">Set Up Password</a>
+              </p>
+            </div>
+            <div id="error-panel" class="hidden">
+              <div role="alert" class="alert alert-error mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="error-message">This confirmation link is invalid or has expired.</span>
+              </div>
+              <div class="flex flex-col gap-2 mt-4">
+                <a href="/login.html" class="btn btn-outline w-full">Back to Sign In</a>
+                <a href="mailto:support@example.com" class="link link-primary text-center text-sm">Contact Support</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="ts/confirm-email.ts"></script>
+  </body>
+</html>
