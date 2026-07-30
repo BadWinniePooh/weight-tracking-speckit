@@ -1,8 +1,37 @@
 # weight-tracking Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-13
+Auto-generated from all feature plans. Last updated: 2026-03-14
 
 ## Active Technologies
+- C# 12 / .NET 8 ASP.NET Core Minimal API — Ports and Adapters architecture (Domain / Infrastructure / Api / Tests) (003-backend-api-migration)
+- EF Core 8 + Npgsql (Npgsql.EntityFrameworkCore.PostgreSQL) — PostgreSQL 16 via Docker named volume `weighttracker-data` (003-backend-api-migration)
+- xUnit + WebApplicationFactory<Program> + Testcontainers.PostgreSql — all backend tests in WeightTracker.Tests (003-backend-api-migration)
+- Docker Compose — 3 services: db (postgres:16-alpine), backend (.NET), frontend (nginx+envsubst); health-check-ordered startup (003-backend-api-migration)
+- Runtime API URL injection via `envsubst` + `public/config.json.template` → `/config.json` in nginx container (003-backend-api-migration)
+- TypeScript 5.x (browser target: ES2020) + Chart.js ^4.0.0, chartjs-adapter-date-fns ^3.0.0, date-fns ^3.0.0 (new); Vite 5.x (existing) (002-chart-visualization)
+- PostgreSQL 16 in a Docker container with a named persistent volume (003-backend-api-migration)
+- TypeScript 5.x (frontend), C# 12 / .NET 8 (backend — unchanged) + Vite 5.x, Vitest 2.x, nginx:alpine, Docker Compose v2 (file moves only — no new dependencies) (004-repo-restructure-docs)
+- PostgreSQL 16 via Docker named volume `weighttracker-data` (unchanged) (004-repo-restructure-docs)
+- C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend) (006-jwt-auth-setup)
+- PostgreSQL 16 — adds `RefreshTokens` table; alters `Users` table (006-jwt-auth-setup)
+- C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend — api-client.ts only) + ASP.NET Core Minimal API, EF Core 8, Npgsql, BCrypt.Net-Next, MailKit 4.x (new), Testcontainers 3.10.0 + MailHog generic container (new) (007-admin-user-management)
+- PostgreSQL 16 — adds `PasswordResetTokens`, `EmailConfirmationTokens`, `AuditLog` tables; alters `Users` table (007-admin-user-management)
+- TypeScript 5.x (browser ES2020) for all frontend work; C# 12 / .NET 8 for the one backend amendmen + Vite 5.x (build + dev server); Vitest 2.x + jsdom (frontend tests); existing `api-client.ts`, `auth-guard.ts`, `auth-token.ts`; xUnit + Testcontainers.PostgreSql (backend amendment test) (008-frontend-admin-ui)
+- No new storage — no `localStorage` usage, no new database columns (008-frontend-admin-ui)
+- TypeScript 5.x (browser target ES2020); HTML5; CSS3 + Tailwind CSS v3 (PostCSS plugin), DaisyUI v4 (Tailwind plugin), Vite 5.x (existing) (009-tailwind-daisyui-redesign)
+- None — no localStorage, no new DB columns (009-tailwind-daisyui-redesign)
+- YAML (Docker Compose v2), nginx config syntax, shell (env var substitution) + Docker Compose v2, Traefik v2.x (labels compatible with v3.x), nginx:alpine (existing) (010-production-hardening)
+- N/A — no database schema changes (010-production-hardening)
+- C# 12 / .NET 8 (backend); TypeScript 5.x / ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql; Vite 5.x, Tailwind CSS v3, DaisyUI v4 (frontend — no new packages needed) (011-data-import)
+- PostgreSQL 16 — no schema changes; new repository method only (011-data-import)
+- Markdown (CommonMark + GitHub Flavored Markdown); MermaidJS for diagrams + None — documentation only; MermaidJS renders natively on GitHub (012-docs-overhaul)
+- TypeScript 5.x (browser target ES2020) + Vite 5.x (build), Vitest 2.x + jsdom (tests), Tailwind CSS v3 + DaisyUI v4 (UI), existing `api-client.ts`, `auth-guard.ts`, `config.ts`, `theme.ts` (013-confirm-email-page)
+- C# 12 / .NET 8 (backend); TypeScript 5.x ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql (backend); Vite 5.x, Vitest 2.x + jsdom (frontend) (014-confirm-email-password-setup)
+- PostgreSQL 16 — no schema changes; `PasswordResetTokens` table is written to via existing infrastructure (014-confirm-email-password-setup)
+- TypeScript 5.x (browser target ES2020); Node.js 20+ (build tooling) + Vite 5.x (build), `vite-plugin-pwa` (new), Workbox (via plugin), Tailwind CSS v4 + DaisyUI v5 (existing) (015-pwa-support)
+- N/A — no new data storage; static build artifacts only (015-pwa-support)
+- Markdown (CommonMark + GitHub Flavored Markdown); no code compilation + None — documentation only (016-fullstack-arch-docs)
+- N/A — no new data storage; output files only (016-fullstack-arch-docs)
 
 - TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing) (001-weight-tracker-app)
 
@@ -10,21 +39,74 @@ Auto-generated from all feature plans. Last updated: 2026-03-13
 
 ```text
 backend/
-frontend/
-tests/
+  WeightTracker.Domain/        # Entities, interfaces — zero external deps
+  WeightTracker.Infrastructure/ # EF Core, repositories, services, seeding
+  WeightTracker.Api/           # ASP.NET Core Minimal API endpoints
+  WeightTracker.Tests/         # All xUnit tests (Unit/ + Integration/)
+src/ts/                        # Frontend TypeScript
+tests/                         # Frontend Vitest tests
+docker-compose.yml             # Full stack: db + backend + frontend
 ```
 
 ## Commands
 
-npm test && npm run lint
+```bash
+# Frontend — `npm run build` MUST precede `npm test`:
+# tests/pwa/pwa-build.test.ts asserts against generated files in dist/,
+# and 35 tests fail on a clean checkout without it.
+cd frontend && npm ci && npm run lint && npm run typecheck && npm run build && npm test
+
+# Frontend mutation testing (slow; runs on every PR in CI)
+cd frontend && npm run test:mutation
+
+# Backend (from backend/ directory) — Testcontainers needs a running Docker daemon
+cd backend && dotnet test
+```
+
+These are the same gates CI enforces in `.github/workflows/ci.yml`. Run them before
+pushing.
+
+## Backend Testing Rules (003-backend-api-migration)
+- TDD mandatory: failing test in WeightTracker.Tests first, then implementation
+- All test files MUST live in WeightTracker.Tests — never in Domain/Infrastructure/Api
+- Test file naming mirrors project structure: Infrastructure/Repositories/FooRepository.cs → Tests/Integration/Repositories/FooRepositoryTests.cs
+- Integration tests use Testcontainers.PostgreSql (real PostgreSQL, no mocks)
 
 ## Code Style
 
 TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard conventions
+C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 017-cicd-pipeline: Added GitHub Actions CI (backend tests, frontend lint/typecheck/tests, mutation testing, image builds) + GHCR publishing on trunk pushes + ESLint 9 flat config with `typescript-eslint` (new dev dependencies)
+- 016-fullstack-arch-docs: Added Markdown (CommonMark + GitHub Flavored Markdown); no code compilation + None — documentation only
+- 015-pwa-support: Added TypeScript 5.x (browser target ES2020); Node.js 20+ (build tooling) + Vite 5.x (build), `vite-plugin-pwa` (new), Workbox (via plugin), Tailwind CSS v4 + DaisyUI v5 (existing)
+- 014-confirm-email-password-setup: Added C# 12 / .NET 8 (backend); TypeScript 5.x ES2020 (frontend) + ASP.NET Core Minimal API, EF Core 8 + Npgsql (backend); Vite 5.x, Vitest 2.x + jsdom (frontend)
 
-- 001-weight-tracker-app: Added TypeScript 5.x (browser target: ES2020); HTML5; CSS3 + Vite 5.x (build + dev server); Vitest 2.x + jsdom (testing)
 
 <!-- MANUAL ADDITIONS START -->
+## Architecture Quick Reference (016-fullstack-arch-docs)
+
+See `ARCHITECTURE.md` for full context, rationale, and worked example.
+
+### Backend Layer Placement
+
+| What | Project | Directory |
+|------|---------|-----------|
+| New entity | `WeightTracker.Domain` | `Entities/` |
+| Repository interface | `WeightTracker.Domain` | `Interfaces/Repositories/` |
+| Service interface | `WeightTracker.Domain` | `Interfaces/Services/` |
+| Repository implementation | `WeightTracker.Infrastructure` | `Repositories/` |
+| Service implementation | `WeightTracker.Infrastructure` | `Services/` |
+| API endpoint group | `WeightTracker.Api` | `Endpoints/` (as `MapXxxEndpoints()` extension) |
+| Integration test | `WeightTracker.Tests` | `Integration/` (mirrors source path) |
+
+Register all new services and repositories as **Scoped** in `WeightTracker.Api/Program.cs`.
+
+### Critical Patterns
+
+- **Current user in endpoints**: `var userId = (Guid)httpContext.Items["CurrentUserId"]!;` — never read JWT claims directly in handlers.
+- **Frontend API calls**: Always use `request<T>()` from `api-client.ts` — never raw `fetch()` — to inherit silent token refresh.
+- **New authenticated pages**: Call `checkAuthStatus()` then `enforceRedirect(pageType, state)` from `auth-guard.ts` at page load before rendering.
+- **Integration tests**: Use `ApiFixture` with `CreateAuthenticatedClient()`. Real PostgreSQL via Testcontainers — no mocks.
 <!-- MANUAL ADDITIONS END -->

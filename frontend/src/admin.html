@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="WeightTracker" />
+    <title>Weight Tracker — Admin</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <nav id="main-navbar" class="navbar bg-base-100 shadow-sm">
+        <div class="navbar-start">
+          <a id="nav-brand" href="/index.html" class="btn btn-ghost text-xl">Weight Tracker</a>
+        </div>
+        <div class="navbar-center hidden lg:flex">
+          <ul id="nav-links-desktop" class="menu menu-horizontal px-1">
+            <li><a id="nav-dashboard" href="/index.html">Dashboard</a></li>
+            <li><a id="nav-profile" href="/profile.html">Profile</a></li>
+            <li><a id="nav-admin" href="/admin.html" hidden>Admin Dashboard</a></li>
+          </ul>
+        </div>
+        <div class="navbar-end">
+          <button id="logout-button" class="btn btn-ghost">Log out</button>
+          <button id="nav-hamburger" class="btn btn-ghost lg:hidden" type="button" aria-label="Open navigation menu">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+        </div>
+      </nav>
+      <div id="nav-mobile-menu" class="lg:hidden" hidden>
+        <ul id="nav-links-mobile" class="menu menu-vertical px-1 bg-base-100 shadow-sm">
+          <li><a id="nav-mobile-dashboard" href="/index.html">Dashboard</a></li>
+          <li><a id="nav-mobile-profile" href="/profile.html">Profile</a></li>
+          <li><a id="nav-mobile-admin" href="/admin.html" hidden>Admin Dashboard</a></li>
+          <li><button id="nav-mobile-logout" type="button" class="btn btn-ghost w-full text-left">Log out</button></li>
+        </ul>
+      </div>
+
+      <main class="container mx-auto px-4 py-6">
+        <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
+
+        <!-- Stats bar -->
+        <section id="stats-bar">
+          <div class="stats shadow w-full stats-vertical lg:stats-horizontal mb-6">
+            <div class="stat">
+              <div class="stat-title">Total Users</div>
+              <div class="stat-value" id="stat-total-users">—</div>
+              <div class="stat-desc">Registered accounts</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title">Active Sessions</div>
+              <div class="stat-value" id="stat-active-sessions">—</div>
+              <div class="stat-desc">Currently online</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- User management -->
+        <section id="user-management">
+          <div class="card bg-base-100 shadow mb-6">
+            <div class="card-body">
+              <h3 class="card-title">Users</h3>
+              <button id="create-user-btn" class="btn btn-primary btn-sm w-fit mb-4">Create User</button>
+              <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                  <thead>
+                    <tr>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Last Login</th>
+                      <th>Scheduled Deletion</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="user-table-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Create user dialog (FR-029: DaisyUI modal for centered display) -->
+        <dialog id="create-user-modal" class="modal">
+          <div class="modal-box">
+            <h3 class="font-bold text-lg">Create User</h3>
+            <form id="create-user-form" class="mt-4">
+              <div class="form-control mb-4">
+                <label class="label" for="cu-username"><span class="label-text">Username</span></label>
+                <input id="cu-username" type="text" required class="input input-bordered w-full" />
+              </div>
+              <div class="form-control mb-4">
+                <label class="label" for="cu-email"><span class="label-text">Email</span></label>
+                <input id="cu-email" type="email" required class="input input-bordered w-full" />
+              </div>
+              <div class="form-control mb-4">
+                <label class="label" for="cu-role"><span class="label-text">Role</span></label>
+                <select id="cu-role" class="select select-bordered w-full">
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+              <div id="cu-feedback" role="alert" aria-live="polite" class="text-error text-sm min-h-4"></div>
+              <div class="modal-action">
+                <button type="submit" class="btn btn-primary" id="cu-submit-btn">Create</button>
+                <button type="button" id="cu-cancel-btn" class="btn">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </dialog>
+
+        <!-- Confirm action dialog (T044) -->
+        <dialog id="confirm-modal" class="modal">
+          <div class="modal-box">
+            <h3 id="confirm-modal-title" class="font-bold text-lg">Confirm Action</h3>
+            <p id="confirm-modal-message" class="py-4"></p>
+            <div class="modal-action">
+              <button id="confirm-modal-yes" class="btn btn-error">Confirm</button>
+              <button id="confirm-modal-cancel" class="btn">Cancel</button>
+            </div>
+          </div>
+        </dialog>
+
+        <!-- Audit log -->
+        <section id="audit-log">
+          <div class="card bg-base-100 shadow mb-6">
+            <div class="card-body">
+              <h3 class="card-title">Audit Log</h3>
+              <div id="audit-filters" class="flex flex-wrap gap-2 mb-4 items-end">
+                <div class="form-control">
+                  <label class="label" for="audit-filter-from"><span class="label-text">From</span></label>
+                  <input id="audit-filter-from" type="date" class="input input-bordered input-sm" />
+                </div>
+                <div class="form-control">
+                  <label class="label" for="audit-filter-to"><span class="label-text">To</span></label>
+                  <input id="audit-filter-to" type="date" class="input input-bordered input-sm" />
+                </div>
+                <div class="form-control">
+                  <label class="label" for="audit-filter-action"><span class="label-text">Action</span></label>
+                  <select id="audit-filter-action" class="select select-bordered select-sm">
+                    <option value="">All</option>
+                    <option value="user_created">UserCreated</option>
+                    <option value="user_deactivated">UserDeactivated</option>
+                    <option value="user_reactivated">UserReactivated</option>
+                    <option value="user_deleted">UserDeleted</option>
+                    <option value="role_changed">RoleChanged</option>
+                    <option value="password_reset">PasswordReset</option>
+                  </select>
+                </div>
+                <button id="audit-apply-btn" class="btn btn-sm btn-primary">Apply</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="table table-zebra w-full">
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>Admin</th>
+                      <th>Action</th>
+                      <th>Target</th>
+                    </tr>
+                  </thead>
+                  <tbody id="audit-table-body"></tbody>
+                </table>
+              </div>
+              <div id="audit-pagination" class="flex items-center gap-2 mt-4">
+                <div class="join">
+                  <button id="audit-prev-btn" class="join-item btn btn-sm btn-ghost">Previous</button>
+                  <button id="audit-next-btn" class="join-item btn btn-sm btn-ghost">Next</button>
+                </div>
+                <span id="audit-page-indicator"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="ts/admin.ts"></script>
+  </body>
+</html>

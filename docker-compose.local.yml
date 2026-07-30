@@ -1,0 +1,51 @@
+# Local development overlay. Runs without Traefik, exposes ports directly,
+# and adds MailHog for email capture.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up --build
+
+services:
+  db:
+    environment:
+      POSTGRES_DB: weighttracker
+      POSTGRES_USER: weighttracker
+      POSTGRES_PASSWORD: localdev
+    volumes:
+      - weighttracker-local-data:/var/lib/postgresql/data
+
+  backend:
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: weighttracker
+      DB_USER: weighttracker
+      DB_PASSWORD: localdev
+      AllowedOrigin: http://localhost:3000
+      JWT_SECRET: localdev_jwt_secret_replace_with_32_chars
+      APP_BASE_URL: http://localhost:3000
+      USER_DELETION_GRACE_DAYS: 30
+      ADMIN_USERNAME: admin
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: admin
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_SENDER_EMAIL: noreply@localhost
+
+  frontend:
+    ports:
+      - "3001:80"
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "8025:8025"
+
+volumes:
+  weighttracker-local-data:
+
+networks:
+  traefik:
+    external: false
+    name: weight-tracker-local-traefik

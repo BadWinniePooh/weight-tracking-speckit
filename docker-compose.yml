@@ -1,0 +1,86 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - weighttracker-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: WeightTracker.Api/Dockerfile
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      AllowedOrigin: ${ALLOWED_ORIGIN}
+      JWT_SECRET: ${JWT_SECRET}
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_SENDER_EMAIL: ${SMTP_SENDER_EMAIL:-noreply@example.com}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
+      USER_DELETION_GRACE_DAYS: ${USER_DELETION_GRACE_DAYS:-30}
+      #ADMIN_USERNAME: ${ADMIN_USERNAME}
+      #ADMIN_EMAIL: ${ADMIN_EMAIL}
+      #ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - default
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:-traefik}
+      - traefik.http.services.weight-tracker.loadbalancer.server.port=80
+      # Catch-all router (no rate limit)
+      - traefik.http.routers.weight-tracker.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.weight-tracker.entrypoints=websecure
+      - traefik.http.routers.weight-tracker.tls=true
+      - traefik.http.routers.weight-tracker.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      # Auth-specific router (rate limited, higher priority)
+      - traefik.http.routers.weight-tracker-auth.rule=Host(`${APP_DOMAIN}`) && (Path(`/api/auth/login`) || Path(`/api/auth/reset-password/request`))
+      - traefik.http.routers.weight-tracker-auth.priority=10
+      - traefik.http.routers.weight-tracker-auth.entrypoints=websecure
+      - traefik.http.routers.weight-tracker-auth.tls=true
+      - traefik.http.routers.weight-tracker-auth.tls.certresolver=${TRAEFIK_CERT_RESOLVER:-letsencrypt}
+      - traefik.http.routers.weight-tracker-auth.service=weight-tracker
+      - traefik.http.routers.weight-tracker-auth.middlewares=weight-tracker-auth-ratelimit
+      # Rate limit middleware (5 requests per minute average, burst 10)
+      - traefik.http.middlewares.weight-tracker-auth-ratelimit.ratelimit.average=${AUTH_RATE_LIMIT_AVERAGE:-5}
+      - traefik.http.middlewares.weight-tracker-auth-ratelimit.ratelimit.period=${AUTH_RATE_LIMIT_PERIOD:-1m}
+      - traefik.http.middlewares.weight-tracker-auth-ratelimit.ratelimit.burst=${AUTH_RATE_LIMIT_BURST:-10}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  weighttracker-data:
+
+networks:
+  traefik:
+    external: true
+    name: ${TRAEFIK_NETWORK:-traefik}

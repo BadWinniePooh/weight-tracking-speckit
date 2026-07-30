@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="WeightTracker" />
+    <title>Weight Tracker — Setup</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="public-page-root" class="min-h-screen flex items-center justify-center bg-base-200 py-4">
+        <div id="auth-card" class="card w-full max-w-md bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 id="page-title" class="card-title justify-center mb-4">Create Admin Account</h2>
+            <p class="text-center mb-4">No users exist yet. Create an administrator account to get started.</p>
+            <form id="setup-form">
+              <div class="form-control mb-3">
+                <label class="label" for="username">
+                  <span class="label-text">Username</span>
+                </label>
+                <input id="username" type="text" required placeholder="admin" class="input input-bordered w-full" />
+              </div>
+              <div class="form-control mb-3">
+                <label class="label" for="email">
+                  <span class="label-text">Email</span>
+                </label>
+                <input id="email" type="email" required placeholder="admin@example.com" class="input input-bordered w-full" />
+              </div>
+              <div class="form-control mb-3">
+                <label class="label" for="password">
+                  <span class="label-text">Password</span>
+                </label>
+                <input id="password" type="password" required placeholder="At least 8 characters" class="input input-bordered w-full" />
+              </div>
+              <div class="form-control mb-3">
+                <label class="label" for="confirm-password">
+                  <span class="label-text">Confirm Password</span>
+                </label>
+                <input id="confirm-password" type="password" required class="input input-bordered w-full" />
+              </div>
+              <div id="error-message" role="alert" aria-live="polite" class="error-msg text-error text-sm mb-3"></div>
+              <button type="submit" class="btn btn-primary w-full">Create Account</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="ts/setup.ts"></script>
+  </body>
+</html>

@@ -1,26 +1,20 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 1.0.0 → 1.1.0
-  Modified principles: None — all five principles unchanged
+  Version change: 1.1.0 → 1.1.1
+  Modified principles: None
   Added sections: None
   Removed sections: None
   Modified sections:
-    - Privacy & Data Standards: resolved TODO(TECH_STACK) — added concrete
-      localStorage plaintext guidance, v1 encryption stance, and HTTPS
-      deployment responsibility statement
+    - Development Workflow: added commit cadence and message format rules
+      (commit after each completed phase and after any bug fix; imperative
+      mood; reference task ID or phase where applicable)
   Templates requiring updates:
     - .specify/templates/plan-template.md ✅ No changes needed
     - .specify/templates/spec-template.md ✅ No changes needed
     - .specify/templates/tasks-template.md ✅ No changes needed
   Follow-up TODOs:
-    - None — all previously open TODOs resolved.
-  Prior deferred items now resolved:
-    - TODO(TECH_STACK): Resolved 2026-03-13. Stack confirmed as TypeScript 5.x +
-      browser localStorage + nginx:alpine Docker container.
-    - TODO(RATIFICATION_DATE): Resolved at v1.0.0 (2026-03-13).
-    - C1 (analyze finding): Constitution Principle II data-export MUST is now
-      satisfied — US4 (export as CSV/JSON) added to spec.md 2026-03-13.
+    - None.
 -->
 
 # Weight Tracking Constitution
@@ -129,6 +123,26 @@ simple reduces maintenance burden and makes the codebase easier to reason about.
 6. **Analyze** — Run `/speckit.analyze` after task generation to verify
    consistency across all design artifacts.
 
+### Commit Cadence
+
+Commits MUST be made regularly throughout implementation — not batched at the end:
+
+- **After each completed phase** in `tasks.md` (e.g., after Phase 1 Setup,
+  after Phase 2 Foundational, after each user-story phase).
+- **After any bug fix**, as a standalone commit separate from feature work.
+
+### Commit Message Format
+
+All commit messages MUST:
+
+- Use **imperative mood** in the subject line (e.g., "add", "fix", "implement",
+  "wire" — not "added", "fixed", "implementing").
+- **Reference the task ID or phase** where applicable
+  (e.g., `feat(T009): implement model validation` or `feat(phase-2): add
+  foundational storage and model modules`).
+- Keep the subject line under 72 characters.
+- Use the body to explain *why* when the change is non-obvious.
+
 All pull requests MUST reference the spec that drove the change. The Constitution
 Check in `plan.md` MUST be filled out and pass before implementation starts.
 
@@ -153,4 +167,4 @@ project. Any deviation MUST be recorded in the plan's Complexity Tracking table.
 as the per-feature compliance gate. Reviews MUST verify all five principles before
 approving a feature for implementation.
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-13 | **Last Amended**: 2026-03-13
+**Version**: 1.1.1 | **Ratified**: 2026-03-13 | **Last Amended**: 2026-03-13

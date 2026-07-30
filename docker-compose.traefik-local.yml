@@ -1,0 +1,43 @@
+# Local Traefik overlay. Adds a Traefik instance to the stack so the full
+# production routing path (labels, TLS, rate limiting) can be tested locally
+# without an external Traefik network.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.traefik-local.yml up --build
+#
+# Dashboard: http://localhost:8080
+# App (HTTP):  http://localhost (requires APP_DOMAIN in .env or hosts file entry)
+# App (HTTPS): https://localhost (self-signed cert — browser warning expected)
+
+services:
+  traefik:
+    image: traefik:v3.0
+    command:
+      - --api.insecure=true
+      - --api.dashboard=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls=true
+      - --log.level=DEBUG
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik
+
+  # Override the traefik.docker.network label so local Traefik routes over the
+  # local network instead of the production TRAEFIK_NETWORK value from .env.
+  frontend:
+    labels:
+      - traefik.docker.network=weight-tracker-local-traefik
+
+networks:
+  traefik:
+    external: false
+    name: weight-tracker-local-traefik
