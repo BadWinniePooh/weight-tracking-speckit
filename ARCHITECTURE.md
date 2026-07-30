@@ -1,7 +1,9 @@
 # Architecture: Weight Tracker
 
-> **Architecture as of feature 016 (PWA support).** Features introduced after 016 may add new
-> patterns — check `specs/` for spec files numbered above 016 to find patterns not covered here.
+> **Architecture as of feature 018 (offline-first PWA).** Features introduced after 018 may add
+> new patterns — check `specs/` for spec files numbered above 018 to find patterns not covered
+> here. Sections 1–18 describe the 016 baseline; Section 19 covers the offline-first data flow
+> added in 018.
 
 This document serves two audiences equally:
 
@@ -32,6 +34,7 @@ This document serves two audiences equally:
 16. [System Overview](#16-system-overview)
 17. [Technology Stack](#17-technology-stack)
 18. [Data Model](#18-data-model)
+19. [Frontend: Offline-First Data Flow](#19-frontend-offline-first-data-flow)
 
 ---
 
@@ -1255,3 +1258,51 @@ erDiagram
 - **AuditLogEntry**: Append-only. Records admin actions (user creation, role changes,
   deletions) with actor and target user IDs. No FK to Users — records are preserved after
   user deletion.
+
+---
+
+## 19. Frontend: Offline-First Data Flow
+
+Since feature 018, the main page is offline-first. Three modules own it:
+
+**`offline-store.ts`** — All offline persistence, in `localStorage` under the
+`wt_offline::` prefix (never the legacy `weight_tracker_*` keys, which belong to the
+feature-001 migration flow). Holds the **auth marker** (`{ userId, role,
+refreshExpiresAt }` — an expiry date, never a token), and per-user caches: the entry
+cache (the optimistic local view), the FIFO **pending-operation queue**
+(`{type:"create", entry} | {type:"delete", id}`), the chart settings cache, and a
+cached copy of `config.json`.
+
+**`entry-store.ts`** — The repository behind the dashboard. Online-first: every call
+tries the API, and only a fetch-level network failure (`TypeError`) takes the offline
+path — server errors propagate. Mutations apply to the local cache immediately and are
+queued when offline. Entries get **client-generated UUIDs** (`crypto.randomUUID()`), so
+an offline entry and its later replay are the same entry — the backend `AddAsync`
+dedups by id and returns `AlreadyExists` (HTTP 200) on replay. Special cases: deleting
+a never-synced entry cancels its queued create; offline delete-all tombstones only
+synced ids (entries created on another device survive — append-everything policy).
+
+**`sync.ts`** — Automatic replay, no user interaction. Triggers: dashboard load (when
+the queue is non-empty) and the browser `online` event. Single-flight per tab. FIFO
+replay; a network failure stops the run and keeps the remainder; a server-answered
+failure (delete 404, create 4xx/409) drops that op so the queue cannot wedge. After
+draining, it refetches entries + settings and re-renders via callback.
+
+Supporting changes elsewhere:
+
+- **Chart**: `main.ts` computes the chart client-side with
+  `chart-calculations.ts#computeChartData` — one code path online and offline.
+  `/api/chart` still exists but the dashboard no longer calls it.
+- **Auth guard**: on a network throw, `checkAuthStatus()` consults the marker; if
+  valid it returns `{ isAuthenticated: true, offline: true }` and the app shell opens.
+  A server-answered 401 clears the marker. The marker mirrors the server's sliding
+  7-day refresh window (`AuthConstants.RefreshTokenDays`) and gates only local UI.
+- **Refresh rotation grace**: the server caps a rotated refresh token's `ExpiresAt` at
+  now + 60 s (`AuthConstants.RotationGraceSeconds`) instead of revoking it, so a client
+  that lost the rotation response over a flaky connection can retry. Replays cannot
+  extend the deadline; logout revocation stays immediate.
+- **Service worker**: precaches the full app shell (all HTML pages + bundles);
+  `config.json` is the single NetworkFirst runtime route; `/api/*` is never cached.
+- **Limitation by design**: offline capability requires one prior online session
+  (shell precache + marker + caches). A first-ever visit offline shows the browser's
+  offline error.

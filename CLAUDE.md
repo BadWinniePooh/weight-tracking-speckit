@@ -78,6 +78,7 @@ TypeScript 5.x (browser target: ES2020); HTML5; CSS3: Follow standard convention
 C# 12 / .NET 8: Follow standard C# conventions; primary constructors preferred
 
 ## Recent Changes
+- 018-offline-first-pwa: Offline-first dashboard (localStorage offline store + FIFO sync engine + client-side chart), app-shell precaching via Workbox, persisted 7-day sliding auth marker, refresh rotation grace window, entry id-conflict protection (409), collapsible history card (default folded)
 - 017-cicd-pipeline: Added GitHub Actions CI (backend tests, frontend lint/typecheck/tests, mutation testing, image builds) + GHCR publishing on trunk pushes + ESLint 9 flat config with `typescript-eslint` (new dev dependencies)
 - 016-fullstack-arch-docs: Added Markdown (CommonMark + GitHub Flavored Markdown); no code compilation + None — documentation only
 - 015-pwa-support: Added TypeScript 5.x (browser target ES2020); Node.js 20+ (build tooling) + Vite 5.x (build), `vite-plugin-pwa` (new), Workbox (via plugin), Tailwind CSS v4 + DaisyUI v5 (existing)
@@ -109,4 +110,7 @@ Register all new services and repositories as **Scoped** in `WeightTracker.Api/P
 - **Frontend API calls**: Always use `request<T>()` from `api-client.ts` — never raw `fetch()` — to inherit silent token refresh.
 - **New authenticated pages**: Call `checkAuthStatus()` then `enforceRedirect(pageType, state)` from `auth-guard.ts` at page load before rendering.
 - **Integration tests**: Use `ApiFixture` with `CreateAuthenticatedClient()`. Real PostgreSQL via Testcontainers — no mocks.
+- **Dashboard data access (018)**: Route entry reads/writes through `entry-store.ts` (offline-capable, queues on network failure) — not `api-client.ts` directly. Offline persistence lives in `offline-store.ts` under the `wt_offline::` prefix; never reuse the legacy `weight_tracker_*` localStorage keys.
+- **Chart (018)**: The dashboard computes chart data client-side via `chart-calculations.ts#computeChartData` — do not reintroduce `/api/chart` calls on the main page.
+- **Auth lifetimes (018)**: All token lifetimes live in `WeightTracker.Domain/AuthConstants.cs` — never hardcode 7-day/15-minute values in endpoints or services.
 <!-- MANUAL ADDITIONS END -->
