@@ -13,15 +13,20 @@ public class WeightEntryRepository(AppDbContext db) : IWeightEntryRepository
             .OrderByDescending(e => e.Timestamp)
             .ToListAsync();
 
-    public async Task<(WeightEntry Entry, bool WasInserted)> AddAsync(WeightEntry entry)
+    public async Task<(WeightEntry Entry, AddOutcome Outcome)> AddAsync(WeightEntry entry)
     {
         var existing = await db.WeightEntries.FindAsync(entry.Id);
         if (existing is not null)
-            return (existing, false);
+        {
+            // A foreign user's entry must never be echoed back to the caller.
+            return existing.UserId == entry.UserId
+                ? (existing, AddOutcome.AlreadyExists)
+                : (entry, AddOutcome.IdConflict);
+        }
 
         db.WeightEntries.Add(entry);
         await db.SaveChangesAsync();
-        return (entry, true);
+        return (entry, AddOutcome.Inserted);
     }
 
     public async Task<int> AddRangeAsync(IEnumerable<WeightEntry> entries)

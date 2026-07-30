@@ -103,8 +103,14 @@ unchanged. The marker gates only the local UI shell.
    `enum AddOutcome { Inserted, AlreadyExists, IdConflict }`. Endpoint maps
    201 / 200 (own replay, existing entry) / 409 (foreign, no data echo). The sync
    client drops ops on 409.
-2. **60 s rotation grace** in `RefreshTokenRepository.GetActiveByHashAsync`:
-   `RevokedAt == null || RevokedAt > UtcNow.AddSeconds(-60)`. No migration.
+2. **60 s rotation grace, without touching revocation.** Rotation no longer calls
+   `RevokeAsync`; it calls a new `ShortenExpiryAsync(tokenId, UtcNow + 60 s)` that caps
+   — never extends — the old token's `ExpiresAt` and leaves `RevokedAt` null. This
+   keeps logout (`RevokeAllForUserAsync`) immediate — a graced *revocation* would have
+   let a stolen cookie refresh for 60 s after logout and broken the existing
+   `Logout_ThenRefresh_Returns401` test. Replays inside the grace window succeed but
+   cannot push the deadline out (min semantics). `GetActiveByHashAsync` is unchanged.
+   No migration.
 3. **`AuthConstants`** in Domain: `RefreshTokenDays = 7` (currently duplicated in
    JwtTokenService.cs and AuthEndpoints.cs), `AccessTokenMinutes = 15`,
    `AccessTokenSeconds = 900` (currently hardcoded twice in responses).

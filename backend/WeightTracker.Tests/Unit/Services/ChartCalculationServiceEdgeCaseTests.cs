@@ -19,7 +19,7 @@ public class ChartCalculationServiceEdgeCaseTests
         public StubWeightEntryRepo(List<WeightEntry> entries) => _entries = entries;
         public Task<List<WeightEntry>> GetAllAsync(Guid userId)
             => Task.FromResult(_entries);
-        public Task<(WeightEntry Entry, bool WasInserted)> AddAsync(WeightEntry e) => Task.FromResult((e, true));
+        public Task<(WeightEntry Entry, AddOutcome Outcome)> AddAsync(WeightEntry e) => Task.FromResult((e, AddOutcome.Inserted));
         public Task<int> AddRangeAsync(IEnumerable<WeightEntry> entries) => Task.FromResult(0);
         public Task<bool> DeleteAsync(Guid id, Guid userId) => Task.FromResult(true);
         public Task DeleteAllAsync(Guid userId) => Task.CompletedTask;

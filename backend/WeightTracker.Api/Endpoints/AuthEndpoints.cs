@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using WeightTracker.Domain;
 using WeightTracker.Domain.Entities;
 using WeightTracker.Domain.Interfaces.Repositories;
 using WeightTracker.Domain.Interfaces.Services;
@@ -11,7 +12,6 @@ namespace WeightTracker.Api.Endpoints;
 public static class AuthEndpoints
 {
     private const string RefreshTokenCookieName = "refreshToken";
-    private const int RefreshTokenDays = 7;
 
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
@@ -53,7 +53,7 @@ public static class AuthEndpoints
             return Results.Ok(new
             {
                 accessToken,
-                expiresIn = 900,
+                expiresIn = AuthConstants.AccessTokenSeconds,
                 tokenType = "Bearer"
             });
         }).AllowAnonymous();
@@ -87,15 +87,17 @@ public static class AuthEndpoints
                 return Results.Json(new { error = "Session expired. Please log in again." }, statusCode: 401);
             }
 
-            // Rotate: revoke old token, issue new pair
-            await refreshTokenRepository.RevokeAsync(stored.Id);
+            // Rotate: cap the old token at a short grace window (not a hard revoke)
+            // so a client that lost this response can retry, then issue a new pair.
+            await refreshTokenRepository.ShortenExpiryAsync(
+                stored.Id, DateTime.UtcNow.AddSeconds(AuthConstants.RotationGraceSeconds));
             var (newAccessToken, newRawRefresh) = await tokenService.GenerateTokensAsync(user);
             SetRefreshCookie(httpContext, newRawRefresh);
 
             return Results.Ok(new
             {
                 accessToken = newAccessToken,
-                expiresIn = 900,
+                expiresIn = AuthConstants.AccessTokenSeconds,
                 tokenType = "Bearer"
             });
         }).AllowAnonymous();
@@ -157,7 +159,7 @@ public static class AuthEndpoints
             Secure = env.IsProduction(),
             SameSite = SameSiteMode.Strict,
             Path = "/",
-            Expires = DateTimeOffset.UtcNow.AddDays(RefreshTokenDays)
+            Expires = DateTimeOffset.UtcNow.AddDays(AuthConstants.RefreshTokenDays)
         });
     }
 

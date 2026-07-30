@@ -187,7 +187,9 @@ shows the existing entry table unchanged.
   token another 7 days (already the case; the 7-day constant is deduplicated, not
   changed).
 - **FR-016**: The server MUST honour a refresh token for 60 seconds after it was
-  rotated, so a client that lost the rotation response is not logged out.
+  rotated, so a client that lost the rotation response is not logged out. Replays
+  MUST NOT extend that window, and explicit revocation (logout) MUST remain
+  immediate — the grace applies only to rotation.
 
 **Backend correctness**
 

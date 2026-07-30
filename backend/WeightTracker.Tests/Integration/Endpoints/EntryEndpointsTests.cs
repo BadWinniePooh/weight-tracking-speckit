@@ -118,7 +118,7 @@ public class EntryEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
     }
 
     [Fact]
-    public async Task PostEntry_DuplicateId_Returns201WithExistingEntry()
+    public async Task PostEntry_DuplicateOwnId_Returns200WithExistingEntry()
     {
         var id = Guid.NewGuid();
         var request = new CreateEntryRequestWithId(id, 80m, "kg", "2026-03-11T08:00:00Z");
@@ -126,16 +126,41 @@ public class EntryEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
         var first = await _client.PostAsJsonAsync("/api/entries", request);
         Assert.Equal(HttpStatusCode.Created, first.StatusCode);
 
-        // Submit same ID again with different value
+        // Replay the same ID with a different value — idempotent, not a new resource
         var duplicate = new CreateEntryRequestWithId(id, 99m, "kg", "2026-03-11T09:00:00Z");
         var second = await _client.PostAsJsonAsync("/api/entries", duplicate);
 
-        Assert.Equal(HttpStatusCode.Created, second.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
         var body = await second.Content.ReadFromJsonAsync<EntryResponse>();
         Assert.NotNull(body);
         // Original value preserved, not overwritten
         Assert.Equal(80m, body.WeightValue);
         Assert.Equal(id, body.Id);
+    }
+
+    [Fact]
+    public async Task PostEntry_IdOwnedByAnotherUser_Returns409WithoutEntryData()
+    {
+        // Admin creates an entry with a known id
+        var adminClient = fixture.CreateAuthenticatedAdminClient();
+        var id = Guid.NewGuid();
+        var adminCreate = await adminClient.PostAsJsonAsync("/api/entries",
+            new CreateEntryRequestWithId(id, 123.45m, "kg", "2026-03-12T08:00:00Z"));
+        Assert.Equal(HttpStatusCode.Created, adminCreate.StatusCode);
+
+        // Regular user replays the same id — must not read the admin's entry
+        var response = await _client.PostAsJsonAsync("/api/entries",
+            new CreateEntryRequestWithId(id, 70m, "kg", "2026-03-12T09:00:00Z"));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var raw = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("123.45", raw);
+        var body = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.NotNull(body?.Error);
+
+        // The admin's entry is untouched and the user gained no entry
+        var userList = await _client.GetFromJsonAsync<EntryListResponse>("/api/entries");
+        Assert.DoesNotContain(userList!.Entries, e => e.Id == id);
     }
 
     // ── DELETE /api/entries/{id} ────────────────────────────────────────────────

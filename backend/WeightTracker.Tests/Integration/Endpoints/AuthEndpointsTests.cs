@@ -178,6 +178,134 @@ public class AuthEndpointsTests(ApiFixture fixture) : IClassFixture<ApiFixture>
         Assert.Equal(HttpStatusCode.OK, secondRefresh.StatusCode);
     }
 
+    // ── Rotation grace window (018: offline-first, FR-016) ───────────────────
+
+    private async Task<string> LoginAndCaptureRefreshCookieAsync(string username, string password)
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest(username, password));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var setCookie = response.Headers.GetValues("Set-Cookie")
+            .First(c => c.StartsWith("refreshToken="));
+        // "refreshToken=<url-encoded-value>; ..." — value ends at the first ';'
+        var value = setCookie["refreshToken=".Length..].Split(';')[0];
+        return Uri.UnescapeDataString(value);
+    }
+
+    private static string Sha256Hex(string token)
+    {
+        var bytes = System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(token));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    [Fact]
+    public async Task Refresh_OldCookieReplayedWithinRotationGrace_Returns200()
+    {
+        var username = $"gracetest_{Guid.NewGuid():N}";
+        await CreateTestUserAsync(username, "pass123456");
+        var rawToken = await LoginAndCaptureRefreshCookieAsync(username, "pass123456");
+
+        // First refresh rotates the token
+        var request1 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request1.Headers.Add("Cookie", $"refreshToken={Uri.EscapeDataString(rawToken)}");
+        var first = await _client.SendAsync(request1);
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+
+        // A client that lost the rotation response retries with the OLD cookie —
+        // within the grace window this must still succeed.
+        var request2 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request2.Headers.Add("Cookie", $"refreshToken={Uri.EscapeDataString(rawToken)}");
+        var replay = await _client.SendAsync(request2);
+        Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_Rotation_ShortensOldTokenExpiryWithoutRevoking()
+    {
+        var username = $"graceexpiry_{Guid.NewGuid():N}";
+        await CreateTestUserAsync(username, "pass123456");
+        var rawToken = await LoginAndCaptureRefreshCookieAsync(username, "pass123456");
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request.Headers.Add("Cookie", $"refreshToken={Uri.EscapeDataString(rawToken)}");
+        var response = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var oldToken = await db.RefreshTokens.SingleAsync(t => t.TokenHash == Sha256Hex(rawToken));
+        // Rotation must not hard-revoke (that would kill retries after lost
+        // responses) but must cap the old token's life to the grace window.
+        Assert.Null(oldToken.RevokedAt);
+        Assert.True(oldToken.ExpiresAt <= DateTime.UtcNow.AddSeconds(61),
+            "rotated token must expire within the 60s grace window");
+    }
+
+    [Fact]
+    public async Task Refresh_OldCookieAfterGraceExpired_Returns401()
+    {
+        var username = $"gracedead_{Guid.NewGuid():N}";
+        await CreateTestUserAsync(username, "pass123456");
+        var rawToken = await LoginAndCaptureRefreshCookieAsync(username, "pass123456");
+
+        // Rotate once
+        var request1 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request1.Headers.Add("Cookie", $"refreshToken={Uri.EscapeDataString(rawToken)}");
+        var first = await _client.SendAsync(request1);
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+
+        // Simulate the grace window elapsing
+        await using (var scope = fixture.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var oldToken = await db.RefreshTokens.SingleAsync(t => t.TokenHash == Sha256Hex(rawToken));
+            oldToken.ExpiresAt = DateTime.UtcNow.AddSeconds(-1);
+            await db.SaveChangesAsync();
+        }
+
+        var request2 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request2.Headers.Add("Cookie", $"refreshToken={Uri.EscapeDataString(rawToken)}");
+        var replay = await _client.SendAsync(request2);
+        Assert.Equal(HttpStatusCode.Unauthorized, replay.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_GraceReplay_DoesNotExtendOldTokenLifetime()
+    {
+        var username = $"gracereplay_{Guid.NewGuid():N}";
+        await CreateTestUserAsync(username, "pass123456");
+        var rawToken = await LoginAndCaptureRefreshCookieAsync(username, "pass123456");
+
+        // Rotate, note the shortened deadline
+        var request1 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request1.Headers.Add("Cookie", $"refreshToken={Uri.EscapeDataString(rawToken)}");
+        await _client.SendAsync(request1);
+
+        DateTime deadlineAfterFirstRotation;
+        await using (var scope = fixture.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            deadlineAfterFirstRotation = (await db.RefreshTokens
+                .SingleAsync(t => t.TokenHash == Sha256Hex(rawToken))).ExpiresAt;
+        }
+
+        // Replay within grace — must succeed but must NOT push the deadline out
+        var request2 = new HttpRequestMessage(HttpMethod.Post, "/api/auth/refresh");
+        request2.Headers.Add("Cookie", $"refreshToken={Uri.EscapeDataString(rawToken)}");
+        var replay = await _client.SendAsync(request2);
+        Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
+
+        await using (var scope = fixture.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var deadlineAfterReplay = (await db.RefreshTokens
+                .SingleAsync(t => t.TokenHash == Sha256Hex(rawToken))).ExpiresAt;
+            Assert.True(deadlineAfterReplay <= deadlineAfterFirstRotation,
+                "replaying an old token must never extend its grace deadline");
+        }
+    }
+
     // ── POST /api/auth/logout ────────────────────────────────────────────────
 
     [Fact]

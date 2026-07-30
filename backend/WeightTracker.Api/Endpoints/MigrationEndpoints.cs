@@ -65,8 +65,8 @@ public static class MigrationEndpoints
                     CreatedAt = DateTime.UtcNow
                 };
 
-                var (_, wasInserted) = await entryRepository.AddAsync(weightEntry);
-                if (wasInserted)
+                var (_, outcome) = await entryRepository.AddAsync(weightEntry);
+                if (outcome == AddOutcome.Inserted)
                     migratedEntries++;
                 else
                     skippedEntries++;

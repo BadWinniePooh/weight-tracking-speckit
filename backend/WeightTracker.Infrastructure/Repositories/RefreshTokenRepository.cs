@@ -30,6 +30,16 @@ public class RefreshTokenRepository(AppDbContext db) : IRefreshTokenRepository
         }
     }
 
+    public async Task ShortenExpiryAsync(Guid tokenId, DateTime maxExpiresAt)
+    {
+        var token = await db.RefreshTokens.FindAsync(tokenId);
+        if (token is not null && token.ExpiresAt > maxExpiresAt)
+        {
+            token.ExpiresAt = maxExpiresAt;
+            await db.SaveChangesAsync();
+        }
+    }
+
     public async Task RevokeAllForUserAsync(Guid userId)
     {
         var tokens = await db.RefreshTokens

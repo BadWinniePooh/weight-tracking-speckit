@@ -47,15 +47,23 @@ public static class EntryEndpoints
                 CreatedAt = DateTime.UtcNow
             };
 
-            var (saved, _) = await repository.AddAsync(entry);
+            var (saved, outcome) = await repository.AddAsync(entry);
 
-            return Results.Created($"/api/entries/{saved.Id}", new
+            if (outcome == AddOutcome.IdConflict)
+                return Results.Conflict(new { error = "An entry with this id already exists." });
+
+            var dto = new
             {
                 id = saved.Id,
                 weightValue = saved.WeightValue,
                 unit = saved.Unit,
                 timestamp = saved.Timestamp.ToString("o")
-            });
+            };
+
+            // Replay of an already-stored entry is idempotent, not a new resource.
+            return outcome == AddOutcome.AlreadyExists
+                ? Results.Ok(dto)
+                : Results.Created($"/api/entries/{saved.Id}", dto);
         });
 
         group.MapDelete("{id:guid}", async (Guid id, HttpContext httpContext, IWeightEntryRepository repository) =>

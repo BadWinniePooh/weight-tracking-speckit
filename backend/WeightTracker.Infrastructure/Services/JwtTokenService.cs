@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using WeightTracker.Domain;
 using WeightTracker.Domain.Entities;
 using WeightTracker.Domain.Interfaces.Repositories;
 using WeightTracker.Domain.Interfaces.Services;
@@ -14,8 +15,6 @@ public class JwtTokenService(IRefreshTokenRepository refreshTokenRepository, ICo
 {
     private const string Issuer = "weight-tracker";
     private const string Audience = "weight-tracker-api";
-    private const int AccessTokenMinutes = 15;
-    private const int RefreshTokenDays = 7;
 
     public async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user)
     {
@@ -28,7 +27,7 @@ public class JwtTokenService(IRefreshTokenRepository refreshTokenRepository, ICo
             Id = Guid.NewGuid(),
             UserId = user.Id,
             TokenHash = tokenHash,
-            ExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays),
+            ExpiresAt = DateTime.UtcNow.AddDays(AuthConstants.RefreshTokenDays),
             CreatedAt = DateTime.UtcNow
         });
 
@@ -76,7 +75,7 @@ public class JwtTokenService(IRefreshTokenRepository refreshTokenRepository, ICo
             audience: Audience,
             claims: claims,
             notBefore: now,
-            expires: now.AddMinutes(AccessTokenMinutes),
+            expires: now.AddMinutes(AuthConstants.AccessTokenMinutes),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         );
 
