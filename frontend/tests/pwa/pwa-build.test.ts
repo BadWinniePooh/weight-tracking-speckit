@@ -100,6 +100,43 @@ describe("PWA build output", () => {
     }
   });
 
+  describe("Offline app shell (018)", () => {
+    const swSource = () =>
+      fs.readFileSync(path.join(distDir, "sw.js"), "utf-8");
+
+    it("precaches every HTML entry point", () => {
+      const sw = swSource();
+      for (const htmlFile of ENTRY_HTML_FILES) {
+        expect(sw, `${htmlFile} missing from precache manifest`).toContain(htmlFile);
+      }
+    });
+
+    it("precaches the JS and CSS bundles", () => {
+      // Hashed asset names — assert the extensions appear in the manifest.
+      const sw = swSource();
+      expect(sw).toMatch(/assets\/[^"']+\.js/);
+      expect(sw).toMatch(/assets\/[^"']+\.css/);
+    });
+
+    it("registers a NetworkFirst runtime route for config.json", () => {
+      // The route pattern is embedded as regex source, so the dot is escaped.
+      const sw = swSource();
+      expect(sw).toMatch(/config\\?\.json/);
+      expect(sw).toMatch(/NetworkFirst/i);
+    });
+
+    it("navigations to /api/ are denylisted from the HTML fallback", () => {
+      expect(swSource()).toContain("api");
+    });
+
+    it("registers no runtime caching for API data routes", () => {
+      // /api/* must always hit the network — only config.json gets a runtime route.
+      const sw = swSource();
+      const runtimeRouteCount = (sw.match(/NetworkFirst/g) ?? []).length;
+      expect(runtimeRouteCount).toBe(1);
+    });
+  });
+
   describe("iOS Home Screen (US3)", () => {
     for (const htmlFile of ENTRY_HTML_FILES) {
       it(`${htmlFile} contains apple-touch-icon link`, () => {
