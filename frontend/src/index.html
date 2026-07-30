@@ -136,9 +136,20 @@
         <section class="history" aria-labelledby="history-heading">
           <div class="card bg-base-100 shadow mb-6">
             <div class="card-body">
-              <h2 id="history-heading" class="card-title">History</h2>
-              <div class="overflow-x-auto">
-                <div id="entry-list" aria-label="Weight entry history"></div>
+              <div class="collapse collapse-arrow">
+                <input
+                  type="checkbox"
+                  id="history-toggle"
+                  aria-labelledby="history-heading"
+                />
+                <div class="collapse-title p-0 min-h-0">
+                  <h2 id="history-heading" class="card-title">History</h2>
+                </div>
+                <div class="collapse-content p-0">
+                  <div class="overflow-x-auto">
+                    <div id="entry-list" aria-label="Weight entry history"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
