@@ -1,19 +1,13 @@
 import { loadConfig, getApiUrl } from "./config";
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
-import { clearAccessToken } from "./auth-token";
-import { clearAuthMarker } from "./offline-store";
+import { clearAccessToken, getUserId } from "./auth-token";
+import { clearAuthMarker, getAuthMarker, getPendingOps } from "./offline-store";
+import { loadEntries, addEntry, removeEntry, removeAllEntries, loadSettings } from "./entry-store";
+import { runSync, initSync } from "./sync";
 import { initNavbar } from "./navbar";
 import { initTheme } from "./theme";
-import {
-  getEntries as fetchEntries,
-  createEntry as apiCreateEntry,
-  deleteEntry as apiDeleteEntry,
-  deleteAllEntries as apiDeleteAllEntries,
-  getChartData,
-  getSettings,
-  updateSettings,
-  ApiError,
-} from "./api-client";
+import { computeChartData } from "./chart-calculations";
+import { getSettings, updateSettings, ApiError } from "./api-client";
 import {
   renderApp,
   renderEntryList,
@@ -31,16 +25,32 @@ import { runMigration, hasMigratableData } from "./migration-tool";
 import { generateCSV, generateJSON, formatExportFilename, triggerDownload } from "./export";
 import { renderChart } from "./chart";
 import { validateWeight } from "./model";
-import type { WeightUnit, ChartSettings } from "./model";
+import type { WeightUnit, WeightEntry, ChartSettings } from "./model";
 import type { Chart } from "chart.js";
 
 let _chartInstance: Chart | null = null;
-let _entries: { id: string; weightValue: number; unit: string; timestamp: string }[] = [];
+let _entries: WeightEntry[] = [];
 let _preferredUnit: string = "kg";
+let _settings: ChartSettings | null = null;
+let _userId: string | null = null;
 
-async function refreshChart(): Promise<void> {
+/**
+ * The user's id, whichever source survives the current situation: the
+ * in-memory access token (online) or the persisted auth marker (offline
+ * reload, where the in-memory token is gone).
+ */
+function currentUserId(): string | null {
+  return _userId ?? getUserId() ?? getAuthMarker()?.userId ?? null;
+}
+
+function refreshChart(): void {
   try {
-    const dataset = await getChartData();
+    if (!_settings) {
+      hideChartSection();
+      return;
+    }
+    // Computed client-side so the chart is identical online and offline.
+    const dataset = computeChartData(_entries, _settings, _preferredUnit as WeightUnit);
 
     if (dataset.corridorState === "no-data") {
       hideChartSection();
@@ -64,13 +74,15 @@ async function refreshChart(): Promise<void> {
 }
 
 async function refreshEntries(): Promise<void> {
+  const userId = currentUserId();
+  if (!userId) return;
   showApiLoading();
   clearApiError();
   try {
-    const response = await fetchEntries();
-    _entries = response.entries;
+    const { entries } = await loadEntries(userId);
+    _entries = entries;
     renderEntryList(_entries, _preferredUnit);
-    await refreshChart();
+    refreshChart();
   } catch (err) {
     if (err instanceof ApiError) {
       showApiError(err.message);
@@ -88,7 +100,7 @@ async function openSettingsModal(): Promise<void> {
   const dialog = document.getElementById("chart-settings-modal") as HTMLDialogElement | null;
   if (!dialog) return;
 
-  const settings = await getSettings();
+  const settings = _settings ?? (await getSettings());
   const goalInput = document.getElementById("weight-goal-input") as HTMLInputElement | null;
   const lossInput = document.getElementById("loss-rate-input") as HTMLInputElement | null;
   const carbInput = document.getElementById("carb-fat-ratio-input") as HTMLInputElement | null;
@@ -209,9 +221,9 @@ export async function applyNavVisibility(): Promise<void> {
   }
 }
 
-// ─── DOMContentLoaded ─────────────────────────────────────────────────────────
+// ─── Dashboard bootstrap ──────────────────────────────────────────────────────
 
-document.addEventListener("DOMContentLoaded", async () => {
+export async function initDashboard(): Promise<void> {
   initTheme();
   await loadConfig();
   const state = await checkAuthStatus();
@@ -220,43 +232,57 @@ document.addEventListener("DOMContentLoaded", async () => {
   initNavbar("dashboard");
   renderApp(false);
 
+  _userId = getUserId() ?? getAuthMarker()?.userId ?? null;
   const unitSelect = document.getElementById("unit-select") as HTMLSelectElement | null;
 
-  getSettings()
-    .then((settings) => {
-      _preferredUnit = settings.preferredUnit;
-      if (unitSelect) unitSelect.value = _preferredUnit;
-      return refreshEntries();
-    })
-    .then(() => {
-      if (hasMigratableData()) {
-        showMigrationButton(async () => {
-          try {
-            const result = await runMigration();
-            hideMigrationButton();
-            showMigrationResult(result);
-            await refreshEntries();
-          } catch {
-            showApiError("Migration failed.");
-          }
-        });
-      }
-    })
-    .catch(() => {
-      showApiError("Failed to load application configuration.");
-    });
+  const bootstrap = (async () => {
+    const userId = currentUserId();
+    if (!userId) return;
+
+    _settings = await loadSettings(userId);
+    _preferredUnit = _settings.preferredUnit;
+    if (unitSelect) unitSelect.value = _preferredUnit;
+    await refreshEntries();
+
+    // Automatic sync: re-run whenever connectivity returns…
+    initSync({ getUserId: currentUserId, onAfterSync: refreshEntries });
+    // …and once now, if an earlier offline session left work queued.
+    if (!state.offline && getPendingOps(userId).length > 0) {
+      void runSync(userId).then((synced) => {
+        if (synced) return refreshEntries();
+      });
+    }
+
+    // The legacy localStorage migration probe needs the server.
+    if (!state.offline && hasMigratableData()) {
+      showMigrationButton(async () => {
+        try {
+          const result = await runMigration();
+          hideMigrationButton();
+          showMigrationResult(result);
+          await refreshEntries();
+        } catch {
+          showApiError("Migration failed.");
+        }
+      });
+    }
+  })();
+  bootstrap.catch(() => {
+    showApiError("Failed to load application configuration.");
+  });
+  await bootstrap.catch(() => undefined);
 
   unitSelect?.addEventListener("change", async () => {
     const newUnit = unitSelect.value as string;
     _preferredUnit = newUnit;
+    if (_settings) _settings = { ..._settings, preferredUnit: newUnit };
     try {
-      const currentSettings = await getSettings();
-      await updateSettings({ ...currentSettings, preferredUnit: newUnit as WeightUnit });
+      await updateSettings({ ...(_settings ?? {}), preferredUnit: newUnit as WeightUnit });
     } catch {
-      // non-fatal
+      // non-fatal — offline unit preference applies locally until next sync
     }
     renderEntryList(_entries, _preferredUnit);
-    void refreshChart();
+    refreshChart();
   });
 
   const submitBtn = document.getElementById("submit-btn");
@@ -276,9 +302,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const errEl = document.getElementById("error-msg");
     if (errEl) errEl.textContent = "";
 
+    const userId = currentUserId();
+    if (!userId) return;
     showApiLoading();
     try {
-      await apiCreateEntry({
+      // entry-store applies the write locally at once and queues it when offline.
+      await addEntry(userId, {
         weightValue: Number(input.value.trim()),
         unit: entryUnit,
         timestamp: new Date().toISOString(),
@@ -306,12 +335,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const entryList = document.getElementById("entry-list");
   entryList?.addEventListener("click", async (e) => {
     const target = e.target as HTMLElement;
+    const userId = currentUserId();
+    if (!userId) return;
     if (target.getAttribute("data-action") === "delete") {
       const id = target.getAttribute("data-id");
       if (id && window.confirm("Delete this entry?")) {
         showApiLoading();
         try {
-          await apiDeleteEntry(id);
+          await removeEntry(userId, id);
           await refreshEntries();
         } catch {
           showApiError("Failed to delete entry.");
@@ -323,7 +354,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (window.confirm("Delete all entries? This cannot be undone.")) {
         showApiLoading();
         try {
-          await apiDeleteAllEntries();
+          await removeAllEntries(userId);
           await refreshEntries();
         } catch {
           showApiError("Failed to delete all entries.");
@@ -335,27 +366,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   const exportBtn = document.getElementById("export-btn");
-  exportBtn?.addEventListener("click", async () => {
+  exportBtn?.addEventListener("click", () => {
     const formatSelect = document.getElementById("export-format") as HTMLSelectElement | null;
     const format = (formatSelect?.value ?? "csv") as "csv" | "json";
 
-    showApiLoading();
+    // Export the local state — no server round-trip, so it works offline.
     try {
-      const { getEntries: fetchForExport } = await import("./api-client");
-      const response = await fetchForExport();
-      const entries = response.entries;
-
       if (format === "csv") {
-        const content = generateCSV(entries);
+        const content = generateCSV(_entries);
         triggerDownload(content, formatExportFilename("csv"), "text/csv");
       } else {
-        const content = generateJSON(entries);
+        const content = generateJSON(_entries);
         triggerDownload(content, formatExportFilename("json"), "application/json");
       }
     } catch {
       showApiError("Failed to export entries.");
-    } finally {
-      hideApiLoading();
     }
   });
 
@@ -383,11 +408,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const validated = validateSettingsForm();
     if (!validated) return;
     try {
-      await updateSettings(validated);
+      _settings = await updateSettings(validated);
       closeSettingsModal();
       await refreshEntries();
     } catch {
       showApiError("Failed to save settings.");
     }
   });
-});
+}
+
+document.addEventListener("DOMContentLoaded", () => void initDashboard());
