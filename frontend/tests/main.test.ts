@@ -14,6 +14,8 @@ vi.mock("../src/ts/auth-token", () => ({
   setAccessToken: vi.fn(),
   getAccessToken: vi.fn().mockReturnValue("test-token"),
   clearAccessToken: mockClearAccessToken,
+  getUserRole: vi.fn().mockReturnValue("user"),
+  getUserId: vi.fn().mockReturnValue("user-id-123"),
 }));
 
 vi.mock("../src/ts/config", () => ({

@@ -1,5 +1,6 @@
 import { getApiUrl } from "./config";
 import { getAccessToken, setAccessToken, clearAccessToken } from "./auth-token";
+import { clearAuthMarker, recordSuccessfulAuth } from "./offline-store";
 import type { WeightEntry, ChartDataSet, ChartSettings } from "./model";
 
 // ─── Typed API error ──────────────────────────────────────────────────────────
@@ -46,8 +47,12 @@ async function attemptRefresh(): Promise<boolean> {
       if (res.ok) {
         const { accessToken } = (await res.json()) as { accessToken: string };
         setAccessToken(accessToken);
+        recordSuccessfulAuth();
         return true;
       }
+      // The server answered and rejected the session — only then drop the
+      // offline marker. A network throw must keep it (offline is not logout).
+      clearAuthMarker();
     } catch {
       // network error
     }

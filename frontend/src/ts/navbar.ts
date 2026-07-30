@@ -1,4 +1,5 @@
 import { getUserRole, clearAccessToken, getAccessToken } from "./auth-token";
+import { clearAuthMarker } from "./offline-store";
 import { getApiUrl } from "./config";
 
 export function initNavbar(activePage: "dashboard" | "profile" | "admin"): void {
@@ -56,6 +57,7 @@ export function initNavbar(activePage: "dashboard" | "profile" | "admin"): void 
       // always clear session regardless of server response
     } finally {
       clearAccessToken();
+      clearAuthMarker();
       window.location.href = "/login.html";
     }
   }

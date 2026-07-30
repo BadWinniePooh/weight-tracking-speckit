@@ -12,6 +12,8 @@ vi.mock("../src/ts/auth-token", () => ({
   setAccessToken: mockSetAccessToken,
   getAccessToken: mockGetAccessToken,
   clearAccessToken: mockClearAccessToken,
+  getUserRole: vi.fn().mockReturnValue("user"),
+  getUserId: vi.fn().mockReturnValue("user-id-123"),
 }));
 
 const mockFetch = vi.fn();
@@ -81,6 +83,40 @@ describe("api-client 401 retry with silent refresh", () => {
 
     expect(mockClearAccessToken).toHaveBeenCalled();
     expect(window.location.href).toBe("/login.html");
+  });
+
+  it("successful refresh writes the offline auth marker; rejected refresh clears it", async () => {
+    const { saveAuthMarker, getAuthMarker } = await import("../src/ts/offline-store");
+    mockGetAccessToken.mockReturnValue("old-token");
+    localStorage.clear();
+
+    // 401 → refresh ok → marker written (identity comes from the mocked auth-token)
+    let call = 0;
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes("/api/auth/refresh")) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => ({ accessToken: "t" }) });
+      }
+      call++;
+      return call === 1
+        ? Promise.resolve({ ok: false, status: 401, json: async () => ({}) })
+        : Promise.resolve({ ok: true, status: 200, json: async () => ({ entries: [] }) });
+    });
+
+    const { getEntries } = await import("../src/ts/api-client");
+    await getEntries();
+    expect(getAuthMarker()?.userId).toBe("user-id-123");
+
+    // 401 → refresh rejected by the server → marker cleared
+    saveAuthMarker({ userId: "user-id-123", role: "user", refreshExpiresAt: new Date(Date.now() + 86400_000).toISOString() });
+    mockFetch.mockImplementation(() =>
+      Promise.resolve({ ok: false, status: 401, json: async () => ({}) })
+    );
+    try {
+      await getEntries();
+    } catch {
+      // expected to throw
+    }
+    expect(getAuthMarker()).toBeNull();
   });
 
   it("concurrent 401s trigger only one refresh attempt", async () => {

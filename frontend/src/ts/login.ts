@@ -1,5 +1,6 @@
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { setAccessToken } from "./auth-token";
+import { recordSuccessfulAuth } from "./offline-store";
 import { loadConfig, getApiUrl } from "./config";
 import { initTheme } from "./theme";
 
@@ -34,6 +35,7 @@ export async function initLoginPage(): Promise<void> {
       if (response.ok) {
         const { accessToken } = (await response.json()) as { accessToken: string };
         setAccessToken(accessToken);
+        recordSuccessfulAuth();
         window.location.href = "/index.html";
         return;
       }

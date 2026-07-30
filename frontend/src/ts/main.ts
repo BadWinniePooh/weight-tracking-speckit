@@ -1,6 +1,7 @@
 import { loadConfig, getApiUrl } from "./config";
 import { checkAuthStatus, enforceRedirect } from "./auth-guard";
 import { clearAccessToken } from "./auth-token";
+import { clearAuthMarker } from "./offline-store";
 import { initNavbar } from "./navbar";
 import { initTheme } from "./theme";
 import {
@@ -192,6 +193,7 @@ export function initLogout(): void {
       // always clear session regardless of server response
     } finally {
       clearAccessToken();
+      clearAuthMarker();
       window.location.href = "/login.html";
     }
   });
